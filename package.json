@@ -1,0 +1,21 @@
+{
+    "name": "SASPanel V1",
+    "mastertemplate": "SASPanel",
+    "version": "1.0",
+    "description": "SASPanel - Web Hosting Control Panel",
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mayazhanif/SASPanel"
+    },
+    "bugs": {
+        "url": "https://github.com/mayazhanif/SASPanel/issues",
+        "email": "mayazhanif@gmail.com"
+    },
+    "author": "Sadaf, Samar, Ayaz",
+    "engines": {
+        "node": ">=10.0.0"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+}

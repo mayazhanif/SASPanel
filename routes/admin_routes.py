@@ -1,0 +1,8 @@
+from flask import render_template
+from . import routes
+
+
+@routes.route('/dashboard')
+def admin_dashboard():
+    msg=''
+    return render_template('adminFiles/dashboard.html', msg=msg)
