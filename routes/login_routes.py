@@ -4,7 +4,9 @@ from app import *
 
 @routes.route('/login/', methods=['GET', 'POST'])
 def login():
-    print(mysqlconnection)
+    #print(session['id']);
+    #username = request.form['username']
+    #print(mysqlconnection)
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         # Create variables for easy access
         username = request.form['username']
@@ -27,3 +29,9 @@ def login():
             # Account doesnt exist or username/password incorrect
             #flash("Incorrect username/password!", "danger")
     return render_template('authentication/login.html',title="Login")
+
+
+@routes.route('/logout/')
+def logout():
+    msg=''
+    return redirect(url_for('routes.login'))
