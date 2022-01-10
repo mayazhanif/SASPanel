@@ -7,10 +7,22 @@ def login():
     #print(session['id']);
     #username = request.form['username']
     #print(mysqlconnection)
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'logintype' in request.form:
         # Create variables for easy access
         username = request.form['username']
         password = request.form['password']
+        logintype = request.form['logintype']
+        session['loggedin'] = True
+        session['id'] = 1
+        session['username'] = username
+        if logintype == "Admin":
+            session['usertype'] = "Admin"
+            return redirect(url_for('routes.user_dashboard'))
+        elif logintype == "User":
+            session['usertype'] = "User"
+            return redirect(url_for('routes.admin_dashboard'))
+        else:
+            return render_template('authentication/login.html', msg="Error")
         # Check if account exists using MySQL
         cursor = mysqlconnection.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM accounts WHERE username = %s AND password = %s', (username, password))

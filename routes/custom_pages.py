@@ -1,5 +1,6 @@
 from flask import render_template
 from . import routes
+from app import *
 
 
 @routes.route('/test/')
@@ -9,8 +10,12 @@ def hello_world():  # put application's code here
 
 @routes.route('/')
 def home_route():  # put application's code here
-    msg = ''
-    return render_template('adminFiles/dashboard.html', msg=msg)
+    if 'loggedin' in session:
+        msg = ''
+        return render_template('adminFiles/dashboard.html', msg=msg)
+    else:
+        msg = 'Please, Login first.'
+        return redirect(url_for('routes.login'))
 
 
 @routes.errorhandler(404)

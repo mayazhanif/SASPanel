@@ -5,7 +5,6 @@ from routes.admin_routes import *
 from routes.login_routes import *
 from routes.custom_pages import *
 from routes.user_routes import *
-
 app = Flask(__name__,
             static_url_path='',
             static_folder='apps/static',

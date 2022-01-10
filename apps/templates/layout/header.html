@@ -195,7 +195,7 @@
                                     <div class="media-body text-left">
                                         <h6 class="pro-user-name ml-2 my-0">
                                             <span>Shreyu N</span>
-                                            <span class="pro-user-desc text-muted d-block mt-1">Administrator </span>
+                                            <span class="pro-user-desc text-muted d-block mt-1">{{ session['usertype'] }} </span>
                                         </h6>
                                     </div>
                                     <span data-feather="chevron-down" class="ml-2 align-self-center"></span>
@@ -244,7 +244,7 @@
 
                     <div class="media-body">
                         <h6 class="pro-user-name mt-0 mb-0">Nik Patel</h6>
-                        <span class="pro-user-desc">Administrator</span>
+                        <span class="pro-user-desc">{{ session['usertype'] }}</span>
                     </div>
                     <div class="dropdown align-self-center profile-dropdown-menu">
                         <a class="dropdown-toggle mr-0" data-toggle="dropdown" href="#" role="button" aria-haspopup="false"
