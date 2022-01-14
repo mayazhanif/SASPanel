@@ -3,7 +3,7 @@ from . import routes
 from app import *
 
 
-@routes.route('/dashboard')
+@routes.route('/userdashboard')
 def user_dashboard():
     msg=''
     return render_template('userFiles/dashboard.html', msg=msg)
