@@ -6,3 +6,9 @@ from . import routes
 def admin_dashboard():
     msg=''
     return render_template('adminFiles/dashboard.html', msg=msg)
+
+
+@routes.route('/admin/userslist')
+def admin_userslist():
+    msg=''
+    return render_template('adminFiles/userslist.html', msg=msg)

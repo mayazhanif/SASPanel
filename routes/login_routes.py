@@ -17,10 +17,10 @@ def login():
         session['username'] = username
         if logintype == "Admin":
             session['usertype'] = "Admin"
-            return redirect(url_for('routes.user_dashboard'))
+            return redirect(url_for('routes.admin_dashboard'))
         elif logintype == "User":
             session['usertype'] = "User"
-            return redirect(url_for('routes.admin_dashboard'))
+            return redirect(url_for('routes.user_dashboard'))
         else:
             return render_template('authentication/login.html', msg="Error")
         # Check if account exists using MySQL
