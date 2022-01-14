@@ -2,7 +2,7 @@ from Database.DbConfig import mysqlconnection
 from app import *
 
 
-@routes.route('/login/', methods=['GET', 'POST'])
+@routes.route('/login', methods=['GET', 'POST'])
 def login():
     #print(session['id']);
     #username = request.form['username']
