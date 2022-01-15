@@ -11,8 +11,13 @@ def hello_world():  # put application's code here
 @routes.route('/')
 def home_route():  # put application's code here
     if 'loggedin' in session:
-        msg = ''
-        return render_template('adminFiles/dashboard.html', msg=msg)
+        print(session['usertype'])
+        if session['usertype'] == "Admin":
+            msg = ''
+            return redirect(url_for('routes.admin_dashboard'))
+        elif session['usertype'] == "User":
+            msg = ''
+            return redirect(url_for('routes.user_dashboard'))
     else:
         msg = 'Please, Login first.'
         return redirect(url_for('routes.login'))

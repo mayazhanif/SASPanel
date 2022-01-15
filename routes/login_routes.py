@@ -2,7 +2,7 @@ from Database.DbConfig import mysqlconnection
 from app import *
 
 
-@routes.route('/login', methods=['GET', 'POST'])
+@routes.route('/login/', methods=['GET', 'POST'])
 def login():
     #print(session['id']);
     #username = request.form['username']
@@ -15,6 +15,7 @@ def login():
         session['loggedin'] = True
         session['id'] = 1
         session['username'] = username
+        #session['usertype'] = request.form['logintype']
         if logintype == "Admin":
             session['usertype'] = "Admin"
             return redirect(url_for('routes.admin_dashboard'))
@@ -43,7 +44,10 @@ def login():
     return render_template('authentication/login.html',title="Login")
 
 
-@routes.route('/logout/')
+@routes.route('/logout/', methods=['GET', 'POST'])
 def logout():
     msg=''
+    session.pop('loggedin', None)
+    session.pop('usertype', None)
+    session.pop('id', None)
     return redirect(url_for('routes.login'))
