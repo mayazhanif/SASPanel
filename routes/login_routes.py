@@ -23,6 +23,8 @@ def login(msg=""):
                 session['loggedin'] = True
                 session['id'] = 1
                 session['Email'] = result[4]
+                session['Name'] = result[1]
+
                 return redirect(url_for('routes.user_dashboard'))
             return render_template('authentication/login.html', msg="Error")
         elif logintype == "User":
@@ -39,6 +41,8 @@ def login(msg=""):
                 session['loggedin'] = True
                 session['id'] = result[0]
                 session['Email'] = result[1]
+                session['Name'] = result[3]
+
                 return redirect(url_for('routes.user_dashboard'))
         else:
             return render_template('authentication/login.html', msg="Error")
