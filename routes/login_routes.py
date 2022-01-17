@@ -11,8 +11,20 @@ def login(msg=""):
         password = request.form['password']
         logintype = request.form['logintype']
         if logintype == "Admin":
-            #session['usertype'] = "Admin"
-            return redirect(url_for('routes.admin_dashboard'))
+            cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT * FROM administrator WHERE Admin_Email = %s AND Admin_Password = %s', (Email, password))
+            result = cursor.fetchone()
+            if result==None:
+                #return redirect(url_for('routes.login'))
+                #flash('You were successfully logged in')
+                return render_template('authentication/login.html', msg="Error")
+            else:
+                session['usertype'] = "Admin"
+                session['loggedin'] = True
+                session['id'] = 1
+                session['Email'] = result[4]
+                return redirect(url_for('routes.user_dashboard'))
+            return render_template('authentication/login.html', msg="Error")
         elif logintype == "User":
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, password))
@@ -25,8 +37,8 @@ def login(msg=""):
             else:
                 session['usertype'] = "Admin"
                 session['loggedin'] = True
-                session['id'] = 1
-                session['username'] = Email
+                session['id'] = result[0]
+                session['Email'] = result[1]
                 return redirect(url_for('routes.user_dashboard'))
         else:
             return render_template('authentication/login.html', msg="Error")
