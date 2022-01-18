@@ -2,10 +2,12 @@ from flask import flash
 
 from Database.DbConfig import mysqlconnection
 from app import *
+from functions import *
 
 
 @routes.route('/login/', methods=['GET', 'POST'])
 def login(msg=""):
+    #check_user_Login()
     if request.method == 'POST' and 'Email' in request.form and 'password' in request.form and 'logintype' in request.form:
         Email = request.form['Email']
         password = request.form['password']
@@ -37,7 +39,7 @@ def login(msg=""):
                 #flash('You were successfully logged in')
                 return render_template('authentication/login.html', msg="Error")
             else:
-                session['usertype'] = "Admin"
+                session['usertype'] = "User"
                 session['loggedin'] = True
                 session['id'] = result[0]
                 session['Email'] = result[1]

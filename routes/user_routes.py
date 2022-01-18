@@ -5,8 +5,11 @@ from app import *
 
 @routes.route('/user/dashboard')
 def user_dashboard():
-    msg=''
-    return render_template('userFiles/dashboard.html', msg=msg)
+    if check_user_Login():
+        msg=''
+        return render_template('userFiles/dashboard.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
 
 
 @routes.route('/user/profile')
