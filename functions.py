@@ -1,6 +1,3 @@
-from flask import render_template, session
-import routes
-from Database.DbConfig import mysqlconnection
 from app import *
 
 def check_Session(type="User"):

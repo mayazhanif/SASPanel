@@ -26,9 +26,8 @@ def login(msg=""):
                 session['id'] = 1
                 session['Email'] = result[4]
                 session['Name'] = result[1]
-
-                return redirect(url_for('routes.user_dashboard'))
-            return render_template('authentication/login.html', msg="Error")
+                return redirect(url_for('routes.admin_dashboard'))
+            #return render_template('authentication/login.html', msg="Error")
         elif logintype == "User":
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, password))
