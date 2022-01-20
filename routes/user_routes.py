@@ -11,11 +11,14 @@ def user_dashboard():
     else:
         return redirect(url_for('routes.login'))
 
-
 @routes.route('/user/profile')
 def user_profile():
-    msg=''
-    return render_template('userFiles/dashboard.html', msg=msg)
+    if check_user_Login():
+        msg=''
+        return render_template('userFiles/profile.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
 
 
 @routes.route('/user/domains/addnew')

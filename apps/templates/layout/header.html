@@ -31,8 +31,8 @@
                     <!-- LOGO -->
                     <a href="index.html" class="navbar-brand mr-0 mr-md-2 logo">
                         <span class="logo-lg">
-                            <img src="/assets/images/logo.png" alt="" height="24" />
-                            <span class="d-inline h5 ml-1 text-logo">Shreyu</span>
+                            <img src="/assets/images/logo.png" alt="" height="50" />
+                            <span class="d-inline h1 ml-1 text-logo">SASPANEL</span>
                         </span>
                         <span class="logo-sm">
                             <img src="/assets/images/logo.png" alt="" height="24">
@@ -60,37 +60,7 @@
                             </div>
                         </li>
 
-                        <li class="dropdown d-none d-lg-block" data-toggle="tooltip" data-placement="left" title="Change language">
-                            <a class="nav-link dropdown-toggle mr-0" data-toggle="dropdown" href="#" role="button"
-                                aria-haspopup="false" aria-expanded="false">
-                                <i data-feather="globe"></i>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="/assets/images/flags/germany.jpg" alt="user-image" class="mr-2" height="12"> <span
-                                        class="align-middle">German</span>
-                                </a>
 
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="/assets/images/flags/italy.jpg" alt="user-image" class="mr-2" height="12"> <span
-                                        class="align-middle">Italian</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="/assets/images/flags/spain.jpg" alt="user-image" class="mr-2" height="12"> <span
-                                        class="align-middle">Spanish</span>
-                                </a>
-
-                                <!-- item-->
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <img src="/assets/images/flags/russia.jpg" alt="user-image" class="mr-2" height="12"> <span
-                                        class="align-middle">Russian</span>
-                                </a>
-                            </div>
-                        </li>
 
 
                         <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left"
@@ -182,8 +152,14 @@
                         </li>
 
                         <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
-                            <a href="javascript:void(0);" class="nav-link right-bar-toggle">
-                                <i data-feather="settings"></i>
+                            <a href="{{ url_for("routes.user_profile") }}" class="nav-link right-bar-toggle">
+                                <i data-feather="user"></i>
+                            </a>
+                        </li>
+
+                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
+                            <a href="{{ url_for("routes.logout") }}" class="nav-link right-bar-toggle">
+                                <i data-feather="log-out"></i>
                             </a>
                         </li>
 
@@ -252,7 +228,7 @@
                             <span data-feather="chevron-down"></span>
                         </a>
                         <div class="dropdown-menu profile-dropdown">
-                            <a href="pages-profile.html" class="dropdown-item notify-item">
+                            <a href="{{ url_for("routes.user_profile") }}" class="dropdown-item notify-item">
                                 <i data-feather="user" class="icon-dual icon-xs mr-2"></i>
                                 <span>My Account</span>
                             </a>
@@ -272,7 +248,7 @@
                                 <span>Lock Screen</span>
                             </a>
 
-                            <div class="dropdown-divider"></div>
+
 
                             <a href="{{ url_for("routes.logout") }}" class="dropdown-item notify-item">
                                 <i data-feather="log-out" class="icon-dual icon-xs mr-2"></i>
@@ -410,6 +386,25 @@
                                     <i data-feather="server"></i>
 
                                     <span> Web FTP </span>
+                                </a>
+                            </li>
+
+                            <li class="menu-title">Errors</li>
+
+
+                            <li>
+                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                    <i class="uil-bug"></i>
+
+                                    <span> Error Log </span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                    <i data-feather="list"></i>
+
+                                    <span> Access Log  </span>
                                 </a>
                             </li>
 
