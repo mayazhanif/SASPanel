@@ -1,4 +1,4 @@
-from flask import flash
+from flask import flash,request
 
 from Database.DbConfig import mysqlconnection
 from app import *
@@ -25,7 +25,7 @@ def login(msg=""):
             else:
                 session['usertype'] = "Admin"
                 session['loggedin'] = True
-                session['id'] = 1
+                session['id'] = result[0]
                 session['Email'] = result[4]
                 session['Name'] = result[1]
                 return redirect(url_for('routes.admin_dashboard'))

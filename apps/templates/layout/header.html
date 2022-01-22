@@ -151,13 +151,13 @@
                             </div>
                         </li>
 
-                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
+                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Profile">
                             <a href="{{ url_for("routes.user_profile") }}" class="nav-link right-bar-toggle">
                                 <i data-feather="user"></i>
                             </a>
                         </li>
 
-                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
+                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Logout">
                             <a href="{{ url_for("routes.logout") }}" class="nav-link right-bar-toggle">
                                 <i data-feather="log-out"></i>
                             </a>
@@ -167,7 +167,7 @@
                             <a class="nav-link dropdown-toggle nav-user mr-0" data-toggle="dropdown" href="#" role="button"
                                 aria-haspopup="false" aria-expanded="false">
                                 <div class="media user-profile ">
-                                    <img src="/assets/images/users/avatar-7.jpg" alt="user-image" class="rounded-circle align-self-center" />
+                                    <img src="/assets/images/users/avatar.jpg" alt="user-image" class="rounded-circle align-self-center" />
                                     <div class="media-body text-left">
                                         <h6 class="pro-user-name ml-2 my-0">
                                             <span>Shreyu N</span>
@@ -215,8 +215,7 @@
             <!-- ========== Left Sidebar Start ========== -->
             <div class="left-side-menu">
                 <div class="media user-profile mt-2 mb-2">
-                    <img src="/assets/images/users/avatar-7.jpg" class="avatar-sm rounded-circle mr-2" alt="Shreyu" />
-                    <img src="/assets/images/users/avatar-7.jpg" class="avatar-xs rounded-circle mr-2" alt="Shreyu" />
+                    <img src="/assets/images/users/avatar.jpg" class="avatar-sm rounded-circle mr-2" alt="User" />
 
                     <div class="media-body">
                         <h6 class="pro-user-name mt-0 mb-0">{{ session['Name'] }}</h6>
