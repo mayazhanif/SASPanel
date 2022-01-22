@@ -1,7 +1,7 @@
 from flask import render_template, session
 from . import routes
 from app import *
-
+import functions
 
 @routes.route('/user/dashboard')
 def user_dashboard():

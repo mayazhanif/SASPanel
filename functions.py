@@ -1,4 +1,4 @@
-from app import *
+from flask import session
 
 def check_Session(type="User"):
     if 'loggedin' in session:
