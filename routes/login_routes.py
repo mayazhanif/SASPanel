@@ -3,6 +3,7 @@ from flask import flash
 from Database.DbConfig import mysqlconnection
 from app import *
 from functions import *
+import hashlib
 
 
 @routes.route('/login/', methods=['GET', 'POST'])
@@ -11,10 +12,11 @@ def login(msg=""):
     if request.method == 'POST' and 'Email' in request.form and 'password' in request.form and 'logintype' in request.form:
         Email = request.form['Email']
         password = request.form['password']
+        md5password = hashlib.md5(password.encode()).hexdigest()
         logintype = request.form['logintype']
         if logintype == "Admin":
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT * FROM administrator WHERE Admin_Email = %s AND Admin_Password = %s', (Email, password))
+            cursor.execute('SELECT * FROM administrator WHERE Admin_Email = %s AND Admin_Password = %s', (Email, md5password))
             result = cursor.fetchone()
             if result==None:
                 #return redirect(url_for('routes.login'))
@@ -30,7 +32,7 @@ def login(msg=""):
             #return render_template('authentication/login.html', msg="Error")
         elif logintype == "User":
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, password))
+            cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
             result = cursor.fetchone()
             #print(result)
             if result==None:
