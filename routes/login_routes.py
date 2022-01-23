@@ -21,7 +21,7 @@ def login(msg=""):
             if result==None:
                 #return redirect(url_for('routes.login'))
                 #flash('You were successfully logged in')
-                return render_template('authentication/login.html', msg="Error")
+                return render_template('authentication/login.html', msg={"error":"primary","message":"Invalid email or password."})
             else:
                 session['usertype'] = "Admin"
                 session['loggedin'] = True
@@ -38,7 +38,7 @@ def login(msg=""):
             if result==None:
                 #return redirect(url_for('routes.login'))
                 #flash('You were successfully logged in')
-                return render_template('authentication/login.html', msg="Error")
+                return render_template('authentication/login.html',msg={"error":"primary","message":"Invalid email or password."})
             else:
                 session['usertype'] = "User"
                 session['loggedin'] = True
@@ -48,7 +48,7 @@ def login(msg=""):
 
                 return redirect(url_for('routes.user_dashboard'))
         else:
-            return render_template('authentication/login.html', msg="Error")
+            return render_template('authentication/login.html', msg={"error":"primary","message":"Please fill all fields Correctly."})
     return render_template('authentication/login.html',title="Login")
 
 
