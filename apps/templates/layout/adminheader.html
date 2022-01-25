@@ -14,6 +14,14 @@
         <!-- plugins -->
         <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 
+        <!-- plugin css -->
+        <link href="/assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/bootstrap-select//bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+
         <!-- App css -->
         <link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <link href="/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
@@ -152,7 +160,7 @@
                         </li>
 
                         <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
-                            <a href="{{ url_for("routes.user_profile") }}" class="nav-link right-bar-toggle">
+                            <a href="{{ url_for("routes.admin_profile") }}" class="nav-link right-bar-toggle">
                                 <i data-feather="user"></i>
                             </a>
                         </li>
@@ -228,28 +236,10 @@
                             <span data-feather="chevron-down"></span>
                         </a>
                         <div class="dropdown-menu profile-dropdown">
-                            <a href="{{ url_for("routes.user_profile") }}" class="dropdown-item notify-item">
+                            <a href="{{ url_for("routes.admin_profile") }}" class="dropdown-item notify-item">
                                 <i data-feather="user" class="icon-dual icon-xs mr-2"></i>
                                 <span>My Account</span>
                             </a>
-
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i data-feather="settings" class="icon-dual icon-xs mr-2"></i>
-                                <span>Settings</span>
-                            </a>
-
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i data-feather="help-circle" class="icon-dual icon-xs mr-2"></i>
-                                <span>Support</span>
-                            </a>
-
-                            <a href="pages-lock-screen.html" class="dropdown-item notify-item">
-                                <i data-feather="lock" class="icon-dual icon-xs mr-2"></i>
-                                <span>Lock Screen</span>
-                            </a>
-
-
-
                             <a href="{{ url_for("routes.logout") }}" class="dropdown-item notify-item">
                                 <i data-feather="log-out" class="icon-dual icon-xs mr-2"></i>
                                 <span>Logout</span>
@@ -264,7 +254,7 @@
                             <li class="menu-title">Navigation</li>
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.admin_dashboard") }}">
                                     <i data-feather="home"></i>
 
                                     <span> Dashboard </span>
@@ -274,6 +264,26 @@
                             <li class="menu-title">Apps</li>
                             <li>
                                 <a href="javascript: void(0);">
+                                    <i data-feather="user"></i>
+                                    <span> Users </span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+
+                                <ul class="nav-second-level" aria-expanded="false">
+                                    <li>
+                                        <a href="{{ url_for("routes.admin_addUser") }}">Add new User</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for("routes.admin_viewUser") }}">View User</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for("routes.admin_updateUser") }}">Modify</a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);">
                                     <i data-feather="globe"></i>
                                     <span> Domains </span>
                                     <span class="menu-arrow"></span>
@@ -281,10 +291,10 @@
 
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li>
-                                        <a href="email-inbox.html">Add new Domain</a>
+                                        <a href="{{ url_for("routes.admin_addDomain") }}">Add new Domain</a>
                                     </li>
-                                    <li>
-                                        <a href="email-read.html">Remove Domain</a>
+                                     <li>
+                                        <a href="email-inbox.html">View Domains</a>
                                     </li>
                                     <li>
                                         <a href="email-compose.html">Modify</a>
@@ -366,7 +376,7 @@
 
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.admin_dashboard") }}">
                                     <i data-feather="database"></i>
 
                                     <span> PhpMyAdmin </span>
@@ -374,7 +384,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.admin_dashboard") }}">
                                     <i data-feather="inbox"></i>
 
                                     <span> Roundcube </span>
@@ -382,7 +392,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.admin_dashboard") }}">
                                     <i data-feather="server"></i>
 
                                     <span> Web FTP </span>
@@ -393,7 +403,7 @@
 
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.admin_dashboard") }}">
                                     <i class="uil-bug"></i>
 
                                     <span> Error Log </span>
@@ -401,7 +411,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.admin_dashboard") }}">
                                     <i data-feather="list"></i>
 
                                     <span> Access Log  </span>
