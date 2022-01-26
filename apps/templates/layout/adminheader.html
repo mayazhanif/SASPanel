@@ -294,10 +294,10 @@
                                         <a href="{{ url_for("routes.admin_addDomain") }}">Add new Domain</a>
                                     </li>
                                      <li>
-                                        <a href="email-inbox.html">View Domains</a>
+                                        <a href="{{ url_for("routes.admin_viewDomains") }}">View Domains</a>
                                     </li>
                                     <li>
-                                        <a href="email-compose.html">Modify</a>
+                                        <a href="{{ url_for("routes.admin_updateDomains") }}">Modify</a>
                                     </li>
                                 </ul>
                             </li>
@@ -311,10 +311,14 @@
 
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li>
-                                        <a href="email-inbox.html">Add new Database</a>
+                                        <a href="{{ url_for("routes.admin_viewDatabases") }}">Database List</a>
+                                    </li>
+
+                                    <li>
+                                        <a href="{{ url_for("routes.admin_addDB") }}">Add new Database</a>
                                     </li>
                                     <li>
-                                        <a href="email-read.html">Add new DBuser</a>
+                                        <a href="{{ url_for("routes.admin_addDBUser") }}">Add new DBuser</a>
                                     </li>
                                     <li>
                                         <a href="email-compose.html">Delete DBuser</a>

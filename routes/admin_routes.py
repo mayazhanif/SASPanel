@@ -80,3 +80,46 @@ def admin_addDomain():
         return render_template('adminFiles/addDomain.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/domains/viewDomains')
+def admin_viewDomains():
+    if check_admin_Login():
+        msg=''
+        return render_template('adminFiles/viewDomains.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/domains/updateDomains')
+def admin_updateDomains():
+    if check_admin_Login():
+        msg=''
+        return render_template('adminFiles/updateDomains.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/Databases/addDBUser')
+def admin_addDBUser():
+    if check_admin_Login():
+        msg=''
+        return render_template('adminFiles/addDBUser.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/Databases/addDB')
+def admin_addDB():
+    if check_admin_Login():
+        msg=''
+        return render_template('adminFiles/addDB.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/Databases/viewDatabases')
+def admin_viewDatabases():
+    if check_admin_Login():
+        msg=''
+        return render_template('adminFiles/viewDatabases.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))

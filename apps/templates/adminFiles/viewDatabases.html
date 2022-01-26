@@ -14,11 +14,11 @@
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
                                         <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="#">Users</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">View User</li>
+                                        <li class="breadcrumb-item"><a href="#">MySQL Databases</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Database List</li>
                                     </ol>
                                 </nav>
-                                <h4 class="mb-1 mt-0"> Users List</h4>
+                                <h4 class="mb-1 mt-0"> Databases List</h4>
                             </div>
                         </div>
 
@@ -38,9 +38,9 @@
                                                 <tr>
                                                     <th>User's Name</th>
                                                     <th>User's Email</th>
-                                                    <th>Package Name</th>
-                                                    <th>Storage limit</th>
-                                                    <th>MySQL Databases</th>
+                                                    <th>Database Username</th>
+                                                    <th>Database Name</th>
+                                                    <th>phpMyAdmin</th>
                                                     <th>Manage</th>
                                                 </tr>
                                             </thead>
@@ -49,19 +49,19 @@
                                             <tbody>
                                                 <tr>
                                                     <td>Tiger Nixon</td>
-                                                    <td>System Architect</td>
-                                                    <td>Edinburgh</td>
-                                                    <td>Edinburgh</td>
-                                                    <td>Edinburgh</td>
-                                                    <td><a href="{{url_for("routes.admin_updateUser")}}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <button type="button" class="btn btn-danger btn-sm">Delete</button></td>
+                                                    <td>test@test.com</td>
+                                                    <td>Tiger Nixon</td>
+                                                    <td>Database</td>
+                                                    <td><button type="button" class="btn btn-primary btn-sm">Login</button></td>
+                                                    <td><a href="{{url_for("routes.admin_updateUser")}}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <button type="button" class="btn btn-danger btn-sm">Suspend</button></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Garrett Winters</td>
-                                                    <td>Accountant</td>
-                                                    <td>Tokyo</td>
-                                                    <td>Edinburgh</td>
-                                                    <td>Edinburgh</td>
-                                                    <td><button type="button" class="btn btn-info btn-sm">Edit</button> <button type="button" class="btn btn-danger btn-sm">Delete</button></td>
+                                                    <td>ABC</td>
+                                                    <td>test@test.com</td>
+                                                    <td>ABC</td>
+                                                    <td>Database1</td>
+                                                    <td><button type="button" class="btn btn-primary btn-sm">Login</button></td>
+                                                    <td><button type="button" class="btn btn-info btn-sm">Edit</button> <button type="button" class="btn btn-warning btn-sm">Unsuspend</button></td>
                                                 </tr>
 
 
