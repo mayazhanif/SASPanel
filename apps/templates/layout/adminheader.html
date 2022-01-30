@@ -341,16 +341,16 @@
 
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li>
-                                        <a href="email-inbox.html">Add new Account</a>
+                                        <a href="{{ url_for("routes.admin_addAccounts") }}">Add new Account</a>
                                     </li>
                                     <li>
-                                        <a href="email-read.html">Remove Account</a>
+                                        <a href="{{ url_for("routes.admin_viewAccounts") }}">View Account</a>
                                     </li>
                                     <li>
-                                        <a href="email-compose.html">Modify Account</a>
+                                        <a href="{{ url_for("routes.admin_updateAccounts") }}">Modify Account</a>
                                     </li>
                                     <li>
-                                        <a href="email-compose.html">FTP Server</a>
+                                        <a href="{{ url_for("routes.admin_ftpServer") }}">FTP Server</a>
                                     </li>
                                 </ul>
                             </li>
@@ -363,14 +363,14 @@
                                 </a>
 
                                 <ul class="nav-second-level" aria-expanded="false">
-                                    <li>
-                                        <a href="email-inbox.html">View</a>
+                                     <li>
+                                        <a href="{{ url_for("routes.admin_addEmail") }}">Add</a>
                                     </li>
                                     <li>
-                                        <a href="email-read.html">Delete</a>
+                                        <a href="{{ url_for("routes.admin_viewEmail") }}">View</a>
                                     </li>
                                     <li>
-                                        <a href="email-compose.html">Modify</a>
+                                        <a href="{{ url_for("routes.admin_updateEmail") }}">Modify</a>
                                     </li>
                                 </ul>
                             </li>
@@ -380,7 +380,7 @@
 
 
                             <li>
-                                <a href="{{ url_for("routes.admin_dashboard") }}">
+                                <a href="">
                                     <i data-feather="database"></i>
 
                                     <span> PhpMyAdmin </span>
@@ -388,7 +388,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.admin_dashboard") }}">
+                                <a href="">
                                     <i data-feather="inbox"></i>
 
                                     <span> Roundcube </span>
@@ -396,7 +396,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.admin_dashboard") }}">
+                                <a href="">
                                     <i data-feather="server"></i>
 
                                     <span> Web FTP </span>
@@ -407,7 +407,7 @@
 
 
                             <li>
-                                <a href="{{ url_for("routes.admin_dashboard") }}">
+                                <a href="">
                                     <i class="uil-bug"></i>
 
                                     <span> Error Log </span>
@@ -415,7 +415,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.admin_dashboard") }}">
+                                <a href="">
                                     <i data-feather="list"></i>
 
                                     <span> Access Log  </span>

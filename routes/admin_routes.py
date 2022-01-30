@@ -116,6 +116,7 @@ def admin_addDB():
     else:
         return redirect(url_for('routes.login'))
 
+
 @routes.route('/admin/Databases/viewDatabases')
 def admin_viewDatabases():
     if check_admin_Login():
@@ -123,3 +124,63 @@ def admin_viewDatabases():
         return render_template('adminFiles/viewDatabases.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/FTPAccounts/addAccounts')
+def admin_addAccounts():
+    if check_admin_Login():
+        msg=''
+        return render_template('adminFiles/addAccounts.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/FTPAccounts/viewAccounts')
+def admin_viewAccounts():
+    if check_admin_Login():
+        msg=''
+        return render_template('adminFiles/viewAccounts.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/FTPAccounts/updateAccounts')
+def admin_updateAccounts():
+    if check_admin_Login():
+        msg = ''
+        return render_template('adminFiles/updateAccounts.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/FTPAccounts/ftpServer')
+def admin_ftpServer():
+    if check_admin_Login():
+        msg = ''
+        return render_template('adminFiles/ftpServer.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/EmailAccounts/addEmail')
+def admin_addEmail():
+    if check_admin_Login():
+        msg = ''
+        return render_template('adminFiles/addEmail.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/EmailAccounts/viewEmail')
+def admin_viewEmail():
+    if check_admin_Login():
+        msg = ''
+        return render_template('adminFiles/viewEmail.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/EmailAccounts/updateEmail')
+def admin_updateEmail():
+    if check_admin_Login():
+        msg = ''
+        return render_template('adminFiles/updateEmail.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
