@@ -17,7 +17,7 @@ def admin_dashboard():
 def admin_viewUser():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/viewUser.html', msg=msg)
+        return render_template('adminFiles/users/viewUser.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -55,12 +55,12 @@ def admin_addUser():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 session["Name"]=Name;
-                return render_template('adminFiles/addUser.html', msg={"error":"success","message":"Name Updated Successfully."})
+                return render_template('adminFiles/users/addUser.html', msg={"error":"success","message":"Name Updated Successfully."})
             else:
-                return render_template('adminFiles/addUser.html', msg={"error":"primary","message":"Name not Updated."})
+                return render_template('adminFiles/users/addUser.html', msg={"error":"primary","message":"Name not Updated."})
 
         else:
-            return render_template('adminFiles/addUser.html')
+            return render_template('adminFiles/users/addUser.html')
     else:
         return redirect(url_for('routes.login'))
 
@@ -69,7 +69,7 @@ def admin_addUser():
 def admin_updateUser():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/updateUser.html', msg=msg)
+        return render_template('adminFiles/users/updateUser.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -77,7 +77,7 @@ def admin_updateUser():
 def admin_addDomain():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/addDomain.html', msg=msg)
+        return render_template('adminFiles/domains/addDomain.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -86,7 +86,7 @@ def admin_addDomain():
 def admin_viewDomains():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/viewDomains.html', msg=msg)
+        return render_template('adminFiles/domains/viewDomains.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -94,7 +94,7 @@ def admin_viewDomains():
 def admin_updateDomains():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/updateDomains.html', msg=msg)
+        return render_template('adminFiles/domains/updateDomains.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -103,7 +103,7 @@ def admin_updateDomains():
 def admin_addDBUser():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/addDBUser.html', msg=msg)
+        return render_template('adminFiles/MysqlDatabase/addDBUser.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -112,16 +112,16 @@ def admin_addDBUser():
 def admin_addDB():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/addDB.html', msg=msg)
+        return render_template('adminFiles/MysqlDatabase/addDB.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
 
-@routes.route('/admin/Databases/viewDatabases')
+@routes.route('/admin/Databases/MysqlDatabase/viewDatabases')
 def admin_viewDatabases():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/viewDatabases.html', msg=msg)
+        return render_template('adminFiles/MysqlDatabase/viewDatabases.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -130,7 +130,7 @@ def admin_viewDatabases():
 def admin_addAccounts():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/addAccounts.html', msg=msg)
+        return render_template('adminFiles/ftpAccounts/addAccounts.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -139,7 +139,7 @@ def admin_addAccounts():
 def admin_viewAccounts():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/viewAccounts.html', msg=msg)
+        return render_template('adminFiles/ftpAccounts/viewAccounts.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -148,7 +148,7 @@ def admin_viewAccounts():
 def admin_updateAccounts():
     if check_admin_Login():
         msg = ''
-        return render_template('adminFiles/updateAccounts.html', msg=msg)
+        return render_template('adminFiles/ftpAccounts/updateAccounts.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -156,7 +156,7 @@ def admin_updateAccounts():
 def admin_ftpServer():
     if check_admin_Login():
         msg = ''
-        return render_template('adminFiles/ftpServer.html', msg=msg)
+        return render_template('adminFiles/ftpAccounts/ftpServer.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -164,7 +164,7 @@ def admin_ftpServer():
 def admin_addEmail():
     if check_admin_Login():
         msg = ''
-        return render_template('adminFiles/addEmail.html', msg=msg)
+        return render_template('adminFiles/Mails/addEmail.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -172,7 +172,7 @@ def admin_addEmail():
 def admin_viewEmail():
     if check_admin_Login():
         msg = ''
-        return render_template('adminFiles/viewEmail.html', msg=msg)
+        return render_template('adminFiles/Mails/viewEmail.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -180,7 +180,22 @@ def admin_viewEmail():
 def admin_updateEmail():
     if check_admin_Login():
         msg = ''
-        return render_template('adminFiles/updateEmail.html', msg=msg)
+        return render_template('adminFiles/Mails/updateEmail.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
+@routes.route('/admin/Logs/error_Logs')
+def admin_error_logs():
+    if check_admin_Login():
+        msg = ''
+        return render_template('adminFiles/Logs/error_logs.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/Logs/access_logs')
+def admin_access_logs():
+    if check_admin_Login():
+        msg = ''
+        return render_template('adminFiles/Logs/access_logs.html', msg=msg)
+    else:
+        return redirect(url_for('routes.login'))

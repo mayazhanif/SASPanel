@@ -8,8 +8,15 @@ def hello_world():  # put application's code here
     return 'Hello World!'
 
 
+@routes.route('/installer')
+def installer():
+    return render_template('installer/installer.html')
+
+
 @routes.route('/')
 def home_route():  # put application's code here
+    if mysqlconnection is None:
+        return redirect(url_for('routes.installer'))
     if 'loggedin' in session:
         print(session['usertype'])
         if session['usertype'] == "Admin":
