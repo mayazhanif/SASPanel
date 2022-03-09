@@ -1,0 +1,15 @@
+.terminal {
+  background: black;
+  color: white;
+  height:500px;
+  width:100%;
+}
+
+pre code {
+  font: 11pt/1.25 Monaco, monospace;
+}
+
+.debug { color: Snow; }
+.info  { color: LawnGreen; }
+.warn  { color: GoldenRod; }
+.error { color: LightCoral; }

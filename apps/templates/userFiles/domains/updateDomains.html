@@ -1,0 +1,70 @@
+{% include "layout/header.html" %}
+{% block body %}
+
+            <div class="content-page">
+                <div class="content">
+                    
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+                        <div class="row page-title">
+                            <div class="col-md-12">
+                                <nav aria-label="breadcrumb" class="float-right mt-1">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_dashboard") }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewDomains") }}">Domains</a></li>
+                                        <li class="breadcrumb-item active">Modify</li>
+                                    </ol>
+                                </nav>
+                                <h4 class="mb-1 mt-0">Update User Details</h4>
+                            </div>
+                        </div>
+
+
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Modify Domain Directory</h4>
+                                        <p class="sub-header">
+                                            Statement
+                                        </p>
+    
+                                        <form role="form" class="parsley-examples">
+                                            <div class="form-group row">
+                                                <label for="Directory" class="col-md-2 col-form-label">Current Directory</label>
+                                                <div class="col-md-7">
+                                                    <span>/home/username/domains</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <label for="Email" class="col-md-2 col-form-label">Update Directory<span class="text-danger">*</span></label>
+                                                <div class="col-md-4">
+                                                    <span>/home/username/domains</span><input type="text" required class="form-control"
+                                                            id="updateDirectory" name="updateDirectory" value="/google.com/tmp/" placeholder="Update Directory">
+                                                </div>
+                                            </div>
+
+
+                                            <div class="form-group row">
+                                                <div class="col-md-8 offset-md-4">
+                                                    <button type="submit" class="btn btn-primary mr-1">
+                                                        Update Domain
+                                                    </button>
+                                                    <button type="reset"
+                                                            class="btn btn-secondary">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div> <!-- end card -->
+
+                            </div> <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+
+
+{% include "layout/footer.html" %}
+{% endblock %}

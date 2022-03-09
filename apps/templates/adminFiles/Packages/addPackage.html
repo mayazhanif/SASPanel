@@ -1,0 +1,91 @@
+{% include "layout/adminheader.html" %}
+{% block body %}
+
+            <div class="content-page">
+                <div class="content">
+                    
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+                        <div class="row page-title">
+                            <div class="col-md-12">
+                                <nav aria-label="breadcrumb" class="float-right mt-1">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_dashboard") }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewUser") }}">FTP Accounts</a></li>
+                                        <li class="breadcrumb-item active">Add new Account</li>
+                                    </ol>
+                                </nav>
+                                <h4 class="mb-1 mt-0">FTP Account</h4>
+                            </div>
+                        </div>
+
+
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Add FTP Account</h4>
+                                        <p class="sub-header">
+                                            Statement
+                                        </p>
+
+                                         <form role="form" class="parsley-examples">
+                                            <div class="form-group row">
+                                                <label for="Name" class="col-md-2 col-form-label">Select User<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                     <select name="usertype" class="custom-select mb-2">
+                                            <option selected="">Select User</option>
+                                            <option value="User">User</option>
+                                            <option value="Admin">Admin</option>
+                                        </select>
+                                                </div>
+                                            </div>
+    
+                                        <form role="form" class="parsley-examples">
+                                            <div class="form-group row">
+                                                <label for="Name" class="col-md-2 col-form-label">User Name<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="Text" required parsley-type="Text" class="form-control"
+                                                            id="Name" name="name"placeholder="User Name">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <label for="Directory" class="col-md-2 col-form-label">Directory<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text" required parsley-type="text" class="form-control"
+                                                            id="Directory" name="Directory" placeholder="Enter Directory">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <label for="Password" class="col-md-2 col-form-label">Password<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input id="Password" name="pass1" type="password" placeholder="Enter Password" required
+                                                            class="form-control">
+                                                </div>
+                                            </div>
+
+
+                                            <div class="form-group row">
+                                                <div class="col-md-8 offset-md-4">
+                                                    <button type="submit" class="btn btn-primary mr-1">
+                                                        Add Account
+                                                    </button>
+                                                    <button type="reset"
+                                                            class="btn btn-secondary">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div> <!-- end card -->
+
+                            </div> <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+
+
+{% include "layout/adminfooter.html" %}
+{% endblock %}

@@ -1,0 +1,78 @@
+{% include "layout/header.html" %}
+{% block body %}
+    <!-- ============================================================== -->
+            <!-- Start Page Content here -->
+            <!-- ============================================================== -->
+
+            <div class="content-page">
+                <div class="content">
+
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+                        <div class="row page-title">
+                            <div class="col-md-12">
+                                <nav aria-label="breadcrumb" class="float-right mt-1">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#">Domains</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Domains List</li>
+                                    </ol>
+                                </nav>
+                                <h4 class="mb-1 mt-0"> Domains List</h4>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Table View</h4>
+                                        <p class="sub-header">
+                                            DataTables has most features enabled by default, so all you need to do to use it with your own tables is to call the construction
+                                            function:
+                                            <code>$().DataTable();</code>.
+                                        </p>
+
+                                        <table id="basic-datatable" class="table nowrap">
+                                            <thead>
+                                                <tr>
+                                                    <th>User's Name</th>
+                                                    <th>User's Email</th>
+                                                    <th>Domain Name</th>
+                                                    <th>Domain Directory</th>
+                                                    <th>Manage</th>
+                                                </tr>
+                                            </thead>
+
+
+                                            <tbody>
+                                                <tr>
+                                                    <td>Tiger Nixon</td>
+                                                    <td>System Architect</td>
+                                                    <td><a href="https://google.com">google.com</a></td>
+                                                    <td>/home/username/domains/google.com/html</td>
+                                                    <td><a href="{{url_for("routes.admin_updateUser")}}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <button type="button" class="btn btn-danger btn-sm">Suspend</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Garrett Winters</td>
+                                                    <td>Accountant</td>
+                                                    <td><a href="https://google.com">google.com</a></td>
+                                                    <td>/home/username/domains/google.com/html</td>
+                                                    <td><button type="button" class="btn btn-info btn-sm">Edit</button> <button type="button" class="btn btn-warning btn-sm">Unsuspend</button></td>
+                                                </tr>
+
+
+                                            </tbody>
+                                        </table>
+
+                                    </div> <!-- end card body-->
+                                </div> <!-- end card -->
+                            </div><!-- end col-->
+                        </div>
+                        <!-- end row-->
+                        <!-- end row-->
+                    </div> <!-- container-fluid -->
+
+                </div> <!-- content -->
+{% include "layout/footer.html" %}
+{% endblock %}

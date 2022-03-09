@@ -14,6 +14,15 @@
         <!-- plugins -->
         <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
 
+        <!-- plugin css -->
+        <link href="/assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/bootstrap-select//bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+        <link href="/assets/libs/terminal/jquery.terminal.min.css" rel="stylesheet" type="text/css" />
+
         <!-- App css -->
         <link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
         <link href="/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
@@ -31,7 +40,7 @@
                     <!-- LOGO -->
                     <a href="index.html" class="navbar-brand mr-0 mr-md-2 logo">
                         <span class="logo-lg">
-                            <img src="/assets/images/logo.png" alt="" height="40" />
+                            <img src="/assets/images/logo.png" alt="" height="50" />
                             <span class="d-inline h1 ml-1 text-logo">SASPANEL</span>
                         </span>
                         <span class="logo-sm">
@@ -151,13 +160,13 @@
                             </div>
                         </li>
 
-                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Profile">
+                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
                             <a href="{{ url_for("routes.user_profile") }}" class="nav-link right-bar-toggle">
                                 <i data-feather="user"></i>
                             </a>
                         </li>
 
-                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Logout">
+                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
                             <a href="{{ url_for("routes.logout") }}" class="nav-link right-bar-toggle">
                                 <i data-feather="log-out"></i>
                             </a>
@@ -167,7 +176,7 @@
                             <a class="nav-link dropdown-toggle nav-user mr-0" data-toggle="dropdown" href="#" role="button"
                                 aria-haspopup="false" aria-expanded="false">
                                 <div class="media user-profile ">
-                                    <img src="/assets/images/users/avatar.jpg" alt="user-image" class="rounded-circle align-self-center" />
+                                    <img src="/assets/images/users/avatar-7.jpg" alt="user-image" class="rounded-circle align-self-center" />
                                     <div class="media-body text-left">
                                         <h6 class="pro-user-name ml-2 my-0">
                                             <span>Shreyu N</span>
@@ -215,7 +224,8 @@
             <!-- ========== Left Sidebar Start ========== -->
             <div class="left-side-menu">
                 <div class="media user-profile mt-2 mb-2">
-                    <img src="/assets/images/users/avatar.jpg" class="avatar-sm rounded-circle mr-2" alt="User" />
+                    <img src="/assets/images/users/avatar-7.jpg" class="avatar-sm rounded-circle mr-2" alt="Shreyu" />
+                    <img src="/assets/images/users/avatar-7.jpg" class="avatar-xs rounded-circle mr-2" alt="Shreyu" />
 
                     <div class="media-body">
                         <h6 class="pro-user-name mt-0 mb-0">{{ session['Name'] }}</h6>
@@ -262,16 +272,13 @@
 
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li>
-                                        <a href="email-inbox.html">Add new Domain</a>
+                                        <a href="{{ url_for("routes.user_addDomain") }}">Add new Domain</a>
+                                    </li>
+                                     <li>
+                                        <a href="{{ url_for("routes.user_viewDomains") }}">View Domains</a>
                                     </li>
                                     <li>
-                                        <a href="email-inbox.html">View Domain</a>
-                                    </li>
-                                    <li>
-                                        <a href="email-read.html">Remove Domain</a>
-                                    </li>
-                                    <li>
-                                        <a href="email-compose.html">Modify</a>
+                                        <a href="{{ url_for("routes.user_updateDomains") }}">Modify</a>
                                     </li>
                                 </ul>
                             </li>
@@ -285,10 +292,14 @@
 
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li>
-                                        <a href="email-inbox.html">Add new Database</a>
+                                        <a href="{{ url_for("routes.user_viewDatabases") }}">Database List</a>
+                                    </li>
+
+                                    <li>
+                                        <a href="{{ url_for("routes.user_addDB") }}">Add new Database</a>
                                     </li>
                                     <li>
-                                        <a href="email-read.html">Add new DBuser</a>
+                                        <a href="{{ url_for("routes.user_addDBUser") }}">Add new DBuser</a>
                                     </li>
                                     <li>
                                         <a href="email-compose.html">Delete DBuser</a>
@@ -311,16 +322,16 @@
 
                                 <ul class="nav-second-level" aria-expanded="false">
                                     <li>
-                                        <a href="email-inbox.html">Add new Account</a>
+                                        <a href="{{ url_for("routes.user_addAccounts") }}">Add new Account</a>
                                     </li>
                                     <li>
-                                        <a href="email-read.html">Remove Account</a>
+                                        <a href="{{ url_for("routes.user_viewAccounts") }}">View Account</a>
                                     </li>
                                     <li>
-                                        <a href="email-compose.html">Modify Account</a>
+                                        <a href="{{ url_for("routes.user_updateAccounts") }}">Modify Account</a>
                                     </li>
                                     <li>
-                                        <a href="email-compose.html">FTP Server</a>
+                                        <a href="{{ url_for("routes.user_ftpServer") }}">FTP Server</a>
                                     </li>
                                 </ul>
                             </li>
@@ -333,14 +344,14 @@
                                 </a>
 
                                 <ul class="nav-second-level" aria-expanded="false">
-                                    <li>
-                                        <a href="email-inbox.html">View</a>
+                                     <li>
+                                        <a href="{{ url_for("routes.user_addEmail") }}">Add</a>
                                     </li>
                                     <li>
-                                        <a href="email-read.html">Delete</a>
+                                        <a href="{{ url_for("routes.user_viewEmail") }}">View</a>
                                     </li>
                                     <li>
-                                        <a href="email-compose.html">Modify</a>
+                                        <a href="{{ url_for("routes.user_updateEmail") }}">Modify</a>
                                     </li>
                                 </ul>
                             </li>
@@ -350,7 +361,7 @@
 
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="">
                                     <i data-feather="database"></i>
 
                                     <span> PhpMyAdmin </span>
@@ -358,7 +369,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="">
                                     <i data-feather="inbox"></i>
 
                                     <span> Roundcube </span>
@@ -366,7 +377,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="">
                                     <i data-feather="server"></i>
 
                                     <span> Web FTP </span>
@@ -377,7 +388,7 @@
 
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.user_error_logs") }}">
                                     <i class="uil-bug"></i>
 
                                     <span> Error Log </span>
@@ -385,7 +396,7 @@
                             </li>
 
                             <li>
-                                <a href="{{ url_for("routes.user_dashboard") }}">
+                                <a href="{{ url_for("routes.user_access_logs") }}">
                                     <i data-feather="list"></i>
 
                                     <span> Access Log  </span>
