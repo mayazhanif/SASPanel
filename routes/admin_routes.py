@@ -73,6 +73,68 @@ def admin_updateUser():
     else:
         return redirect(url_for('routes.login'))
 
+
+
+
+@routes.route('/admin/Packages/addPackage' , methods=['GET', 'POST'])
+def admin_addPackage():
+    if check_admin_Login():
+        if request.method == 'POST' and 'packagename' in request.form and 'domains' in request.form and 'dbs' in request.form and 'subdomains' in request.form and 'ftps' in request.form and 'mails' in request.form and 'storage' in request.form:
+            Package_Name = request.form['packagename']
+            Admin_id = str(session['id'])
+            Limit_Domains = request.form['domains']
+            Limit_DB = request.form['dbs']
+            Limit_FTP = request.form['ftps']
+            Limit_Mails = request.form['mails']
+            Sub_Domains = request.form['subdomains']
+            Storage_Limit = request.form['storage']
+            #CGI_ACCESS = request.form.getlist('cgiAccess')
+            #print(CGI_ACCESS)
+            CGI_ACCESS='0'
+            if request.form.get("cgiAccess"):
+                CGI_ACCESS = '1'
+            #print(CGI_ACCESS)
+            cursor = mysqlconnection.cursor()
+            query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                #session["Name"]=Package_Name;
+                return render_template('adminFiles/Packages/addPackage.html', msg={"error":"success","message":"Package Added."})
+            else:
+                return render_template('adminFiles/Packages/addPackage.html', msg={"error":"primary","message":"Fill all fields Correctly."})
+
+        else:
+            return render_template('adminFiles/Packages/addPackage.html', title='Add package')
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/Packages/viewPackages')
+def admin_viewPackages():
+    if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `packages`')
+        results = cursor.fetchall()
+        #msg=''
+        return render_template('adminFiles/Packages/viewPackages.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/Packages/updatePackage', methods =['GET'])
+def admin_updatePackage():
+    if check_admin_Login():
+        if request.method == 'GET' and request.args.get('packageID'):
+            return render_template('adminFiles/Packages/updatePackage.html', msg='')
+            #return redirect(url_for('routes.login'))
+        else:
+            return redirect(url_for("routes.admin_viewPackages"))
+        #return render_template('adminFiles/Packages/updatePackage.html', msg=msg)
+
+    else:
+        return redirect(url_for('routes.login'))
+
+
 @routes.route('/admin/domains/addDomain')
 def admin_addDomain():
     if check_admin_Login():

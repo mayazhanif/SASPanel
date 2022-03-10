@@ -11,11 +11,11 @@
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
                                         <li class="breadcrumb-item"><a href="{{url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewUser") }}">FTP Accounts</a></li>
-                                        <li class="breadcrumb-item active">Add new Account</li>
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewPackages") }}">Hosting Packages</a></li>
+                                        <li class="breadcrumb-item active">Add Hosting Package</li>
                                     </ol>
                                 </nav>
-                                <h4 class="mb-1 mt-0">FTP Account</h4>
+                                <h4 class="mb-1 mt-0">Hosting Package</h4>
                             </div>
                         </div>
 
@@ -23,53 +23,74 @@
                             <div class="">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h4 class="header-title mt-0 mb-1">Add FTP Account</h4>
+                                        <h4 class="header-title mt-0 mb-1">Add Hosting Package</h4>
                                         <p class="sub-header">
-                                            Statement
+                                            Use this to add new Hosting Packages which you offer to user
                                         </p>
-
-                                         <form role="form" class="parsley-examples">
+                                    {% if msg %}
+                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
+                                        {{ msg.message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                {% endif %}
+                                        <form method="post" role="form" class="parsley-examples">
                                             <div class="form-group row">
-                                                <label for="Name" class="col-md-2 col-form-label">Select User<span class="text-danger">*</span></label>
-                                                <div class="col-md-7">
-                                                     <select name="usertype" class="custom-select mb-2">
-                                            <option selected="">Select User</option>
-                                            <option value="User">User</option>
-                                            <option value="Admin">Admin</option>
-                                        </select>
-                                                </div>
-                                            </div>
-    
-                                        <form role="form" class="parsley-examples">
-                                            <div class="form-group row">
-                                                <label for="Name" class="col-md-2 col-form-label">User Name<span class="text-danger">*</span></label>
+                                                <label for="Name" class="col-md-2 col-form-label">Package Name<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
                                                     <input type="Text" required parsley-type="Text" class="form-control"
-                                                            id="Name" name="name"placeholder="User Name">
+                                                            id="Name" name="packagename" placeholder="Package Name">
                                                 </div>
                                             </div>
-
                                             <div class="form-group row">
-                                                <label for="Directory" class="col-md-2 col-form-label">Directory<span class="text-danger">*</span></label>
+                                                <label for="Domain" class="col-md-2 col-form-label">Domains Limit<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="text" required parsley-type="text" class="form-control"
-                                                            id="Directory" name="Directory" placeholder="Enter Directory">
+                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="domains" id="Domain" placeholder="Domains Limit">
                                                 </div>
                                             </div>
-
                                             <div class="form-group row">
-                                                <label for="Password" class="col-md-2 col-form-label">Password<span class="text-danger">*</span></label>
+                                                <label for="Domain" class="col-md-2 col-form-label">FTP Limit<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input id="Password" name="pass1" type="password" placeholder="Enter Password" required
-                                                            class="form-control">
+                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="ftps" id="FTP" placeholder="FTP Limit">
                                                 </div>
                                             </div>
-
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Mails Limit<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="mails" id="Domain" placeholder="Mails Limit">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Databases Limit<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="dbs" id="Domain" placeholder="Databases Limit">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Subdomains Limits<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="subdomains" id="Domain" placeholder="Subdomains Limit">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Storage (GB/s)<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="storage" id="Domain" placeholder="Storage Limit">
+                                                </div>
+                                            </div>
+                                            <h4 class="header-title mt-0">Additional Options</h4>
+                                            <div class="mt-3">
+                                            <div class="custom-control custom-checkbox mb-2">
+                                                <input type="checkbox" class="custom-control-input" name="cgiAccess" value="1" id="cgiAccess">
+                                                <label class="custom-control-label" for="cgiAccess">CGI ACCESS</label>
+                                            </div>
+                                            </div>
 
                                             <div class="form-group row">
                                                 <div class="col-md-8 offset-md-4">
                                                     <button type="submit" class="btn btn-primary mr-1">
-                                                        Add Account
+                                                        Add Hosting Package
                                                     </button>
                                                     <button type="reset"
                                                             class="btn btn-secondary">
