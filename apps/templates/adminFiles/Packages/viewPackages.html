@@ -14,11 +14,11 @@
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
                                         <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="#">FTP Accounts</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">View Account</li>
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewPackages") }}">Hosting Packages</a></li>
+                                        <li class="breadcrumb-item active">View Hosting Package</li>
                                     </ol>
                                 </nav>
-                                <h4 class="mb-1 mt-0">Account List</h4>
+                                <h4 class="mb-1 mt-0">Hosting Package</h4>
                             </div>
                         </div>
 
@@ -26,7 +26,7 @@
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h4 class="header-title mt-0 mb-1">Table View</h4>
+                                        <h4 class="header-title mt-0 mb-1">Hosting packages</h4>
                                         <p class="sub-header">
                                             You can view, Modify and Delete Existing Hosting Packages from here.
 

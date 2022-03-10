@@ -1,4 +1,4 @@
-from flask import render_template, request,redirect, url_for
+from flask import render_template, request,redirect, url_for, flash
 from Database.DbConfig import mysqlconnection
 
 from . import routes
@@ -121,14 +121,49 @@ def admin_viewPackages():
         return redirect(url_for('routes.login'))
 
 
-@routes.route('/admin/Packages/updatePackage', methods =['GET'])
+@routes.route('/admin/Packages/updatePackage', methods =['GET', 'POST'])
 def admin_updatePackage():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('packageID'):
-            return render_template('adminFiles/Packages/updatePackage.html', msg='')
+            packageID=request.args.get('packageID')
+            cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT * FROM `packages` where Package_Id='+packageID)
+            package = cursor.fetchone()
+            if cursor.rowcount>0:
+                return render_template('adminFiles/Packages/updatePackage.html', package=package)
+            else:
+                return redirect(url_for("routes.admin_viewPackages"))
             #return redirect(url_for('routes.login'))
+        elif request.method == 'POST' and 'packageID' in request.form and 'packagename' in request.form and 'domains' in request.form and 'dbs' in request.form and 'subdomains' in request.form and 'ftps' in request.form and 'mails' in request.form and 'storage' in request.form:
+            packageID = request.form['packageID']
+            Package_Name = request.form['packagename']
+            Admin_id = str(session['id'])
+            Limit_Domains = request.form['domains']
+            Limit_DB = request.form['dbs']
+            Limit_FTP = request.form['ftps']
+            Limit_Mails = request.form['mails']
+            Sub_Domains = request.form['subdomains']
+            Storage_Limit = request.form['storage']
+            #CGI_ACCESS = request.form.getlist('cgiAccess')
+            #print(CGI_ACCESS)
+            CGI_ACCESS='0'
+            if request.form.get("cgiAccess"):
+                CGI_ACCESS = '1'
+            #print(CGI_ACCESS)
+            cursor = mysqlconnection.cursor()
+            #query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
+            query = "UPDATE `packages` SET  `Package_Name` = '"+Package_Name+"', `Limit_FTP` = '"+Limit_FTP+"', `Limit_Mails` = '"+Limit_Mails+"', `Limit_Domains` = '"+Limit_Domains+"', `CGI_ACCESS` = '"+CGI_ACCESS+"', `Limit_DB` = '"+Limit_DB+"', `Sub_Domains` = '"+Sub_Domains+"', `Storage_Limit` = '"+Storage_Limit+"' WHERE `packages`.`Package_Id` = "+packageID+""
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                #session["Name"]=Package_Name;
+                #flash('Package Updated.')
+                return redirect(request.referrer)
+                #return render_template('adminFiles/Packages/updatePackage.html', msg={"error":"success","message":"Package Updated."})
+            else:
+                return redirect(request.referrer)
         else:
-            return redirect(url_for("routes.admin_viewPackages"))
+            return redirect(request.referrer)
         #return render_template('adminFiles/Packages/updatePackage.html', msg=msg)
 
     else:

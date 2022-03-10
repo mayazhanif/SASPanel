@@ -27,56 +27,49 @@
                                         <p class="sub-header">
                                             You can change Hosting Package Details from here.
                                         </p>
-                                    {% if msg %}
-                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
-                                        {{ msg.message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                                {% endif %}
                                         <form method="post" role="form" class="parsley-examples">
+                                            <input type="hidden" id="Name" name="packageID" value="{{ package[0] }}">
                                             <div class="form-group row">
                                                 <label for="Name" class="col-md-2 col-form-label">Package Name<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
                                                     <input type="Text" required parsley-type="Text" class="form-control"
-                                                            id="Name" name="packagename" placeholder="Package Name">
+                                                            id="Name" name="packagename" value="{{ package[1] }}" placeholder="Package Name">
                                                 </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">Domains Limit<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="domains" id="Domain" placeholder="Domains Limit">
+                                                    <input type="number" required="" parsley-type="number" value="{{ package[5] }}" class="form-control" name="domains" id="Domain" placeholder="Domains Limit">
                                                 </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">FTP Limit<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="ftps" id="FTP" placeholder="FTP Limit">
+                                                    <input type="number" required="" parsley-type="number" value="{{ package[3] }}" class="form-control" name="ftps" id="FTP" placeholder="FTP Limit">
                                                 </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">Mails Limit<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="mails" id="Domain" placeholder="Mails Limit">
+                                                    <input type="number" required="" parsley-type="number" value="{{ package[4] }}" class="form-control" name="mails" id="Domain" placeholder="Mails Limit">
                                                 </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">Databases Limit<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="dbs" id="Domain" placeholder="Databases Limit">
+                                                    <input type="number" required="" parsley-type="number" value="{{ package[7] }}" class="form-control" name="dbs" id="Domain" placeholder="Databases Limit">
                                                 </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">Subdomains Limits<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="subdomains" id="Domain" placeholder="Subdomains Limit">
+                                                    <input type="number" required="" parsley-type="number" value="{{ package[8] }}" class="form-control" name="subdomains" id="Domain" placeholder="Subdomains Limit">
                                                 </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">Storage (GB/s)<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="number" required="" parsley-type="number" value="5" class="form-control" name="storage" id="Domain" placeholder="Storage Limit">
+                                                    <input type="number" required="" parsley-type="number" value="{{ package[9] }}" class="form-control" name="storage" id="Domain" placeholder="Storage Limit">
                                                 </div>
                                             </div>
                                             <h4 class="header-title mt-0">Additional Options</h4>
@@ -90,7 +83,7 @@
                                             <div class="form-group row">
                                                 <div class="col-md-8 offset-md-4">
                                                     <button type="submit" class="btn btn-primary mr-1">
-                                                        Add Hosting Package
+                                                        Update Hosting Package
                                                     </button>
                                                     <button type="reset"
                                                             class="btn btn-secondary">
