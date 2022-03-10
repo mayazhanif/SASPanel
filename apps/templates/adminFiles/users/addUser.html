@@ -33,7 +33,7 @@
                                                 <label for="Name" class="col-md-2 col-form-label">Name<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
                                                     <input type="Text" required parsley-type="Text" class="form-control"
-                                                            id="Name" name="name"placeholder="User Name">
+                                                            id="Name" name="name" placeholder="User Name">
                                                 </div>
                                             </div>
 
@@ -63,10 +63,13 @@
                                                 <label for="confirmPassword" class="col-md-2 col-form-label">Select Package
                                                     <span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                  <select name="packageid" class="custom-select mb-2">
+                                                  <select name="packageID" class="custom-select mb-2">
                                                      <option selected="">Select Package</option>
-                                                     <option value="1">Default</option>
-                                                     <option value="2">Demo</option>
+                                                  {% if results %}
+                                                  {% for record in results %}
+                                                     <option value="{{ record[0] }}">{{ record[1] }}</option>
+                                                    {% endfor %}
+                                                    {% endif %}
                                                   </select>
                                                 </div>
                                             </div>

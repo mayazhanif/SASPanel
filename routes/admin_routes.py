@@ -1,5 +1,6 @@
 from flask import render_template, request,redirect, url_for, flash
 from Database.DbConfig import mysqlconnection
+import hashlib
 
 from . import routes
 from functions import *
@@ -46,21 +47,31 @@ def admin_profile():
 @routes.route('/admin/users/adduser', methods=['GET', 'POST'])
 def admin_addUser():
     if check_admin_Login():
-        if request.method == 'POST' and 'Name' in request.form:
-            Name = request.form['Name']
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
+        results = cursor.fetchall()
+        if request.method == 'POST' and 'Name' in request.form and 'Email' in request.form and 'pass1' in request.form and 'pass2' in request.form and 'packageID' in request.form:
+            User_Name = request.form['Name']
+            Admin_id = str(session['id'])
+            User_email = request.form['Email']
+            User_Password = request.form['pass1']
+            Confirm_Password = request.form['pass2']
+            #md5Password = User_Password
+            md5Password = hashlib.md5(User_Password.encode()).hexdigest()
+            packageID = request.form['packageID']
             cursor = mysqlconnection.cursor()
-            #cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
-            #print("UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id'])")
-            cursor.execute('UPDATE `administrator` SET `Admin_Name` = %s WHERE Admin_id = %s;', (Name,session['id']))
+            #query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
+            query = "INSERT INTO `users` (`User_id`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '"+User_email+"', '"+md5Password+"', '"+User_Name+"', '', CURRENT_TIMESTAMP, '"+Admin_id+"', '"+packageID+"', '0', CURRENT_TIMESTAMP);"
+            cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                session["Name"]=Name;
-                return render_template('adminFiles/users/addUser.html', msg={"error":"success","message":"Name Updated Successfully."})
+                #session["Name"]=Package_Name;
+                return render_template('adminFiles/users/addUser.html', msg={"error":"success","message":"Package Added."})
             else:
-                return render_template('adminFiles/users/addUser.html', msg={"error":"primary","message":"Name not Updated."})
+                return render_template('adminFiles/users/addUser.html', msg={"error":"primary","message":"Fill all fields Correctly."})
 
         else:
-            return render_template('adminFiles/users/addUser.html')
+            return render_template('adminFiles/users/addUser.html', results=results)
     else:
         return redirect(url_for('routes.login'))
 
@@ -113,7 +124,7 @@ def admin_addPackage():
 def admin_viewPackages():
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `packages`')
+        cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
         results = cursor.fetchall()
         #msg=''
         return render_template('adminFiles/Packages/viewPackages.html', results=results)
@@ -144,32 +155,41 @@ def admin_updatePackage():
             Limit_Mails = request.form['mails']
             Sub_Domains = request.form['subdomains']
             Storage_Limit = request.form['storage']
-            #CGI_ACCESS = request.form.getlist('cgiAccess')
-            #print(CGI_ACCESS)
             CGI_ACCESS='0'
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
-            #print(CGI_ACCESS)
             cursor = mysqlconnection.cursor()
-            #query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
             query = "UPDATE `packages` SET  `Package_Name` = '"+Package_Name+"', `Limit_FTP` = '"+Limit_FTP+"', `Limit_Mails` = '"+Limit_Mails+"', `Limit_Domains` = '"+Limit_Domains+"', `CGI_ACCESS` = '"+CGI_ACCESS+"', `Limit_DB` = '"+Limit_DB+"', `Sub_Domains` = '"+Sub_Domains+"', `Storage_Limit` = '"+Storage_Limit+"' WHERE `packages`.`Package_Id` = "+packageID+""
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                #session["Name"]=Package_Name;
-                #flash('Package Updated.')
                 return redirect(request.referrer)
-                #return render_template('adminFiles/Packages/updatePackage.html', msg={"error":"success","message":"Package Updated."})
             else:
                 return redirect(request.referrer)
         else:
             return redirect(request.referrer)
-        #return render_template('adminFiles/Packages/updatePackage.html', msg=msg)
 
     else:
         return redirect(url_for('routes.login'))
 
+@routes.route('/admin/Packages/deletePackage', methods =['GET', 'POST'])
+def admin_deletePackage():
+    if check_admin_Login():
+        if request.method == 'GET' and request.args.get('packageID'):
+            packageID=request.args.get('packageID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` ="+packageID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.admin_viewPackages"))
+            else:
+                return redirect(url_for("routes.admin_viewPackages"))
 
+        else:
+            return redirect(url_for("routes.admin_viewPackages"))
+    else:
+        return redirect(url_for('routes.login'))
 @routes.route('/admin/domains/addDomain')
 def admin_addDomain():
     if check_admin_Login():
