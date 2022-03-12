@@ -47,22 +47,25 @@
 
 
                                             <tbody>
-                                                <tr>
-                                                    <td>Tiger Nixon</td>
-                                                    <td>System Architect</td>
-                                                    <td>Edinburgh</td>
-                                                    <td>Edinburgh</td>
-                                                    <td>Edinburgh</td>
-                                                    <td><a href="{{url_for("routes.admin_updateUser")}}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <button type="button" class="btn btn-danger btn-sm">Delete</button></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Garrett Winters</td>
-                                                    <td>Accountant</td>
-                                                    <td>Tokyo</td>
-                                                    <td>Edinburgh</td>
-                                                    <td>Edinburgh</td>
-                                                    <td><button type="button" class="btn btn-info btn-sm">Edit</button> <button type="button" class="btn btn-danger btn-sm">Delete</button></td>
-                                                </tr>
+                                            {% if results %}
+                                                  {% for record in results %}
+                                                      {% if record[6]==1 %}
+                                                          {% set msg = "Yes" %}
+                                                          {% set badge = "success" %}
+                                                      {% else %}
+                                                          {% set msg = "No" %}
+                                                          {% set badge = "danger" %}
+                                                      {% endif %}
+                                                    <tr>
+                                                        <td>{{record[3]}}</td>
+                                                        <td>{{record[1]}}</td>
+                                                        <td>{{record[11]}}</td>
+                                                        <td>{{record[19]}}</td>
+                                                        <td>{{record[17]}}</td>
+                                                        <td><a href="{{ url_for('routes.admin_updateUser', userID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <a href="{{ url_for('routes.admin_deleteUser', userID=record[0]) }}"><button type="button" class="btn btn-danger btn-sm">Delete</button></a></td>
+                                                    </tr>
+                                                  {% endfor %}
+                                            {% endif %}
 
 
                                             </tbody>

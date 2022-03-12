@@ -17,8 +17,31 @@ def admin_dashboard():
 @routes.route('/admin/users/viewUser')
 def admin_viewUser():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/users/viewUser.html', msg=msg)
+        cursor = mysqlconnection.cursor()
+        #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')
+        results = cursor.fetchall()
+        return render_template('adminFiles/users/viewUser.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/Packages/deleteUser', methods =['GET', 'POST'])
+def admin_deleteUser():
+    if check_admin_Login():
+        if request.method == 'GET' and request.args.get('userID'):
+            userID=request.args.get('userID')
+            cursor = mysqlconnection.cursor()
+            #query="UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` ="+userID
+            query="UPDATE `users` SET `Is_Deleted` = '1' WHERE `users`.`User_id` ="+userID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.admin_viewUser"))
+            else:
+                return redirect(url_for("routes.admin_viewUser"))
+
+        else:
+            return redirect(url_for("routes.admin_viewUser"))
     else:
         return redirect(url_for('routes.login'))
 
@@ -56,35 +79,71 @@ def admin_addUser():
             User_email = request.form['Email']
             User_Password = request.form['pass1']
             Confirm_Password = request.form['pass2']
-            #md5Password = User_Password
-            md5Password = hashlib.md5(User_Password.encode()).hexdigest()
-            packageID = request.form['packageID']
-            cursor = mysqlconnection.cursor()
-            #query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
-            query = "INSERT INTO `users` (`User_id`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '"+User_email+"', '"+md5Password+"', '"+User_Name+"', '', CURRENT_TIMESTAMP, '"+Admin_id+"', '"+packageID+"', '0', CURRENT_TIMESTAMP);"
-            cursor.execute(query)
-            mysqlconnection.commit()
-            if cursor.rowcount>0:
-                #session["Name"]=Package_Name;
-                return render_template('adminFiles/users/addUser.html', msg={"error":"success","message":"Package Added."})
+            if User_Password== Confirm_Password:
+                md5Password = hashlib.md5(User_Password.encode()).hexdigest()
+                packageID = request.form['packageID']
+                cursor = mysqlconnection.cursor()
+                # query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
+                query = "INSERT INTO `users` (`User_id`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '" + User_email + "', '" + md5Password + "', '" + User_Name + "', '', CURRENT_TIMESTAMP, '" + Admin_id + "', '" + packageID + "', '0', CURRENT_TIMESTAMP);"
+                cursor.execute(query)
+                mysqlconnection.commit()
+                if cursor.rowcount > 0:
+                    # session["Name"]=Package_Name;
+                    return render_template('adminFiles/users/addUser.html',
+                                           msg={"error": "success", "message": "User Added Successfully."})
+                else:
+                    return render_template('adminFiles/users/addUser.html',
+                                           msg={"error": "primary", "message": "Fill all fields Correctly."})
             else:
-                return render_template('adminFiles/users/addUser.html', msg={"error":"primary","message":"Fill all fields Correctly."})
-
+                return render_template('adminFiles/users/addUser.html',
+                                       msg={"error": "primary", "message": "Password and Confirm Password does not Match."})
         else:
             return render_template('adminFiles/users/addUser.html', results=results)
     else:
         return redirect(url_for('routes.login'))
 
 
-@routes.route('/admin/users/updateUser')
+@routes.route('/admin/users/updateUser', methods =['GET', 'POST'])
 def admin_updateUser():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/users/updateUser.html', msg=msg)
+        if request.method == 'GET' and request.args.get('userID'):
+            userID=request.args.get('userID')
+            cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
+            results = cursor.fetchall()
+            query="SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
+            cursor.execute(query)
+            user = cursor.fetchone()
+            if cursor.rowcount>0:
+                return render_template('adminFiles/users/updateUser.html', user=user, results=results)
+            else:
+                return redirect(url_for("routes.admin_viewUser"))
+            #return redirect(url_for('routes.login'))
+        elif request.method == 'POST' and 'userID' in request.form and 'Name' in request.form and 'Email' in request.form and 'password' in request.form  and 'packageID' in request.form:
+            print("TEST")
+            packageID = request.form['packageID']
+            userID = request.form['userID']
+            Name = request.form['Name']
+            Email = request.form['Email']
+            password = request.form['password']
+            md5Password = hashlib.md5(password.encode()).hexdigest()
+
+            #Package_Name = request.form['packagename']
+            cursor = mysqlconnection.cursor()
+            query = "UPDATE `users` SET `Package_Id` = '"+packageID+"', `User_email` = '"+Email+"',`User_Password` = '"+md5Password+"', `User_Name` = '"+Name+"' WHERE `users`.`User_id` = "+userID+""
+            print(query)
+            #query = "UPDATE `packages` SET  `Name` = '"+Package_Name+"', `Limit_FTP` = '"+Limit_FTP+"', `Limit_Mails` = '"+Limit_Mails+"', `Limit_Domains` = '"+Limit_Domains+"', `CGI_ACCESS` = '"+CGI_ACCESS+"', `Limit_DB` = '"+Limit_DB+"', `Sub_Domains` = '"+Sub_Domains+"', `Storage_Limit` = '"+Storage_Limit+"' WHERE `packages`.`Package_Id` = "+packageID+""
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(request.referrer)
+            else:
+                return redirect(request.referrer)
+        else:
+            return redirect(request.referrer)
+
     else:
         return redirect(url_for('routes.login'))
-
-
 
 
 @routes.route('/admin/Packages/addPackage' , methods=['GET', 'POST'])
