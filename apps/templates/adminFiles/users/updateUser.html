@@ -18,7 +18,9 @@
                                 <h4 class="mb-1 mt-0">Update User Details</h4>
                             </div>
                         </div>
-
+{% for message in get_flashed_messages() %}
+<h2>{{ message }}</h2>
+{% endfor %}
 
                             <div class="">
                                 <div class="card">
@@ -34,7 +36,7 @@
                                                 <label for="Name" class="col-md-2 col-form-label">Update Name<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
                                                     <input type="Text" required parsley-type="Text" class="form-control"
-                                                            id="Name" name="Name" value="{{ user[3] }}" placeholder="User Name">
+                                                            id="Name" name="Name" value="{{ user[4] }}" placeholder="User Name">
                                                 </div>
                                             </div>
 
@@ -42,7 +44,7 @@
                                                 <label for="Email" class="col-md-2 col-form-label">Update Email<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
                                                     <input type="email" required parsley-type="email" class="form-control"
-                                                            id="Email" name="Email" value="{{ user[1] }}" placeholder="Enter Email">
+                                                            id="Email" name="Email" value="{{ user[2] }}" placeholder="Enter Email">
                                                 </div>
                                             </div>
                                             <div class="form-group row">

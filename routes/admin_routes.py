@@ -82,12 +82,19 @@ def admin_addUser():
             if User_Password== Confirm_Password:
                 md5Password = hashlib.md5(User_Password.encode()).hexdigest()
                 packageID = request.form['packageID']
+                servUser = generateservUser(User_Name,User_email)
                 cursor = mysqlconnection.cursor()
                 # query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
-                query = "INSERT INTO `users` (`User_id`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '" + User_email + "', '" + md5Password + "', '" + User_Name + "', '', CURRENT_TIMESTAMP, '" + Admin_id + "', '" + packageID + "', '0', CURRENT_TIMESTAMP);"
+                query = "INSERT INTO `users` (`User_id`, `servUser`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '"+servUser+"', '" + User_email + "', '" + md5Password + "', '" + User_Name + "', '', CURRENT_TIMESTAMP, '" + Admin_id + "', '" + packageID + "', '0', CURRENT_TIMESTAMP);"
                 cursor.execute(query)
+                userID = str(cursor.lastrowid)
                 mysqlconnection.commit()
                 if cursor.rowcount > 0:
+                    dbUser = generateservUser(User_Name, User_email)
+                    dbPassword = generatePassword()
+                    query = "INSERT INTO `mysqldbusers` (`DbUser_ID`, `DbUsername`, `DbPassword`, `User_id`, `Is_Active`) VALUES (NULL, '"+dbUser+"', '"+dbPassword+"', '"+userID+"', '1')"
+                    cursor.execute(query)
+                    mysqlconnection.commit()
                     # session["Name"]=Package_Name;
                     return render_template('adminFiles/users/addUser.html',
                                            msg={"error": "success", "message": "User Added Successfully."})
@@ -136,6 +143,7 @@ def admin_updateUser():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                flash('Please choose a different Shortcode, that one is already in use')
                 return redirect(request.referrer)
             else:
                 return redirect(request.referrer)
@@ -249,11 +257,31 @@ def admin_deletePackage():
             return redirect(url_for("routes.admin_viewPackages"))
     else:
         return redirect(url_for('routes.login'))
-@routes.route('/admin/domains/addDomain')
+@routes.route('/admin/domains/addDomain', methods = ['GET', 'POST'])
 def admin_addDomain():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/domains/addDomain.html', msg=msg)
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        users = cursor.fetchall()
+        if request.method == 'POST' and 'userID' in request.form and 'DomainName' in request.form:
+            userID = request.form['userID']
+            DomainName = request.form['DomainName']
+            query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '1', '0', '0');"
+            try:
+                cursor.execute(query)
+                mysqlconnection.commit()
+            except:
+                msg={"error":"danger","message":"Domain Already Added."}
+                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+            if cursor.rowcount>0:
+                msg={"error":"success","message":"Domain Added."}
+                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "Domain Not Added."}
+                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+        else:
+            msg=''
+            return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -261,8 +289,11 @@ def admin_addDomain():
 @routes.route('/admin/domains/viewDomains')
 def admin_viewDomains():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/domains/viewDomains.html', msg=msg)
+        cursor = mysqlconnection.cursor()
+        #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `domains` INNER JOIN users ON domains.User_id = users.User_id where domains.Is_Deleted=0;')
+        results = cursor.fetchall()
+        return render_template('adminFiles/domains/viewDomains.html', results=results)
     else:
         return redirect(url_for('routes.login'))
 
@@ -270,25 +301,77 @@ def admin_viewDomains():
 def admin_updateDomains():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/domains/updateDomains.html', msg=msg)
+        if request.method == 'GET' and request.args.get('domainID'):
+            domainID=request.args.get('domainID')
+            cursor = mysqlconnection.cursor()
+            query="select * from domains WHERE `domains`.`Domain_Id` ="+domainID
+            cursor.execute(query)
+            domain = cursor.fetchone()
+            if cursor.rowcount>0:
+                if domain[3]==0:
+                    query = "UPDATE `domains` SET `Domain_Suspended` = '1' WHERE `domains`.`Domain_Id` =" + domainID
+                    cursor.execute(query)
+                    mysqlconnection.commit()
+                    return redirect(url_for("routes.admin_viewDomains"))
+                else:
+                    query = "UPDATE `domains` SET `Domain_Suspended` = '0' WHERE `domains`.`Domain_Id` =" + domainID
+                    cursor.execute(query)
+                    mysqlconnection.commit()
+                    return redirect(url_for("routes.admin_viewDomains"))
+            else:
+                return redirect(url_for("routes.admin_viewDomains"))
+        return redirect(url_for("routes.admin_viewDomains"))
     else:
         return redirect(url_for('routes.login'))
 
-
-@routes.route('/admin/Databases/addDBUser')
-def admin_addDBUser():
+@routes.route('/admin/Packages/deleteDomain', methods =['GET', 'POST'])
+def admin_deleteDomain():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/MysqlDatabase/addDBUser.html', msg=msg)
+        if request.method == 'GET' and request.args.get('domainID'):
+            domainID=request.args.get('domainID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.admin_viewDomains"))
+            else:
+                return redirect(url_for("routes.admin_viewDomains"))
+
+        else:
+            return redirect(url_for("routes.admin_viewDomains"))
     else:
         return redirect(url_for('routes.login'))
 
-
-@routes.route('/admin/Databases/addDB')
+@routes.route('/admin/Databases/addDB', methods = ['GET','POST'])
 def admin_addDB():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/MysqlDatabase/addDB.html', msg=msg)
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        users = cursor.fetchall()
+        if request.method == 'POST' and 'userID' in request.form and 'databaseName' in request.form:
+            userID = request.form['userID']
+            cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id='+userID+';')
+            DBUserbyID = cursor.fetchone()
+            print(DBUserbyID)
+            databaseName = request.form['databaseName']
+            query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '"+databaseName+"', '"+userID+"', '1', '1');"
+            #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '1', '0', '0');"
+            try:
+                cursor.execute(query)
+                mysqlconnection.commit()
+            except:
+                msg={"error":"danger","message":"Database name already in use."}
+                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+            if cursor.rowcount>0:
+                msg={"error":"success","message":"Database Added.."}
+                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "Database Adding not Successfull."}
+                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+        else:
+            msg=''
+            return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
     else:
         return redirect(url_for('routes.login'))
 

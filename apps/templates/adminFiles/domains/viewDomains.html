@@ -46,20 +46,25 @@
 
 
                                             <tbody>
-                                                <tr>
-                                                    <td>Tiger Nixon</td>
-                                                    <td>System Architect</td>
-                                                    <td><a href="https://google.com">google.com</a></td>
-                                                    <td>/home/username/domains/google.com/html</td>
-                                                    <td><a href="{{url_for("routes.admin_updateUser")}}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <button type="button" class="btn btn-danger btn-sm">Suspend</button></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Garrett Winters</td>
-                                                    <td>Accountant</td>
-                                                    <td><a href="https://google.com">google.com</a></td>
-                                                    <td>/home/username/domains/google.com/html</td>
-                                                    <td><button type="button" class="btn btn-info btn-sm">Edit</button> <button type="button" class="btn btn-warning btn-sm">Unsuspend</button></td>
-                                                </tr>
+                                            {% if results %}
+                                                  {% for record in results %}
+                                                      {% if record[3]==1 %}
+                                                          {% set msg = "Unsuspend" %}
+                                                          {% set badge = "success" %}
+                                                      {% else %}
+                                                          {% set msg = "Suspend" %}
+                                                          {% set badge = "danger" %}
+                                                      {% endif %}
+                                                    <tr>
+                                                        <td>{{record[9]}}</td>
+                                                        <td>{{record[7]}}</td>
+                                                        <td><a href="https://google.com">{{record[1]}}</a></td>
+                                                        <td>/home/{{record[6]}}/domains/{{record[1]}}/html</td>
+                                                        <td><a href="{{ url_for('routes.admin_deleteDomain', domainID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a> <a href="{{ url_for('routes.admin_updateDomains', domainID=record[0]) }}"><button type="button" class="btn btn-{{ badge }} btn-sm">
+                                                            {{ msg }}</button></a></td>
+                                                    </tr>
+                                                  {% endfor %}
+                                            {% endif %}
 
 
                                             </tbody>

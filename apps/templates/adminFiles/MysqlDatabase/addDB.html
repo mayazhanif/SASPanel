@@ -28,22 +28,26 @@
                                             Statement
                                         </p>
 
-                                        <form role="form" class="parsley-examples">
+                                        <form method="POST" role="form" class="parsley-examples">
                                             <div class="form-group row">
-                                                <label for="Name" class="col-md-2 col-form-label">Database User<span class="text-danger">*</span></label>
+                                                <label for="Name" class="col-md-2 col-form-label">User<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                              <select name="dbUserType" class="custom-select md-2">
-                                            <option selected="">Select DB user</option>
-                                            <option value="User">User</option>
-                                            <option value="Admin">Admin</option>
-                                        </select>
+                                                     <select name="userID" id="userID" class="custom-select mb-2">
+                                                     <option selected="">Select User</option>
+                                                  {% if users %}
+                                                  {% for user in users %}
+                                                     <option value="{{ user[0] }}">{{ user[2] }}</option>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </select>
+
                                                 </div>
                                             </div>
                                             <div class="form-group row">
-                                                <label for="Name" class="col-md-2 col-form-label">Database Name<span class="text-danger">*</span></label>
-                                                <div class="col-md-7">
-                                                    <input type="Text" required parsley-type="Text" class="form-control"
-                                                            id="Name" name="name"placeholder="Database Name">
+                                                <label for="Email" class="col-md-2 col-form-label">Database Name<span class="text-danger">*</span></label>
+                                                <div class="col-md-6" style="display: inline-flex;">
+                                                    <span class="align-self-center"><input type="text" required class="form-control"
+                                                            id="databaseName" name="databaseName" value="" placeholder="Database Name"></span>
                                                 </div>
                                             </div>
 
@@ -51,7 +55,7 @@
                                             <div class="form-group row">
                                                 <div class="col-md-8 offset-md-4">
                                                     <button type="submit" class="btn btn-primary mr-1">
-                                                        Add User
+                                                        Add Database
                                                     </button>
                                                     <button type="reset"
                                                             class="btn btn-secondary">
