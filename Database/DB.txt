@@ -1,5 +1,5 @@
 [config]
-host = localhost
+host = 34.201.147.152
 user = root
-password =
-database = saspanel
+password = Master@786
+database = SASPanel
