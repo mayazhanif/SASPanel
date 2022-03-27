@@ -13,8 +13,8 @@
                             <div class="col-md-12">
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="#">MySQL Databases</a></li>
+                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.user_dashboard") }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.user_viewDatabases") }}">MYSQL Databases</a></li>
                                         <li class="breadcrumb-item active" aria-current="page">Database List</li>
                                     </ol>
                                 </nav>
@@ -47,23 +47,18 @@
 
 
                                             <tbody>
+                                            {% if results %}
+                                                {% for record in results %}
                                                 <tr>
-                                                    <td>Tiger Nixon</td>
-                                                    <td>test@test.com</td>
-                                                    <td>Tiger Nixon</td>
-                                                    <td>Database</td>
+                                                    <td>{{ record[14] }}</td>
+                                                    <td>{{ record[12] }}</td>
+                                                    <td>{{ record[1] }}</td>
+                                                    <td>{{ record[6] }}</td>
                                                     <td><button type="button" class="btn btn-primary btn-sm">Login</button></td>
-                                                    <td><a href="{{url_for("routes.admin_updateUser")}}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <button type="button" class="btn btn-danger btn-sm">Suspend</button></td>
+                                                    <td><a href="{{ url_for('routes.user_updateDBPass', DbID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Change Password</button></a> <a href="{{ url_for('routes.user_deleteDatabase', DbID=record[0]) }}"><button type="button" class="btn btn-warning btn-sm">Delete</button></a></td>
                                                 </tr>
-                                                <tr>
-                                                    <td>ABC</td>
-                                                    <td>test@test.com</td>
-                                                    <td>ABC</td>
-                                                    <td>Database1</td>
-                                                    <td><button type="button" class="btn btn-primary btn-sm">Login</button></td>
-                                                    <td><button type="button" class="btn btn-info btn-sm">Edit</button> <button type="button" class="btn btn-warning btn-sm">Unsuspend</button></td>
-                                                </tr>
-
+                                                {% endfor %}
+                                            {% endif %}
 
                                             </tbody>
                                         </table>

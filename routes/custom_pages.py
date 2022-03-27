@@ -1,6 +1,7 @@
 from flask import render_template
 from . import routes
 from app import *
+from Database.DbConfig import mysqlconnection
 
 
 @routes.route('/test/')

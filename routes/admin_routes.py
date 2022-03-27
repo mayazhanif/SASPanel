@@ -1,3 +1,5 @@
+import base64
+
 from flask import render_template, request,redirect, url_for, flash
 from Database.DbConfig import mysqlconnection
 import hashlib
@@ -49,21 +51,48 @@ def admin_deleteUser():
 @routes.route('/admin/profile', methods=['GET', 'POST'])
 def admin_profile():
     if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('select * from users where Is_Deleted=0 and Admin_id='+str(session["id"]))
+        cursor.fetchall()
+        totalUsers=str(cursor.rowcount)
+        cursor.execute('select Reg_Date from administrator where Admin_id='+str(session["id"]))
+        details=cursor.fetchone()
+        regDate=str(details[0])
+        cursor.execute('SELECT * FROM `packages` where Is_Active=1 and Admin_id='+str(session["id"]))
+        cursor.fetchall()
+        totalPackages=str(cursor.rowcount)
+
         if request.method == 'POST' and 'Name' in request.form:
             Name = request.form['Name']
-            cursor = mysqlconnection.cursor()
             #cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
             #print("UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id'])")
             cursor.execute('UPDATE `administrator` SET `Admin_Name` = %s WHERE Admin_id = %s;', (Name,session['id']))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 session["Name"]=Name;
-                return render_template('adminFiles/profile.html', msg={"error":"success","message":"Name Updated Successfully."})
+                return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, msg={"error":"success","message":"Name Updated Successfully."})
             else:
-                return render_template('adminFiles/profile.html', msg={"error":"primary","message":"Name not Updated."})
-
+                return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, msg={"error":"primary","message":"Name not Updated."})
+        elif request.method == 'POST' and 'pass1' in request.form and 'pass2' in request.form:
+            pass1 = request.form['pass1']
+            pass2 = request.form['pass2']
+            if pass1==pass2:
+                cursor = mysqlconnection.cursor()
+                md5Password = md5encode(pass1)
+                #query = 'UPDATE `users` SET `User_Password` = %s WHERE User_id = %s;', (Name,session['id'])
+                #cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
+                #print("UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id'])")
+                cursor.execute('UPDATE `administrator` SET `Admin_Password` = %s WHERE Admin_id = %s;', (md5Password,session['id']))
+                mysqlconnection.commit()
+                if cursor.rowcount>0:
+                    return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, passmsg={"error":"success","message":"Password Updated Successfully."})
+                else:
+                    return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, passmsg={"error":"primary","message":"Password not Updated."})
+            else:
+                return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages,
+                                       passmsg={"error": "danger", "message": "Password and Confirm Password Mismatch."})
         else:
-            return render_template('adminFiles/profile.html')
+            return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages)
     else:
         return redirect(url_for('routes.login'))
 
@@ -92,7 +121,8 @@ def admin_addUser():
                 if cursor.rowcount > 0:
                     dbUser = generateservUser(User_Name, User_email)
                     dbPassword = generatePassword()
-                    query = "INSERT INTO `mysqldbusers` (`DbUser_ID`, `DbUsername`, `DbPassword`, `User_id`, `Is_Active`) VALUES (NULL, '"+dbUser+"', '"+dbPassword+"', '"+userID+"', '1')"
+                    base64dbPassword = Base64Encode(dbPassword)
+                    query = "INSERT INTO `mysqldbusers` (`DbUser_ID`, `DbUsername`, `DbPassword`, `User_id`, `Is_Active`) VALUES (NULL, '"+dbUser+"', '"+base64dbPassword+"', '"+userID+"', '1')"
                     cursor.execute(query)
                     mysqlconnection.commit()
                     # session["Name"]=Package_Name;
@@ -353,9 +383,10 @@ def admin_addDB():
             userID = request.form['userID']
             cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id='+userID+';')
             DBUserbyID = cursor.fetchone()
-            print(DBUserbyID)
+
+            #print(DBUserbyID[0])
             databaseName = request.form['databaseName']
-            query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '"+databaseName+"', '"+userID+"', '1', '1');"
+            query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '"+databaseName+"', '"+userID+"', '"+str(DBUserbyID[0])+"', '1');"
             #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '1', '0', '0');"
             try:
                 cursor.execute(query)
@@ -379,17 +410,103 @@ def admin_addDB():
 @routes.route('/admin/Databases/MysqlDatabase/viewDatabases')
 def admin_viewDatabases():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/MysqlDatabase/viewDatabases.html', msg=msg)
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM mysqldbusers LEFT JOIN msqldatabases ON msqldatabases.DbUser_ID = mysqldbusers.DbUser_ID LEFT JOIN users ON users.User_id = mysqldbusers.User_id WHERE msqldatabases.Is_Active = 1')
+        results = cursor.fetchall()
+        msg = ''
+        return render_template('adminFiles/MysqlDatabase/viewDatabases.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/Databases/deleteDatabase', methods =['GET', 'POST'])
+def admin_deleteDatabase():
+    if check_admin_Login():
+        if request.method == 'GET' and request.args.get('DbID'):
+            DbID=request.args.get('DbID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.admin_viewDatabases"))
+            else:
+                return redirect(url_for("routes.admin_viewDatabases"))
+
+        else:
+            return redirect(url_for("routes.admin_viewDatabases"))
     else:
         return redirect(url_for('routes.login'))
 
 
-@routes.route('/admin/FTPAccounts/addAccounts')
-def admin_addAccounts():
+
+@routes.route('/admin/Databases/updateDBPass', methods=['GET', 'POST'])
+def admin_updateDBPass():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/ftpAccounts/addAccounts.html', msg=msg)
+        if request.method == 'GET' and request.args.get('DbID'):
+            DbUser_ID=request.args.get('DbID')
+            cursor = mysqlconnection.cursor()
+            query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
+            cursor.execute(query)
+            database = cursor.fetchone()
+            if cursor.rowcount>0:
+                return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=database[0])
+            else:
+                return redirect(url_for("routes.admin_viewDatabases"))
+        elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
+            DbUser_ID = request.form['DbID']
+            pass1 = request.form['pass1']
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                EncodedPassword = Base64Encode(pass1)
+                cursor = mysqlconnection.cursor()
+                query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+""
+                cursor.execute(query)
+                mysqlconnection.commit()
+                if cursor.rowcount>0:
+                    msg = {"error": "success", "message": "Database Password Updated."}
+                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+                else:
+                    msg = {"error": "danger", "message": "Password not Updated"}
+                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "Password and confirm password does not match."}
+                return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+        else:
+            return redirect(url_for("routes.admin_viewDatabases"))
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/FTPAccounts/addAccounts', methods=['GET', 'POST'])
+def admin_addAccounts():
+    if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        users = cursor.fetchall()
+        if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form :
+            userID = request.form['userID']
+            ftpUsername = request.form['ftpUsername']
+            ftpPassword = request.form['ftpPassword']
+            encodedPass = Base64Encode(ftpPassword)
+            #ftpPassword = request.form['ftpPassword']
+            Directory = "/home/username/public_html"
+            query = "INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, '"+userID+"', '"+Directory+"', '"+ftpUsername+"', '"+encodedPass+"', '1');"
+            try:
+                cursor.execute(query)
+                mysqlconnection.commit()
+            except:
+                msg={"error":"danger","message":"FTP Username Already in Use."}
+                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+            if cursor.rowcount>0:
+                msg={"error":"success","message":"FTP Account Added."}
+                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "FTP account not added."}
+                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+        else:
+            msg=''
+            return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
@@ -397,19 +514,73 @@ def admin_addAccounts():
 @routes.route('/admin/FTPAccounts/viewAccounts')
 def admin_viewAccounts():
     if check_admin_Login():
-        msg=''
-        return render_template('adminFiles/ftpAccounts/viewAccounts.html', msg=msg)
-    else:
-        return redirect(url_for('routes.login'))
-
-
-@routes.route('/admin/FTPAccounts/updateAccounts')
-def admin_updateAccounts():
-    if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id where ftp_accounts.Is_Active=1;')
+        results = cursor.fetchall()
         msg = ''
-        return render_template('adminFiles/ftpAccounts/updateAccounts.html', msg=msg)
+        return render_template('adminFiles/ftpAccounts/viewAccounts.html', results=results)
     else:
         return redirect(url_for('routes.login'))
+
+@routes.route('/admin/FTPAccounts/updateAccountPass', methods=['GET', 'POST'])
+def admin_updateAccountPass():
+    if check_admin_Login():
+        msg=''
+        if request.method == 'GET' and request.args.get('AccID'):
+            AccID=request.args.get('AccID')
+            cursor = mysqlconnection.cursor()
+            query="SELECT * FROM `ftp_accounts` where Account_Id="+AccID
+            cursor.execute(query)
+            account = cursor.fetchone()
+            if cursor.rowcount>0:
+                return render_template('adminFiles/ftpAccounts/updateAccountPass.html', account=account[0])
+            else:
+                return redirect(url_for("routes.admin_viewAccounts"))
+        elif request.method == 'POST' and 'AccID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
+            AccID = request.form['AccID']
+            pass1 = request.form['pass1']
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                EncodedPassword = Base64Encode(pass1)
+                cursor = mysqlconnection.cursor()
+                query = "UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` = "+AccID+""
+                cursor.execute(query)
+                mysqlconnection.commit()
+                if cursor.rowcount>0:
+                    msg = {"error": "success", "message": "FTP Account Password Updated."}
+                    return render_template('adminFiles/ftpAccounts/updateAccountPass.html', account=AccID, msg=msg)
+                else:
+                    msg = {"error": "danger", "message": "Password not Updated"}
+                    return render_template('adminFiles/ftpAccounts/updateAccountPass.html', account=AccID, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "Password and confirm password does not match."}
+                return render_template('adminFiles/ftpAccounts/updateAccountPass.html', database=AccID, msg=msg)
+        else:
+            return redirect(url_for("routes.admin_viewDatabases"))
+    else:
+        return redirect(url_for('routes.login'))
+
+
+
+@routes.route('/admin/FTPAccounts/deleteAccount', methods =['GET', 'POST'])
+def admin_deleteAccount():
+    if check_admin_Login():
+        if request.method == 'GET' and request.args.get('AccID'):
+            AccID=request.args.get('AccID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.admin_viewAccounts"))
+            else:
+                return redirect(url_for("routes.admin_viewAccounts"))
+
+        else:
+            return redirect(url_for("routes.admin_viewAccounts"))
+    else:
+        return redirect(url_for('routes.login'))
+
 
 @routes.route('/admin/FTPAccounts/ftpServer')
 def admin_ftpServer():
@@ -419,27 +590,107 @@ def admin_ftpServer():
     else:
         return redirect(url_for('routes.login'))
 
-@routes.route('/admin/EmailAccounts/addEmail')
+@routes.route('/admin/EmailAccounts/addEmail', methods=['GET','POST'])
 def admin_addEmail():
     if check_admin_Login():
-        msg = ''
-        return render_template('adminFiles/Mails/addEmail.html', msg=msg)
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0;')
+        domains = cursor.fetchall()
+        if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form :
+            domainID = request.form['domainID']
+            suffix = request.form['suffix']
+            Password = request.form['Password']
+            encodedPass = Base64Encode(Password)
+            query= "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id="+domainID+""
+            cursor.execute(query)
+            rDomain = cursor.fetchone()
+            mail_adress= suffix+"@"+rDomain[1]
+            userID= str(rDomain[2])
+            query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+mail_adress+"', '"+encodedPass+"', '1')"
+            try:
+                cursor.execute(query)
+                mysqlconnection.commit()
+            except:
+                msg={"error":"danger","message":"Mail Account Already Exists."}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+            if cursor.rowcount>0:
+                msg={"error":"success","message":"Mail Account Added."}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "Mail Account not added."}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+        else:
+            msg=''
+            return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
 @routes.route('/admin/EmailAccounts/viewEmail')
 def admin_viewEmail():
     if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1')
+        results = cursor.fetchall()
         msg = ''
-        return render_template('adminFiles/Mails/viewEmail.html', msg=msg)
+        return render_template('adminFiles/Mails/viewEmail.html', results=results)
     else:
         return redirect(url_for('routes.login'))
 
-@routes.route('/admin/EmailAccounts/updateEmail')
+@routes.route('/admin/EmailAccounts/deleteEmail', methods =['GET', 'POST'])
+def admin_deleteEmail():
+    if check_admin_Login():
+        if request.method == 'GET' and request.args.get('mailID'):
+            mailID=request.args.get('mailID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `mail_accounts` SET `Is_Active` = '0' WHERE `mail_accounts`.`Mail_Id` = "+mailID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.admin_viewEmail"))
+            else:
+                return redirect(url_for("routes.admin_viewEmail"))
+
+        else:
+            return redirect(url_for("routes.admin_viewEmail"))
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/admin/EmailAccounts/updateEmail', methods=['GET', 'POST'])
 def admin_updateEmail():
     if check_admin_Login():
-        msg = ''
-        return render_template('adminFiles/Mails/updateEmail.html', msg=msg)
+        msg=''
+        if request.method == 'GET' and request.args.get('mailID'):
+            mailID=request.args.get('mailID')
+            cursor = mysqlconnection.cursor()
+            query="SELECT * FROM `mail_accounts` where Mail_Id="+mailID
+            cursor.execute(query)
+            mail = cursor.fetchone()
+            if cursor.rowcount>0:
+                return render_template('adminFiles/Mails/updateEmail.html', mail=mail[0])
+            else:
+                return redirect(url_for("routes.admin_viewEmail"))
+        elif request.method == 'POST' and 'mailID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
+            mailID = request.form['mailID']
+            pass1 = request.form['pass1']
+            pass2 = request.form['pass2']
+            if pass1 == pass2:
+                EncodedPassword = Base64Encode(pass1)
+                cursor = mysqlconnection.cursor()
+                query = "UPDATE `mail_accounts` SET `Mail_Pass` = '"+EncodedPassword+"' WHERE `mail_accounts`.`Mail_Id` = "+mailID+""
+                cursor.execute(query)
+                mysqlconnection.commit()
+                if cursor.rowcount>0:
+                    msg = {"error": "success", "message": "Mail Account Password Updated."}
+                    return render_template('adminFiles/Mails/updateEmail.html', mail=mailID, msg=msg)
+                else:
+                    msg = {"error": "danger", "message": "Password not Updated"}
+                    return render_template('adminFiles/Mails/updateEmail.html', mail=mailID, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "Password and confirm password does not match."}
+                return render_template('adminFiles/Mails/updateEmail.html', mail=mailID, msg=msg)
+        else:
+            return redirect(url_for("routes.admin_viewEmail"))
     else:
         return redirect(url_for('routes.login'))
 

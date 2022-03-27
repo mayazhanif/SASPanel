@@ -26,9 +26,6 @@
                                         <img src="assets/images/users/avatar-7.jpg" alt=""
                                             class="avatar-lg rounded-circle" />
                                         <h5 class="mt-2 mb-0">{{ session["Name"] }}</h5>
-                                        <h6 class="text-muted font-weight-normal mt-2 mb-0">User Experience Specialist
-                                        </h6>
-                                        <h6 class="text-muted font-weight-normal mt-1 mb-4">San Francisco, CA</h6>
 
 
                                     </div>
@@ -41,11 +38,11 @@
                                                 <tbody>
                                                     <tr>
                                                         <th scope="row">Email</th>
-                                                        <td>xyz123@gmail.com</td>
+                                                        <td>{{ session["Email"]}}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">Registration Date</th>
-                                                        <td>2022-01-17 19:28:59</td>
+                                                        <td>{{ regDate }}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -58,15 +55,11 @@
                                                 <tbody>
                                                     <tr>
                                                         <th scope="row">Number of Users</th>
-                                                        <td class="text-primary">0</td>
+                                                        <td class="text-primary">{{ users }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">Number of Packages Accounts</th>
-                                                        <td class="text-primary">4/5</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Mail Accounts</th>
-                                                        <td class="text-primary">5/5</td>
+                                                        <td class="text-primary">{{ totalPackages }}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -116,19 +109,27 @@
                             <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title mb-0 header-title">Change Password</h5>
+                                {% if passmsg %}
+                                    <div class="alert alert-{{ passmsg.error }} alert-dismissible fade show" role="alert">
+                                        {{ passmsg.message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                {% endif %}
                                 <div class="mt-3">
-                                    <form role="form" class="parsley-examples" novalidate="">
+                                    <form method="POST" role="form" class="parsley-examples" novalidate="">
                                             <div class="form-group row">
                                                 <label for="hori-pass1" class="col-md-2 col-form-label">Password<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input id="hori-pass1" type="password" placeholder="Password" required="" class="form-control">
+                                                    <input id="hori-pass1" name="pass1" type="password" placeholder="Password" required="" class="form-control">
                                                 </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="hori-pass2" class="col-md-2 col-form-label">Confirm Password
                                                     <span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input data-parsley-equalto="#hori-pass1" type="password" required="" placeholder="Password" class="form-control" id="hori-pass2">
+                                                    <input data-parsley-equalto="#hori-pass1" name="pass2" type="password" required="" placeholder="Password" class="form-control" id="hori-pass2">
                                                 </div>
                                             </div>
                                             <div class="col-md-8 offset-md-4">

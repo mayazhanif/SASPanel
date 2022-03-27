@@ -5,6 +5,8 @@ from app import *
 from functions import *
 import hashlib
 
+from routes import routes
+
 
 @routes.route('/login/', methods=['GET', 'POST'])
 def login(msg=""):
@@ -44,7 +46,7 @@ def login(msg=""):
                 session['loggedin'] = True
                 session['id'] = result[0]
                 session['Email'] = result[1]
-                session['Name'] = result[3]
+                session['Name'] = result[4]
 
                 return redirect(url_for('routes.user_dashboard'))
         else:

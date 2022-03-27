@@ -13,8 +13,8 @@
                             <div class="col-md-12">
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="#">Domains</a></li>
+                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.user_dashboard") }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.user_viewDomains") }}">Domains</a></li>
                                         <li class="breadcrumb-item active" aria-current="page">Domains List</li>
                                     </ol>
                                 </nav>
@@ -36,8 +36,6 @@
                                         <table id="basic-datatable" class="table nowrap">
                                             <thead>
                                                 <tr>
-                                                    <th>User's Name</th>
-                                                    <th>User's Email</th>
                                                     <th>Domain Name</th>
                                                     <th>Domain Directory</th>
                                                     <th>Manage</th>
@@ -46,20 +44,15 @@
 
 
                                             <tbody>
-                                                <tr>
-                                                    <td>Tiger Nixon</td>
-                                                    <td>System Architect</td>
-                                                    <td><a href="https://google.com">google.com</a></td>
-                                                    <td>/home/username/domains/google.com/html</td>
-                                                    <td><a href="{{url_for("routes.admin_updateUser")}}"><button type="button" class="btn btn-info btn-sm">Edit</button></a> <button type="button" class="btn btn-danger btn-sm">Suspend</button></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Garrett Winters</td>
-                                                    <td>Accountant</td>
-                                                    <td><a href="https://google.com">google.com</a></td>
-                                                    <td>/home/username/domains/google.com/html</td>
-                                                    <td><button type="button" class="btn btn-info btn-sm">Edit</button> <button type="button" class="btn btn-warning btn-sm">Unsuspend</button></td>
-                                                </tr>
+                                            {% if results %}
+                                                  {% for record in results %}
+                                                    <tr>
+                                                        <td><a href="https://{{record[1]}}">{{record[1]}}</a></td>
+                                                        <td>/home/{{record[6]}}/domains/{{record[1]}}/html</td>
+                                                        <td><a href="{{ url_for('routes.user_deleteDomain', domainID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a></td>
+                                                    </tr>
+                                                  {% endfor %}
+                                            {% endif %}
 
 
                                             </tbody>
