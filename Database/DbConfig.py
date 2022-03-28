@@ -8,7 +8,7 @@ initfile = os.path.join(currentDirectory, 'DB.txt')
 
 config = configparser.RawConfigParser()
 config.read(initfile)
-DatabaseDetails = dict(config.items('config'))
+DatabaseDetails = dict(config.items('configlocal'))
 mysqlconnection = None
 try:
   #print(DatabaseDetails['password'])

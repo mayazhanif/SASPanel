@@ -45,7 +45,7 @@ def login(msg=""):
                 session['usertype'] = "User"
                 session['loggedin'] = True
                 session['id'] = result[0]
-                session['Email'] = result[1]
+                session['Email'] = result[2]
                 session['Name'] = result[4]
 
                 return redirect(url_for('routes.user_dashboard'))

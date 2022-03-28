@@ -1,3 +1,5 @@
+import json
+
 from flask import render_template, session, request, redirect, url_for
 from . import routes
 from app import *
@@ -17,6 +19,28 @@ def user_dashboard():
 def user_profile():
     if check_user_Login():
         cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT packages.*, users.User_Reg_Date FROM packages INNER JOIN users ON packages.Package_Id = users.Package_id WHERE users.Is_Deleted=0 and users.User_id='+str(session["id"]))
+        getPackage=cursor.fetchone()
+        cgiAccess="Disabled"
+        if getPackage[6]==1:
+            cgiAccess="Enabled"
+        cursor.execute('SELECT * FROM domains where  Is_Deleted=0 and User_id='+str(session["id"]))
+        cursor.fetchall()
+        countDomains = str(cursor.rowcount)
+        cursor.execute('SELECT * FROM ftp_accounts where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.fetchall()
+        countFTP = str(cursor.rowcount)
+        cursor.execute('SELECT * FROM mail_accounts where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.fetchall()
+        countMails = str(cursor.rowcount)
+        cursor.execute('SELECT * FROM msqldatabases where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.fetchall()
+        countDB = str(cursor.rowcount)
+        cursor.execute('SELECT * FROM msqldatabases where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.fetchall()
+        countSubDomain = str(cursor.rowcount)
+        profileData = '{"RegDate" : "'+str(getPackage[11])+'", "PackageName" : "'+str(getPackage[1])+'", "FTP" : "'+countFTP+'/'+str(getPackage[3])+'", "Mails" : "'+countMails+'/'+str(getPackage[4])+'", "Domains" : "'+countDomains+'/'+str(getPackage[5])+'", "CGI" : "'+cgiAccess+'", "Mysql" : "'+countDB+'/'+str(getPackage[7])+'", "SubDomains" : "'+countSubDomain+'/'+str(getPackage[8])+'", "Storage" : "'+str(getPackage[9])+'"}'
+        profileData = json.loads(profileData)
 
         if request.method == 'POST' and 'Name' in request.form:
             Name = request.form['Name']
@@ -26,9 +50,9 @@ def user_profile():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 session["Name"]=Name;
-                return render_template('userFiles/profile.html', msg={"error":"success","message":"Name Updated Successfully."})
+                return render_template('userFiles/profile.html', profileData=profileData, msg={"error":"success","message":"Name Updated Successfully."})
             else:
-                return render_template('userFiles/profile.html', msg={"error":"primary","message":"Name not Updated."})
+                return render_template('userFiles/profile.html', profileData=profileData, msg={"error":"primary","message":"Name not Updated."})
         elif request.method == 'POST' and 'pass1' in request.form and 'pass2' in request.form:
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
@@ -41,14 +65,14 @@ def user_profile():
                 cursor.execute('UPDATE `users` SET `User_Password` = %s WHERE User_id = %s;', (md5Password,session['id']))
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
-                    return render_template('userFiles/profile.html', passmsg={"error":"success","message":"Password Updated Successfully."})
+                    return render_template('userFiles/profile.html', profileData=profileData, passmsg={"error":"success","message":"Password Updated Successfully."})
                 else:
-                    return render_template('userFiles/profile.html', passmsg={"error":"primary","message":"Password not Updated."})
+                    return render_template('userFiles/profile.html', profileData=profileData, passmsg={"error":"primary","message":"Password not Updated."})
             else:
-                return render_template('userFiles/profile.html',
+                return render_template('userFiles/profile.html', profileData=profileData,
                                        passmsg={"error": "danger", "message": "Password and Confirm Password Mismatch."})
         else:
-            return render_template('userFiles/profile.html') 
+            return render_template('userFiles/profile.html', profileData=profileData)
     else:
         return redirect(url_for('routes.login'))
 

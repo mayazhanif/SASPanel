@@ -42,7 +42,7 @@
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">Registration Date</th>
-                                                        <td>2022-01-17 19:28:59</td>
+                                                        <td>{{ profileData.RegDate }}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -55,35 +55,35 @@
                                                 <tbody>
                                                     <tr>
                                                         <th scope="row">Package Name</th>
-                                                        <td class="text-primary">Default</td>
+                                                        <td class="text-primary">{{ profileData.PackageName }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">FTP Accounts</th>
-                                                        <td class="text-primary">4/5</td>
+                                                        <td class="text-primary">{{ profileData.FTP }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">Mail Accounts</th>
-                                                        <td class="text-primary">5/5</td>
+                                                        <td class="text-primary">{{ profileData.Mails }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">Domains</th>
-                                                        <td class="text-primary">1/10</td>
+                                                        <td class="text-primary">{{ profileData.Domains }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">CGI ACCESS</th>
-                                                        <td class="text-primary">Disabled</td>
+                                                        <td class="text-primary">{{ profileData.CGI }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">MySQL Databases</th>
-                                                        <td class="text-primary">5/10</td>
+                                                        <td class="text-primary">{{ profileData.Mysql }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">Subdomains</th>
-                                                        <td class="text-primary">5/25</td>
+                                                        <td class="text-primary">{{ profileData.SubDomains }}</td>
                                                     </tr>
                                                     <tr>
                                                         <th scope="row">Storage Limit</th>
-                                                        <td class="text-primary">5GB/25GB</td>
+                                                        <td class="text-primary">{{ profileData.Storage }}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>

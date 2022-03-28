@@ -3,3 +3,9 @@ host = 34.201.147.152
 user = root
 password = Master@786
 database = SASPanel
+
+[configlocal]
+host = localhost
+user = root
+password =
+database = saspanel
