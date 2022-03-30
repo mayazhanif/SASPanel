@@ -22,10 +22,5 @@ try:
     password=DatabaseDetails['password'],
     database=DatabaseDetails['database']
   )
-  #print(mysqlconnection)
-  #host = "localhost",
-  #user = "root",
-  #password = "",
-  #database = "saspanel"
 except:
   mysqlconnection = None
