@@ -132,4 +132,4 @@ def install():
 
 def install_packages():
     os.system("/bin/bash installer.sh")
-    os.system("/bin/bash nginx_config.sh")
+    #os.system("/bin/bash nginx_config.sh")
