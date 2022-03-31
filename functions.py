@@ -2,6 +2,7 @@ import base64
 import hashlib
 import re
 import os
+from this import d
 
 from flask import session, render_template
 import random
@@ -88,7 +89,7 @@ def add_usr(name, password):
     os.system("chown " + name + ":" + name + " /home/" + name + "")
     os.system("chmod 755 /home/" + name + "")
     os.system("setfacl -m user:" + name + ":rx /home/" + name + "")
-    print("Done.")
+    print("User Added.")
 
 
 #add_usr("testuser3", "testuser3")
@@ -115,50 +116,20 @@ def WriteFile(filename, s_body, mode='w+'):
             return True
         except:
             return False
+def install():
+    install_packages()
+    print("Hello")
 
+def add_vhost(username, domain):
+    os.system("/bin/bash add_vhost.sh " + username+" "+domain)
 
+    
 def set_mysql_root(password):
-    # import db,os
-    # sql = db.Sql()
-
-    root_mysql = '''#!/bin/bash
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
-export PATH
-pwd=$1
-/etc/init.d/mysqld stop
-mysqld_safe --skip-grant-tables&
-echo 'Changing password...';
-sleep 6
-m_version=$(cat /www/server/mysql/version.pl|grep -E "(5.1.|5.5.|5.6.|10.0|10.1)")
-m2_version=$(cat /www/server/mysql/version.pl|grep -E "(10.5.|10.4.)")
-if [ "$m_version" != "" ];then
-    mysql -uroot -e "UPDATE mysql.user SET password=PASSWORD('${pwd}') WHERE user='root'";
-elif [ "$m2_version" != "" ];then
-    mysql -uroot -e "FLUSH PRIVILEGES;alter user 'root'@'localhost' identified by '${pwd}';alter user 'root'@'127.0.0.1' identified by '${pwd}';FLUSH PRIVILEGES;";
-else
-    m_version=$(cat /www/server/mysql/version.pl|grep -E "(5.7.|8.0.)")
-    if [ "$m_version" != "" ];then
-        mysql -uroot -e "FLUSH PRIVILEGES;update mysql.user set authentication_string='' where user='root' and (host='127.0.0.1' or host='localhost');alter user 'root'@'localhost' identified by '${pwd}';alter user 'root'@'127.0.0.1' identified by '${pwd}';FLUSH PRIVILEGES;";
-    else
-        mysql -uroot -e "update mysql.user set authentication_string=password('${pwd}') where user='root';"
-    fi
-fi
-mysql -uroot -e "FLUSH PRIVILEGES";
-pkill -9 mysqld_safe
-pkill -9 mysqld
-pkill -9 mysql
-sleep 2
-/etc/init.d/mysqld start
-
-echo '==========================================='
-echo "The root password set ${pwd}  successuful"''';
-
-    WriteFile('mysql_root.sh', root_mysql)
     os.system("/bin/bash mysql_root.sh " + password)
-    # os.system("rm -f mysql_root.sh")
+def install():
+    install_packages()
+    print("Hello")
 
-    # result = sql.table('config').where('id=?',(1,)).setField('mysql_root',password)
-    #print("Hello")
-
-
-#set_mysql_root("Master@786")
+def install_packages():
+    os.system("/bin/bash installer.sh")
+    os.system("/bin/bash nginx_config.sh")
