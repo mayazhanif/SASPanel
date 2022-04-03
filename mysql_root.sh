@@ -2,20 +2,21 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 pwd=$1
-#sudo service mysql stop
-sudo mkdir /var/run/mysqld
-sudo chown mysql: /var/run/mysqld
-mysqld_safe --skip-grant-tables&
-echo 'Changing password...';
-sleep 6
-#mysql -uroot -e "FLUSH PRIVILEGES;'ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY ''${pwd}'';FLUSH PRIVILEGES;";
-mysql -uroot -e "FLUSH PRIVILEGES;alter user 'root'@'localhost' identified by '${pwd}';FLUSH PRIVILEGES;";
-mysql -uroot -e "FLUSH PRIVILEGES";
+#sed -i 's/^#skip-grant-tables.*/skip-grant-tables/g' /etc/mysql/mysql.conf.d/mysqld.cnf
+echo "Adding skip-grant-tables"
+echo "skip-grant-tables" >> /etc/mysql/mysql.conf.d/mysqld.cnf
 pkill -9 mysqld_safe
 pkill -9 mysqld
 pkill -9 mysql
-sleep 2
-sudo service mysql start
-
-echo '==========================================='
+#sed -i '$ a skip-grant-tables' /etc/mysql/mysql.conf.d/mysqld.cnf
+echo "Stopping MYSQL"
+service mysql stop
+echo "Starting MYSQL"
+service mysql start
+echo "Changing Password"
+mysql -e "FLUSH PRIVILEGES;alter user 'root'@'localhost' identified by '${pwd}';FLUSH PRIVILEGES;";
+echo "Removing skip-grant-tables"
+sed -i '/skip-grant-tables/d' /etc/mysql/mysql.conf.d/mysqld.cnf
+echo "Restarting MYSQL"
+service mysql restart
 echo "The root password set ${pwd}  successuful"
