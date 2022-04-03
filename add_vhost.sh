@@ -10,8 +10,9 @@ die() { echo -e '\e[1;31m'$domain'\e[m'; exit 1; }
 
 
 # Variables
-#NGINX_AVAILABLE_VHOSTS='/etc/nginx/sites-available'
-NGINX_ENABLED_VHOSTS='/etc/nginx/conf.d'
+NGINX_AVAILABLE_VHOSTS='/etc/nginx/sites-available'
+NGINX_ENABLED_VHOSTS='/etc/nginx/sites-enabled'
+#NGINX_ENABLED_VHOSTS='/etc/nginx/conf.d'
 WEB_DIR='/home'
 WEB_USER=$username
 
@@ -23,7 +24,7 @@ mkdir -p $WEB_DIR/$WEB_USER/domains/$domain/public_html
 #[ $# != "1" ] && die "Usage: $(basename $0) domainName"
 
 # Create nginx config file
-cat > $NGINX_ENABLED_VHOSTS/$domain-vhost.conf <<EOF
+cat > $NGINX_AVAILABLE_VHOSTS/$domain-vhost.conf <<EOF
 ### www to non-www
 #server {
 #    listen	 80;
@@ -77,6 +78,9 @@ EOF
 
 # Changing permissions
 chown -R $WEB_USER:$WEB_USER $WEB_DIR/$username
+#ln -s /etc/sites-available/$domain /etc/sites-enabled/sub.test.com
+ln -s $NGINX_AVAILABLE_VHOSTS/$domain $NGINX_ENABLED_VHOSTS/$domain
+
 service nginx restart
 ok "Site Created for $domain"
 

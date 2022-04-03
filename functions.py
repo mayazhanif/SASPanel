@@ -172,3 +172,7 @@ def install_packages():
     #os.system("sudo apt-get -y install pure-ftpd")
     os.system("/bin/bash installer.sh")
     #os.system("/bin/bash nginx_config.sh")
+
+def install_phpadmin():
+    os.system("sudo apt-get -y install phpmyadmin zip php-mbstring php-zip php-gd")
+    os.system("/bin/bash phpmyadmin_installer.sh")
