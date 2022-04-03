@@ -22,7 +22,6 @@ pkill -9 mysqld_safe
 pkill -9 mysqld
 sleep 2
 service mysqld start
-
 echo '==========================================='
 echo "root密码成功修改为: ${pwd}"
 echo "The root password set ${pwd}  successuful"
