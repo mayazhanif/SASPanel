@@ -13,7 +13,7 @@ def hello_world():  # put application's code here
 def installer():
     #install()
     #add_vhost("mayazhanif","google1.com")
-    #set_mysql_root("Master@786")
+    set_mysql_root("Master_DeVIL")
     return render_template('installer/installer.html')
 
 
