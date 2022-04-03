@@ -2,9 +2,9 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 pwd=$1
-#sudo service mysql stop
-sudo mkdir /var/run/mysqld
-sudo chown mysql: /var/run/mysqld
+sudo service mysql stop
+#sudo mkdir /var/run/mysqld
+#sudo chown mysql: /var/run/mysqld
 mysqld_safe --skip-grant-tables&
 echo 'Changing password...';
 sleep 6
