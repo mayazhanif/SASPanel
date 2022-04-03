@@ -113,6 +113,7 @@ def createUser(cursor, userName, password):
     try:
         sqlCreateUser = "CREATE USER '%s'@'localhost' IDENTIFIED BY '%s';"%(userName, password)
         cursor.execute(sqlCreateUser)
+        print("User Created.")
     except Exception as Ex:
         print("Error creating MySQL User: %s"%(Ex))
 
@@ -120,8 +121,11 @@ def create_database(cursor, DatabaseName,Username):
     try:
         sqlCreateDatabase = "CREATE DATABASE %s;"%(DatabaseName)
         cursor.execute(sqlCreateDatabase)
+        print("Database Created.")
         grantPermissions = "GRANT ALL PRIVILEGES ON "+DatabaseName+".* TO '"+Username+"'@'localhost' WITH GRANT OPTION;"
         cursor.execute(grantPermissions)
+        print("Permissions Granted on Database.")
+
     except Exception as Ex:
         print("Error creating MySQL Database: %s"%(Ex))
 
@@ -140,7 +144,7 @@ def WriteFile(filename, s_body, mode='w+'):
         except:
             return False
 def install():
-    set_mysql_root("DeViL_Master")
+    #set_mysql_root("DeViL_Master")
     install_packages()
     print("Hello")
 
@@ -155,7 +159,7 @@ def add_ftp(username, password):
     os.system("chmod 0777 /home/"+username+"")
     #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
 
-    
+
 def set_mysql_root(password):
     os.system("/bin/bash mysql_root.sh " + password)
 
