@@ -140,6 +140,7 @@ def WriteFile(filename, s_body, mode='w+'):
         except:
             return False
 def install():
+    set_mysql_root("DeViL_Master")
     install_packages()
     print("Hello")
 
