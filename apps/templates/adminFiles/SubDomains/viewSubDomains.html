@@ -14,11 +14,11 @@
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
                                         <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewEmail") }}">Mail Accounts</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Email Accounts</li>
+                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewSubDomains") }}">SubDomains</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">View SubDomains</li>
                                     </ol>
                                 </nav>
-                                <h4 class="mb-1 mt-0"> Email Accounts</h4>
+                                <h4 class="mb-1 mt-0"> View SubDomains</h4>
                             </div>
                         </div>
 
@@ -26,7 +26,7 @@
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h4 class="header-title mt-0 mb-1">Email Accounts</h4>
+                                        <h4 class="header-title mt-0 mb-1">View SubDomains</h4>
                                         <p class="sub-header">
                                             DataTables has most features enabled by default, so all you need to do to use it with your own tables is to call the construction
                                             function:
@@ -38,7 +38,7 @@
                                                 <tr>
                                                     <th>User Email</th>
                                                     <th>Domain Name</th>
-                                                    <th>Mail Account</th>
+                                                    <th>Sub Domain</th>
                                                     <th>Manage</th>
                                                 </tr>
                                             </thead>
@@ -48,10 +48,10 @@
                                             {% if results %}
                                                   {% for record in results %}
                                                     <tr>
-                                                        <td>{{record[8]}}</td>
-                                                        <td>{{record[18]}}</td>
+                                                        <td>{{record[7]}}</td>
+                                                        <td>{{record[17]}}</td>
                                                         <td><a href="">{{record[3]}}</a></td>
-                                                        <td><a href="{{ url_for('routes.admin_deleteEmail', mailID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a> <a href="{{ url_for('routes.admin_updateEmail', mailID=record[0]) }}"><button type="button" class="btn btn-warning btn-sm">Change Password</button></a></td>
+                                                        <td><a href="{{ url_for('routes.admin_deleteSubDomain', SdomainID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a></td>
                                                     </tr>
                                                   {% endfor %}
                                             {% endif %}

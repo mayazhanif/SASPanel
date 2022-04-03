@@ -697,6 +697,77 @@ def admin_updateEmail():
     else:
         return redirect(url_for('routes.login'))
 
+
+
+
+
+@routes.route('/admin/SubDomains/addSubDomain', methods=['GET','POST'])
+def admin_addSubDomain():
+    if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0;')
+        domains = cursor.fetchall()
+        if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form :
+            domainID = request.form['domainID']
+            suffix = request.form['suffix']
+            query= "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id="+domainID+""
+            cursor.execute(query)
+            rDomain = cursor.fetchone()
+            SubDomainAdress= suffix+"."+rDomain[1]
+            userID= str(rDomain[2])
+            query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
+            try:
+                cursor.execute(query)
+                mysqlconnection.commit()
+            except:
+                msg={"error":"danger","message":"Subdomain Already Exists."}
+                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            if cursor.rowcount>0:
+                msg={"error":"success","message":"Subdomain Added."}
+                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "Subdomain not added."}
+                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+        else:
+            msg=''
+            return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/SubDomains/viewSubDomains')
+def admin_viewSubDomains():
+    if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM subdomains LEFT JOIN users ON users.User_id = subdomains.User_id LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id WHERE subdomains.Is_Active = 1')
+        results = cursor.fetchall()
+        msg = ''
+        return render_template('adminFiles/SubDomains/viewSubDomains.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/admin/SubDomains/deleteSubdomain', methods =['GET', 'POST'])
+def admin_deleteSubDomain():
+    if check_admin_Login():
+        if request.method == 'GET' and request.args.get('SdomainID'):
+            SdomainID=request.args.get('SdomainID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.admin_viewSubDomains"))
+            else:
+                return redirect(url_for("routes.admin_viewSubDomains"))
+
+        else:
+            return redirect(url_for("routes.admin_viewSubDomains"))
+    else:
+        return redirect(url_for('routes.login'))
+
+
+
+
+
 @routes.route('/admin/Logs/error_Logs')
 def admin_error_logs():
     if check_admin_Login():

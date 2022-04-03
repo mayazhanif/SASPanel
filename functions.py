@@ -91,7 +91,22 @@ def add_usr(name, password):
     os.system("setfacl -m user:" + name + ":rx /home/" + name + "")
     print("User Added.")
 
-
+def add_default_user(username, password):
+    print("Adding user: %s" % (username))
+    os.system("useradd --create-home \
+    --user-group \
+    --home /home/" + username + " \
+    --shell /bin/rbash \
+    --password $(printf %s " + password + " |openssl passwd -1 -stdin) " + username + "")
+    os.system("chown " + username + ":" + username + " /home/" + username + "")
+    os.system("chmod 755 /home/" + username + "")
+    os.system("setfacl -m user:" + username + ":rx /home/" + username + "")
+    print("User Added.")
+    #os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
+    os.system('echo "'+username+'" >> /etc/vsftpd.chroot_list')
+    os.system("chown "+username+":"+username+" /home/"+username+"")
+    os.system("chmod 0777 /home/"+username+"")
+    #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
 #add_usr("testuser3", "testuser3")
 
 def createUser(cursor, userName, password):
@@ -101,6 +116,14 @@ def createUser(cursor, userName, password):
     except Exception as Ex:
         print("Error creating MySQL User: %s"%(Ex))
 
+def create_database(cursor, DatabaseName,Username):
+    try:
+        sqlCreateDatabase = "CREATE DATABASE %s;"%(DatabaseName)
+        cursor.execute(sqlCreateDatabase)
+        grantPermissions = "GRANT ALL PRIVILEGES ON "+DatabaseName+".* TO '"+Username+"'@'localhost' WITH GRANT OPTION;"
+        cursor.execute(grantPermissions)
+    except Exception as Ex:
+        print("Error creating MySQL Database: %s"%(Ex))
 
 def WriteFile(filename, s_body, mode='w+'):
     try:
@@ -123,6 +146,14 @@ def install():
 def add_vhost(username, domain):
     os.system("/bin/bash add_vhost.sh " + username+" "+domain)
 
+
+def add_ftp(username, password):
+    #os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
+    os.system('echo "'+username+'" >> /etc/vsftpd.chroot_list')
+    os.system("chown "+username+":"+username+" /home/"+username+"")
+    os.system("chmod 0777 /home/"+username+"")
+    #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
+
     
 def set_mysql_root(password):
     os.system("/bin/bash mysql_root.sh " + password)
@@ -131,5 +162,7 @@ def install():
     print("Hello")
 
 def install_packages():
+    os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
+    #os.system("sudo apt-get -y install pure-ftpd")
     os.system("/bin/bash installer.sh")
     #os.system("/bin/bash nginx_config.sh")

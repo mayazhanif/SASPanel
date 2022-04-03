@@ -317,7 +317,22 @@
                                     </li>
                                 </ul>
                             </li>
+                           <li>
+                                <a href="javascript: void(0);">
+                                    <i data-feather="inbox"></i>
+                                    <span> Sub Domains </span>
+                                    <span class="menu-arrow"></span>
+                                </a>
 
+                                <ul class="nav-second-level" aria-expanded="false">
+                                     <li>
+                                        <a href="{{ url_for("routes.user_addSubDomain") }}">Add SubDomain</a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ url_for("routes.user_viewSubDomains") }}">View SubDomains</a>
+                                    </li>
+                                </ul>
+                            </li>
                             <li>
                                 <a href="javascript: void(0);">
                                     <i data-feather="inbox"></i>

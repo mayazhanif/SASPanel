@@ -512,6 +512,106 @@ def user_updateEmail():
     else:
         return redirect(url_for('routes.login'))
 
+
+
+
+
+
+@routes.route('/user/SubDomains/addSubDomain', methods=['GET','POST'])
+def user_addSubDomain():
+    if check_user_Login():
+        userID = str(session["id"])
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id='+userID)
+        domains = cursor.fetchall()
+        if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form:
+            querylimit ="SELECT Sub_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
+            cursor.execute(querylimit)
+            limit=cursor.fetchone()
+            limit= limit[0]
+            #cursor.rowcount>
+            queryinUSe ="SELECT * FROM `domains` where User_id="+userID
+            cursor.execute(queryinUSe)
+            cursor.fetchall()
+            if cursor.rowcount>=limit:
+                msg = {"error": "danger", "message": "Subdomains Limit Reached."}
+                return render_template('userFiles/SubDomains/addSubDomain.html', msg=msg)
+            domainID = request.form['domainID']
+            suffix = request.form['suffix']
+            query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
+            cursor.execute(query)
+            rDomain = cursor.fetchone()
+            SubDomainAdress = suffix + "." + rDomain[1]
+            userID = str(rDomain[2])
+            #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
+            query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
+            #print(query)
+            try:
+                cursor.execute(query)
+                mysqlconnection.commit()
+            except:
+                msg = {"error": "danger", "message": "SubDomain Already Exists."}
+                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            if cursor.rowcount > 0:
+                msg = {"error": "success", "message": "SubDomain Added."}
+                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            else:
+                msg = {"error": "danger", "message": "SubDomain not added."}
+                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+        else:
+            msg = ''
+            return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+    else:
+        return redirect(url_for('routes.login'))
+
+@routes.route('/user/SubDomains/viewSubDomains')
+def user_viewSubDomains():
+    if check_user_Login():
+        userID = str(session["id"])
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM subdomains LEFT JOIN users ON users.User_id = subdomains.User_id LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id WHERE subdomains.Is_Active = 1 AND subdomains.User_id='+userID)
+        results = cursor.fetchall()
+        msg = ''
+        return render_template('userFiles/SubDomains/viewSubDomains.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
+
+
+@routes.route('/user/SubDomains/deleteSubDomain', methods =['GET', 'POST'])
+def user_deleteSubDomain():
+    if check_user_Login():
+        if request.method == 'GET' and request.args.get('SdomainID'):
+            userID = str(session["id"])
+            SdomainID=request.args.get('SdomainID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID+" and User_id="+userID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.user_viewSubDomains"))
+            else:
+                return redirect(url_for("routes.user_viewSubDomains"))
+
+        else:
+            return redirect(url_for("routes.user_viewSubDomains"))
+    else:
+        return redirect(url_for('routes.login'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @routes.route('/user/Logs/error_Logs')
 def user_error_logs():
     if check_user_Login():
