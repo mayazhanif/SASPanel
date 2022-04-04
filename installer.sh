@@ -9,6 +9,20 @@ cat > /etc/nginx/php.conf <<EOF
 		fastcgi_pass unix:/var/run/php/php-fpm.sock;
 	}
 EOF
+cat > /etc/nginx/sites-available/default <<EOF
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	root /var/www/html;
+	index index.php index.html index.htm index.nginx-debian.html;
+	server_name _;
+	location / {
+		try_files \$uri \$uri/ =404;
+	}
+	include php.conf;
+	include snippets/phpmyadmin.conf;
+}
+EOF
 service nginx restart
 cat > /etc/vsftpd.conf <<EOF
 listen=YES
