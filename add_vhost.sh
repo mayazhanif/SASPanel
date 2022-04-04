@@ -51,6 +51,7 @@ server {
     ## INCLUDE COMMONS ##
 
     include php.conf;
+    include snippets/phpmyadmin.conf;
     #include errors.conf;
     #include drop.conf;
     #include expires.conf;
@@ -61,7 +62,7 @@ EOF
 #mkdir -p $WEB_DIR/$username/{public_html,logs}
 
 # Creating index.html file
-cat > $DOMAIN_DIR/index.html <<EOF
+cat > $WEB_DIR/$WEB_USER/domains/$domain/public_html/index.html <<EOF
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,7 +80,8 @@ EOF
 # Changing permissions
 chown -R $WEB_USER:$WEB_USER $WEB_DIR/$username
 #ln -s /etc/sites-available/$domain /etc/sites-enabled/sub.test.com
-ln -s $NGINX_AVAILABLE_VHOSTS/$domain $NGINX_ENABLED_VHOSTS/$domain
+#ln -s $NGINX_AVAILABLE_VHOSTS/$domain $NGINX_ENABLED_VHOSTS/$domain
+ln -s $NGINX_AVAILABLE_VHOSTS/$domain-vhost.conf $NGINX_ENABLED_VHOSTS/$domain-vhost.conf
 
 service nginx restart
 ok "Site Created for $domain"
