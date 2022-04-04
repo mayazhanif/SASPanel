@@ -11,7 +11,7 @@ def hello_world():  # put application's code here
 
 @routes.route('/installer')
 def installer():
-    #install()
+    install()
     #add_vhost("mayazhanif","google1.com")
     #set_mysql_root("Master_DeVIL")
     return render_template('installer/installer.html')

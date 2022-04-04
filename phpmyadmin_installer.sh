@@ -12,6 +12,9 @@ secret=`cat /dev/urandom | head -n 32 | md5sum | head -c 32`;
 \cp -a -r /usr/share/phpmyadmin/config.sample.inc.php  /usr/share/phpmyadmin/config.inc.php
 sed -i "s#^\$cfg\['blowfish_secret'\].*#\$cfg\['blowfish_secret'\] = '${secret}';#" /usr/share/phpmyadmin/config.inc.php
 sed -i "s#^\$cfg\['blowfish_secret'\].*#\$cfg\['blowfish_secret'\] = '${secret}';#" /usr/share/phpmyadmin//libraries/config.default.php
+#sed -i "s#^\$i]['host'\].*#\$i]['host'\] = '127.0.0.1';#" /usr/share/phpmyadmin/config.inc.php
+#sed -i "s#^\$i]['host'\].*#\$i]['host'\] = '127.0.0.1';#" /usr/share/phpmyadmin//libraries/config.default.php
+
 cat > /etc/nginx/snippets/phpmyadmin.conf <<EOF
 location /phpmyadmin {
     root /usr/share/;

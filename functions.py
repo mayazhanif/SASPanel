@@ -165,7 +165,7 @@ def set_mysql_root(password):
 
 def install():
     install_packages()
-    print("Hello")
+    print("Install packages Completed.")
 
 def install_packages():
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
