@@ -116,7 +116,7 @@ def admin_addUser():
                 # query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
                 query = "INSERT INTO `users` (`User_id`, `servUser`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '"+servUser+"', '" + User_email + "', '" + md5Password + "', '" + User_Name + "', '', CURRENT_TIMESTAMP, '" + Admin_id + "', '" + packageID + "', '0', CURRENT_TIMESTAMP);"
                 cursor.execute(query)
-                add_usr(servUser,User_Password)
+                add_default_user(servUser,User_Password)
                 userID = str(cursor.lastrowid)
                 mysqlconnection.commit()
                 if cursor.rowcount > 0:
@@ -303,6 +303,7 @@ def admin_addDomain():
             try:
                 cursor.execute(query)
                 mysqlconnection.commit()
+                #add_vhost("",DomainName)
             except:
                 msg={"error":"danger","message":"Domain Already Added."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)

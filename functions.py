@@ -153,7 +153,7 @@ def add_vhost(username, domain):
 
 
 def add_ftp(username, password):
-    #os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
+    os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
     os.system('echo "'+username+'" >> /etc/vsftpd.chroot_list')
     os.system("chown "+username+":"+username+" /home/"+username+"")
     os.system("chmod 0777 /home/"+username+"")
