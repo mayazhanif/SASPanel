@@ -177,7 +177,7 @@ def add_ftp(username, password):
 
 
 def set_mysql_root(password):
-    os.system("/bin/bash scripts/mysql_root.sh " + password)
+    os.system("/bin/bash scripts/mysql_admin.sh " + password)
 
 def install():
     install_packages()
@@ -188,6 +188,6 @@ def install_packages():
     os.system("sudo apt-get -y install php-common php-cli php-fpm")
     #os.system("sudo apt-get -y install pure-ftpd")
     os.system("/bin/bash scripts/installer.sh")
-    os.system("sudo apt-get -y install zip php-mbstring php-zip php-gd")
+    os.system("sudo apt-get -y install zip php-mbstring php-zip php-gd php-mysql")
     os.system("/bin/bash scripts/phpmyadmin_installer.sh")
     #os.system("/bin/bash nginx_config.sh")
