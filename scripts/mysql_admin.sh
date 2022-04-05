@@ -7,7 +7,7 @@ mysql -u root -e "CREATE USER 'admin'@'localhost' IDENTIFIED BY 'Master786';FLUS
 mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost';FLUSH PRIVILEGES;"
 mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost';FLUSH PRIVILEGES;"
 mysql -u root -e "alter user 'root'@'localhost' identified by 'Master786';FLUSH PRIVILEGES;"
-mysql -u root -e 'use mysql;update user set plugin="mysql_native_password";FLUSH PRIVILEGES;';
+#mysql -u root -e 'use mysql;update user set plugin="mysql_native_password";FLUSH PRIVILEGES;';
 #mysql -hlocalhost -e "FLUSH PRIVILEGES;alter user 'root'@'localhost' identified by '${pwd}';FLUSH PRIVILEGES;";
 #echo "Removing skip-grant-tables"
 #sed -i '/skip-grant-tables/d' /etc/mysql/mysql.conf.d/mysqld.cnf
