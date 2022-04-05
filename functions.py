@@ -159,10 +159,6 @@ def WriteFile(filename, s_body, mode='w+'):
             return True
         except:
             return False
-def install():
-    #set_mysql_root("DeViL_Master")
-    install_packages()
-    print("Hello")
 
 def add_vhost(username, domain):
     os.system("/bin/bash scripts/add_vhost.sh " + username+" "+domain)
@@ -175,6 +171,9 @@ def add_ftp(username, password):
     os.system("chmod 0777 /home/"+username+"")
     #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
 
+
+def set_mysql_root(password):
+    os.system("/bin/bash scripts/mysql_root.sh " + password)
 
 def set_mysql_root(password):
     os.system("/bin/bash scripts/mysql_root.sh " + password)
