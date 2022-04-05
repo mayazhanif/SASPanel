@@ -28,3 +28,4 @@ location /phpmyadmin {
     }
 }
 EOF
+service nginx restart
