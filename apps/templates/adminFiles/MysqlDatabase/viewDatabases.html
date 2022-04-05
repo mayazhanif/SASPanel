@@ -55,7 +55,7 @@
                                                     <td>{{ record[1] }}</td>
                                                     <td>{{ record[6] }}</td>
                                                     <td><button type="button" class="btn btn-primary btn-sm">Login</button></td>
-                                                    <td><a href="{{ url_for('routes.admin_updateDBPass', DbID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Change Password</button></a> <a href="{{ url_for('routes.admin_deleteDatabase', DbID=record[0]) }}"><button type="button" class="btn btn-warning btn-sm">Delete</button></a></td>
+                                                    <td><a href="{{ url_for('routes.admin_updateDBPass', DbID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Change Password</button></a> <a href="{{ url_for('routes.admin_deleteDatabase', DbID=record[5]) }}"><button type="button" class="btn btn-warning btn-sm">Delete</button></a></td>
                                                 </tr>
                                                 {% endfor %}
                                             {% endif %}

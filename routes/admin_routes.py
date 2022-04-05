@@ -305,11 +305,11 @@ def admin_addDomain():
             try:
                 cursor.execute(query)
                 mysqlconnection.commit()
-                add_vhost(getUserName,DomainName)
             except:
                 msg={"error":"danger","message":"Domain Already Added."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             if cursor.rowcount>0:
+                add_vhost(getUserName,DomainName)
                 msg={"error":"success","message":"Domain Added."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             else:
@@ -401,6 +401,7 @@ def admin_addDB():
                 msg={"error":"danger","message":"Database name already in use."}
                 return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
             if cursor.rowcount>0:
+                create_database(cursor,databaseName,DBUserbyID[1])
                 msg={"error":"success","message":"Database Added.."}
                 return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
             else:
@@ -430,10 +431,15 @@ def admin_deleteDatabase():
         if request.method == 'GET' and request.args.get('DbID'):
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID='+DbID+';')
+            #print(cursor.fetchone()[0])
+            getDBName = cursor.fetchone()[0]
+            #print(getDBName)
             query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                drop_database(cursor,getDBName)
                 return redirect(url_for("routes.admin_viewDatabases"))
             else:
                 return redirect(url_for("routes.admin_viewDatabases"))
@@ -448,10 +454,10 @@ def admin_deleteDatabase():
 @routes.route('/admin/Databases/updateDBPass', methods=['GET', 'POST'])
 def admin_updateDBPass():
     if check_admin_Login():
+        cursor = mysqlconnection.cursor()
         msg=''
         if request.method == 'GET' and request.args.get('DbID'):
             DbUser_ID=request.args.get('DbID')
-            cursor = mysqlconnection.cursor()
             query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
             cursor.execute(query)
             database = cursor.fetchone()
@@ -461,15 +467,18 @@ def admin_updateDBPass():
                 return redirect(url_for("routes.admin_viewDatabases"))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
+            query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
+            cursor.execute(query)
+            mysqlUsername = cursor.fetchone()[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
-                cursor = mysqlconnection.cursor()
                 query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+""
                 cursor.execute(query)
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
+                    changePassword(cursor,mysqlUsername,pass1)
                     msg = {"error": "success", "message": "Database Password Updated."}
                     return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
                 else:

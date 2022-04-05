@@ -129,6 +129,22 @@ def create_database(cursor, DatabaseName,Username):
     except Exception as Ex:
         print("Error creating MySQL Database: %s"%(Ex))
 
+def changePassword(cursor, username,NewPassword):
+    try:
+        sqlChangePassword = "alter user '%s'@'localhost' identified by '%s';"%(username, NewPassword)
+        cursor.execute(sqlChangePassword)
+        print("User Password Changed.")
+    except Exception as Ex:
+        print("Error Changing MySQL Password: %s"%(Ex))
+
+def drop_database(cursor, DatabaseName):
+    try:
+        sqlCreateDatabase = "DROP DATABASE %s;"%(DatabaseName)
+        cursor.execute(sqlCreateDatabase)
+        print("Database Deleted.")
+
+    except Exception as Ex:
+        print("Error creating MySQL Database: %s"%(Ex))
 def WriteFile(filename, s_body, mode='w+'):
     try:
         fp = open(filename, mode)

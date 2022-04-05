@@ -18,7 +18,7 @@ WEB_USER=$username
 
 mkdir -p $WEB_DIR/$WEB_USER/logs
 mkdir -p $WEB_DIR/$WEB_USER/domains/$domain/public_html
-
+chown -R $WEB_USER:$WEB_USER $WEB_DIR/$WEB_USER/
 # Sanity check
 [ $(id -g) != "0" ] && die "Script must be run as root."
 #[ $# != "1" ] && die "Usage: $(basename $0) domainName"
