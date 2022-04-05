@@ -86,7 +86,7 @@ def add_usr(name, password):
     --home /home/" + name + " \
     --shell /bin/rbash \
     --password $(printf %s " + password + " |openssl passwd -1 -stdin) " + name + "")
-    os.system("chown " + name + ":" + name + " /home/" + name + "")
+    os.system("chown -R " + name + ":" + name + " /home/" + name + "")
     os.system("chmod 755 /home/" + name + "")
     os.system("setfacl -m user:" + name + ":rx /home/" + name + "")
     print("User Added.")
@@ -104,7 +104,7 @@ def add_default_user(username, password):
     print("User Added.")
     #os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
     os.system('echo "'+username+'" >> /etc/vsftpd.chroot_list')
-    os.system("chown "+username+":"+username+" /home/"+username+"")
+    os.system("chown -R "+username+":"+username+" /home/"+username+"")
     os.system("chmod 0777 /home/"+username+"")
     #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
 #add_usr("testuser3", "testuser3")
@@ -165,19 +165,19 @@ def install():
     print("Hello")
 
 def add_vhost(username, domain):
-    os.system("/bin/bash add_vhost.sh " + username+" "+domain)
+    os.system("/bin/bash scripts/add_vhost.sh " + username+" "+domain)
 
 
 def add_ftp(username, password):
     os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
     os.system('echo "'+username+'" >> /etc/vsftpd.chroot_list')
-    os.system("chown "+username+":"+username+" /home/"+username+"")
+    os.system("chown -R "+username+":"+username+" /home/"+username+"")
     os.system("chmod 0777 /home/"+username+"")
     #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
 
 
 def set_mysql_root(password):
-    os.system("/bin/bash mysql_root.sh " + password)
+    os.system("/bin/bash scripts/mysql_root.sh " + password)
 
 def install():
     install_packages()
@@ -187,7 +187,7 @@ def install_packages():
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
     os.system("sudo apt-get install php-common php-cli php-fpm")
     #os.system("sudo apt-get -y install pure-ftpd")
-    os.system("/bin/bash installer.sh")
+    os.system("/bin/bash scripts/installer.sh")
     os.system("sudo apt-get -y install phpmyadmin zip php-mbstring php-zip php-gd")
-    os.system("/bin/bash phpmyadmin_installer.sh")
+    os.system("/bin/bash scripts/phpmyadmin_installer.sh")
     #os.system("/bin/bash nginx_config.sh")
