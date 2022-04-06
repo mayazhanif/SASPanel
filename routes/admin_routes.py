@@ -301,7 +301,7 @@ def admin_addDomain():
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
             getUserName = cursor.fetchone()[0]
             DomainName = request.form['DomainName']
-            query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '1', '0', '0');"
+            query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '"+userID+"', '0', '0');"
             try:
                 cursor.execute(query)
                 mysqlconnection.commit()
