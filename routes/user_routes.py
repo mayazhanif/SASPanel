@@ -96,6 +96,8 @@ def user_addDomain():
             if cursor.rowcount>=limit:
                 msg = {"error": "danger", "message": "Domains Limit Reached."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            getUserName = cursor.fetchone()[0]
             query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '" + DomainName + "', '1', '0', '0');"
             try:
                 cursor.execute(query)
@@ -104,6 +106,7 @@ def user_addDomain():
                 msg = {"error": "danger", "message": "Domain Already Added."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
             if cursor.rowcount > 0:
+                add_vhost(getUserName,DomainName)
                 msg = {"error": "success", "message": "Domain Added."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
             else:
