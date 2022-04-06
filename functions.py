@@ -186,6 +186,8 @@ def remove_ftp(ftpusername):
     os.system("chage -E0 "+ftpusername)
     os.system('usermod -s /sbin/nologin '+ftpusername)
 
+def change_ftp_pass(ftpUsername,ftpPassword):
+    os.system("echo '"+ftpUsername+":"+ftpPassword+"' | sudo chpasswd")
 
 def set_mysql_root(password):
     os.system("/bin/bash scripts/mysql_admin.sh " + password)

@@ -544,9 +544,9 @@ def admin_viewAccounts():
 def admin_updateAccountPass():
     if check_admin_Login():
         msg=''
+        cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('AccID'):
             AccID=request.args.get('AccID')
-            cursor = mysqlconnection.cursor()
             query="SELECT * FROM `ftp_accounts` where Account_Id="+AccID
             cursor.execute(query)
             account = cursor.fetchone()
@@ -556,15 +556,17 @@ def admin_updateAccountPass():
                 return redirect(url_for("routes.admin_viewAccounts"))
         elif request.method == 'POST' and 'AccID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             AccID = request.form['AccID']
+            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`='+AccID+';')
+            ftpUsername = cursor.fetchone()[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
-                cursor = mysqlconnection.cursor()
                 query = "UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` = "+AccID+""
                 cursor.execute(query)
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
+                    change_ftp_pass(ftpUsername,pass1)
                     msg = {"error": "success", "message": "FTP Account Password Updated."}
                     return render_template('adminFiles/ftpAccounts/updateAccountPass.html', account=AccID, msg=msg)
                 else:
