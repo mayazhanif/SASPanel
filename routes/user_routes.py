@@ -216,7 +216,7 @@ def user_deleteDatabase():
         if request.method == 'GET' and request.args.get('DbID'):
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID='+DbID+' and mysqldbusers.User_id='+userID+';')
+            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID='+DbID+' and msqldatabases.User_id='+userID+';')
             #print(cursor.fetchone()[0])
             getDBName = cursor.fetchone()[0]
             query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID+" and msqldatabases.User_id="+userID
