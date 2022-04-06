@@ -501,7 +501,6 @@ def admin_addAccounts():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form :
             userID = request.form['userID']
-            userID = request.form['userID']
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
             getUserName = cursor.fetchone()[0]
             ftpUsername = request.form['ftpUsername']
@@ -587,10 +586,13 @@ def admin_deleteAccount():
         if request.method == 'GET' and request.args.get('AccID'):
             AccID=request.args.get('AccID')
             cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`='+AccID+';')
+            ftpUsername = cursor.fetchone()[0]
             query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                remove_ftp(ftpUsername)
                 return redirect(url_for("routes.admin_viewAccounts"))
             else:
                 return redirect(url_for("routes.admin_viewAccounts"))

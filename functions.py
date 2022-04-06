@@ -182,6 +182,10 @@ def add_ftp(ftpusername,username, password):
     os.system("chown -R "+ftpusername+":"+ftpusername+" /home/"+username+"")
     os.system("chmod 0777 /home/"+username+"/*")
 
+def remove_ftp(ftpusername):
+    os.system("chage -E0 "+ftpusername)
+    os.system('usermod -s /sbin/nologin '+ftpusername)
+
 
 def set_mysql_root(password):
     os.system("/bin/bash scripts/mysql_admin.sh " + password)
