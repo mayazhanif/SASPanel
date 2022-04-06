@@ -187,7 +187,7 @@ def install_packages():
     os.system("sudo apt-get -y update")
     os.system("sudo apt-get -y upgrade")
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
-    #set_mysql_root("Master@786")
+    set_mysql_root("Master@786")
     os.system("sudo apt-get -y install php-common php-cli php-fpm")
     #os.system("sudo apt-get -y install pure-ftpd")
     os.system("/bin/bash scripts/installer.sh")
