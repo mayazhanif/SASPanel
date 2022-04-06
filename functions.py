@@ -168,12 +168,19 @@ def add_vhost(username, domain):
     os.system("/bin/bash scripts/add_vhost.sh " + username+" "+domain)
 
 
-def add_ftp(username, password):
+def add_ftp_only(username, password):
     os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
     os.system('echo "'+username+'" >> /etc/vsftpd.chroot_list')
     os.system("chown -R "+username+":"+username+" /home/"+username+"")
     os.system("chmod 0777 /home/"+username+"")
     #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
+
+def add_ftp(ftpusername,username, password):
+    os.system("useradd -p `openssl passwd -1 "+password+"` "+ftpusername+" \
+    --home /home/" + username)
+    os.system('echo "'+ftpusername+'" >> /etc/vsftpd.chroot_list')
+    os.system("chown -R "+ftpusername+":"+ftpusername+" /home/"+username+"")
+    os.system("chmod 0777 /home/"+username+"/*")
 
 
 def set_mysql_root(password):

@@ -501,6 +501,9 @@ def admin_addAccounts():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form :
             userID = request.form['userID']
+            userID = request.form['userID']
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            getUserName = cursor.fetchone()[0]
             ftpUsername = request.form['ftpUsername']
             ftpPassword = request.form['ftpPassword']
             encodedPass = Base64Encode(ftpPassword)
@@ -514,6 +517,7 @@ def admin_addAccounts():
                 msg={"error":"danger","message":"FTP Username Already in Use."}
                 return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
             if cursor.rowcount>0:
+                add_ftp(ftpUsername,getUserName,ftpPassword)
                 msg={"error":"success","message":"FTP Account Added."}
                 return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
             else:

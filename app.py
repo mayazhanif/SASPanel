@@ -12,6 +12,13 @@ app = Flask(__name__,
             template_folder='apps/templates')
 app.register_blueprint(routes)
 app.secret_key = 'SecRET@Key123'
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+@app.after_request
+def add_header(r):
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'no-store'
+    return r
 if __name__ == '__main__':
     #app.run(debug=True)
     app.run(host="0.0.0.0", port=int("5000"), debug=True)
