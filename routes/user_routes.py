@@ -6,12 +6,16 @@ from app import *
 import functions
 from Database.DbConfig import mysqlconnection
 import functions
+from urllib.parse import urlparse
 
 @routes.route('/user/dashboard')
 def user_dashboard():
     if check_user_Login():
         msg=""
-        return render_template('userFiles/dashboard.html', msg=msg)
+        o = urlparse(request.base_url)
+        mainhost = o.hostname
+        #print(o.hostname)
+        return render_template('userFiles/dashboard.html', msg=msg, mainhost=mainhost)
     else:
         return redirect(url_for('routes.login'))
 

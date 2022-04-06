@@ -6,13 +6,16 @@ import hashlib
 
 from . import routes
 from functions import *
+from urllib.parse import urlparse
 
 
 @routes.route('/admin/dashboard')
 def admin_dashboard():
     if check_admin_Login():
         msg=''
-        return render_template('adminFiles/dashboard.html', msg=msg)
+        o = urlparse(request.base_url)
+        mainhost = o.hostname
+        return render_template('adminFiles/dashboard.html', msg=msg, mainhost=mainhost)
     else:
         return redirect(url_for('routes.login'))
 
