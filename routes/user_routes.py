@@ -179,6 +179,7 @@ def user_addDB():
                 msg = {"error": "danger", "message": "Database name already in use."}
                 return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
             if cursor.rowcount > 0:
+                create_database(cursor,databaseName,DBUserbyID[1])
                 msg = {"error": "success", "message": "Database Added.."}
                 return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
             else:
@@ -212,10 +213,14 @@ def user_deleteDatabase():
         if request.method == 'GET' and request.args.get('DbID'):
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID='+DbID+' and mysqldbusers.User_id='+userID+';')
+            #print(cursor.fetchone()[0])
+            getDBName = cursor.fetchone()[0]
             query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID+" and mysqldbusers.User_id="+userID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                drop_database(cursor,getDBName)
                 return redirect(url_for("routes.user_viewDatabases"))
             else:
                 return redirect(url_for("routes.user_viewDatabases"))
@@ -231,10 +236,10 @@ def user_deleteDatabase():
 def user_updateDBPass():
     if check_user_Login():
         msg=''
+        cursor = mysqlconnection.cursor()
         userID = str(session["id"])
         if request.method == 'GET' and request.args.get('DbID'):
             DbUser_ID=request.args.get('DbID')
-            cursor = mysqlconnection.cursor()
             query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
             cursor.execute(query)
             database = cursor.fetchone()
@@ -244,15 +249,18 @@ def user_updateDBPass():
                 return redirect(url_for("routes.admin_viewDatabases"))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
+            query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
+            cursor.execute(query)
+            mysqlUsername = cursor.fetchone()[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
-                cursor = mysqlconnection.cursor()
                 query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+" and User_id="+userID
                 cursor.execute(query)
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
+                    changePassword(cursor, mysqlUsername, pass1)
                     msg = {"error": "success", "message": "Database Password Updated."}
                     return render_template('userFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
                 else:
@@ -287,6 +295,8 @@ def user_addAccounts():
             ftpPassword = request.form['ftpPassword']
             encodedPass = Base64Encode(ftpPassword)
             Directory = "/home/username/public_html"
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            getUserName = cursor.fetchone()[0]
             query = "INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, '" + userID + "', '" + Directory + "', '" + ftpUsername + "', '" + encodedPass + "', '1');"
             try:
                 cursor.execute(query)
@@ -295,6 +305,7 @@ def user_addAccounts():
                 msg = {"error": "danger", "message": "FTP Username Already in Use."}
                 return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
             if cursor.rowcount > 0:
+                add_ftp(ftpUsername,getUserName,ftpPassword)
                 msg = {"error": "success", "message": "FTP Account Added."}
                 return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
             else:
@@ -345,11 +356,15 @@ def user_updateAccountPass():
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
                 cursor = mysqlconnection.cursor()
+                cursor.execute(
+                    'SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=' + AccID + 'and ftp_accounts.User_id = '+userID+';')
+                ftpUsername = cursor.fetchone()[0]
                 query = "UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id = "+userID
                 print(query)
                 cursor.execute(query)
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
+                    change_ftp_pass(ftpUsername,pass1)
                     msg = {"error": "success", "message": "FTP Account Password Updated."}
                     return render_template('userFiles/ftpAccounts/updateAccountPass.html', account=AccID, msg=msg)
                 else:
@@ -370,10 +385,13 @@ def user_deleteAccount():
             AccID=request.args.get('AccID')
             userID = str(session["id"])
             cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`='+AccID+' and ftp_accounts.User_id='+userID+';')
+            ftpUsername = cursor.fetchone()[0]
             query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id="+userID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                remove_ftp(ftpUsername)
                 return redirect(url_for("routes.user_viewAccounts"))
             else:
                 return redirect(url_for("routes.user_viewAccounts"))
@@ -529,6 +547,8 @@ def user_addSubDomain():
             cursor.execute(querylimit)
             limit=cursor.fetchone()
             limit= limit[0]
+            cursor.execute('SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id where domains.Is_Deleted=0 and Domain_Id='+domainID+';')
+            getUserName = cursor.fetchone()[0]
             #cursor.rowcount>
             queryinUSe ="SELECT * FROM `domains` where User_id="+userID
             cursor.execute(queryinUSe)
@@ -553,6 +573,7 @@ def user_addSubDomain():
                 msg = {"error": "danger", "message": "SubDomain Already Exists."}
                 return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             if cursor.rowcount > 0:
+                add_vhost(getUserName, SubDomainAdress)
                 msg = {"error": "success", "message": "SubDomain Added."}
                 return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             else:
