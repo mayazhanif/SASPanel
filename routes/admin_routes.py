@@ -729,6 +729,8 @@ def admin_addSubDomain():
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form :
             domainID = request.form['domainID']
+            cursor.execute('SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id where domains.Is_Deleted=0 and Domain_Id'+domainID+';')
+            getUserName = cursor.fetchone()[0]
             suffix = request.form['suffix']
             query= "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id="+domainID+""
             cursor.execute(query)
@@ -743,6 +745,7 @@ def admin_addSubDomain():
                 msg={"error":"danger","message":"Subdomain Already Exists."}
                 return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             if cursor.rowcount>0:
+                add_vhost(getUserName, SubDomainAdress)
                 msg={"error":"success","message":"Subdomain Added."}
                 return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             else:
