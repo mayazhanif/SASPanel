@@ -36,6 +36,7 @@ mv roundcubemail-1.4.13 roundcube
 chown -R www-data:www-data /usr/share/roundcube
 mysql -u root -p${pwd} -e "CREATE USER 'roundcube'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
 mysql -u root -p${pwd} -e "create database roundcubedb;FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON roundcubedb.* TO 'roundcube'@'localhost';FLUSH PRIVILEGES;"
 mysql -u root -p${pwd} roundcubedb < /usr/share/roundcube/SQL/mysql.initial.sql
 cat > /etc/nginx/snippets/roundcube.conf <<EOF
 location /roundcube {
