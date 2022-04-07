@@ -31,13 +31,13 @@ location /phpmyadmin {
 EOF
 cd /usr/share
 wget https://github.com/roundcube/roundcubemail/releases/download/1.4.13/roundcubemail-1.4.13-complete.tar.gz
-tar xvf roundcubemail-1.4.6-complete.tar.gz
-mv roundcubemail-1.4.6 roundcube
+tar xvf roundcubemail-1.4.13-complete.tar.gz
+mv roundcubemail-1.4.13 roundcube
 chown -R www-data:www-data /usr/share/roundcube
 mysql -u root -p${pwd} -e "CREATE USER 'roundcube'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
 mysql -u root -p${pwd} -e "create database roundcubedb;FLUSH PRIVILEGES;"
 mysql -u root -p${pwd} roundcubedb < /usr/share/roundcube/SQL/mysql.initial.sql
-cat > /etc/nginx/snippets/phpmyadmin.conf <<EOF
+cat > /etc/nginx/snippets/roundcube.conf <<EOF
 location /roundcube {
     root /usr/share/;
     index index.php index.html index.htm;
