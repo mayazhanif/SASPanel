@@ -2,6 +2,10 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 sudo apt-get install -y mysql-server nginx curl wget acl
+echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections
+echo "postfix postfix/mailname string saspanelmain.com" | debconf-set-selections
+echo "dovecot-core dovecot-core/create-ssl-cert boolean true" | debconf-set-selections
+
 apt-get install nginx vsftpd
 cat > /etc/nginx/php.conf <<EOF
 	location ~ \.php$ {
@@ -12,7 +16,6 @@ EOF
 cat > /etc/nginx/sites-available/default <<EOF
 server {
 	listen 80 default_server;
-	listen [::]:80 default_server;
 	root /var/www/html;
 	index index.php index.html index.htm index.nginx-debian.html;
 	server_name _;
@@ -21,6 +24,8 @@ server {
 	}
 	include php.conf;
 	include snippets/phpmyadmin.conf;
+	include snippets/roundcube.conf;
+
 }
 EOF
 service nginx restart

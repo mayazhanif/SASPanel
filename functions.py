@@ -197,13 +197,16 @@ def install():
     print("Install packages Completed.")
 
 def install_packages():
+    root_password="Master@786"
     os.system("sudo apt-get -y update")
     os.system("sudo apt-get -y upgrade")
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
-    set_mysql_root("Master@786")
+    set_mysql_root(root_password)
     os.system("sudo apt-get -y install php-common php-cli php-fpm")
-    #os.system("sudo apt-get -y install pure-ftpd")
+    os.system("sudo apt-get install dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd dovecot-mysql -y > /dev/null 2>&1")
     os.system("/bin/bash scripts/installer.sh")
+    os.system("sudo apt install -y php-mysql php-net-ldap2 php-net-ldap3 php-imagick php-common php-gd php-imap php-json php-curl php-zip php-xml php-mbstring php-bz2 php-intl php-gmp php-net-smtp php-mail-mime php-net-idna2 mailutils")
+    #os.system("sudo apt-get -y install pure-ftpd")
     os.system("sudo apt-get -y install zip php-mbstring php-zip php-gd php-mysql")
-    os.system("/bin/bash scripts/phpmyadmin_installer.sh")
+    os.system("/bin/bash scripts/phpmyadmin_installer.sh "+root_password)
     #os.system("/bin/bash nginx_config.sh")

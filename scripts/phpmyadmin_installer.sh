@@ -2,6 +2,7 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 cd /usr/share
+pwd=$1
 #wget https://files.phpmyadmin.net/phpMyAdmin/4.8.5/phpMyAdmin-4.8.5-all-languages.zip
 wget https://files.phpmyadmin.net/phpMyAdmin/5.1.3/phpMyAdmin-5.1.3-all-languages.zip
 unzip phpMyAdmin-5.1.3-all-languages.zip
@@ -24,6 +25,27 @@ location /phpmyadmin {
 		include php.conf;
     }
     location ~* ^/phpmyadmin/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
+        root /usr/share/;
+    }
+}
+EOF
+cd /usr/share
+wget https://github.com/roundcube/roundcubemail/releases/download/1.4.13/roundcubemail-1.4.13-complete.tar.gz
+tar xvf roundcubemail-1.4.6-complete.tar.gz
+mv roundcubemail-1.4.6 roundcube
+chown -R www-data:www-data /usr/share/roundcube
+mysql -u root -p${pwd} -e "CREATE USER 'roundcube'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} -e "create database roundcubedb;FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} roundcubedb < /usr/share/roundcube/SQL/mysql.initial.sql
+cat > /etc/nginx/snippets/phpmyadmin.conf <<EOF
+location /roundcube {
+    root /usr/share/;
+    index index.php index.html index.htm;
+    location ~ ^/roundcube/(.+\.php)$ {
+        root /usr/share/;
+		include php.conf;
+    }
+    location ~* ^/roundcube/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
         root /usr/share/;
     }
 }
