@@ -196,6 +196,23 @@ def install():
     install_packages()
     print("Install packages Completed.")
 
+
+def readLines(fname, N):
+    data=""
+    try:
+        with open(fname) as file:
+            lines = file.readlines()
+            last_lines = lines[-N:]
+            data = listToString(last_lines)
+        file.close()
+        return data
+    except:
+        return "File Does not Exists."
+
+def listToString(s):
+    returnData = ""
+    return (returnData.join(s))
+
 def install_packages():
     root_password="Master@786"
     os.system("sudo apt-get -y update")

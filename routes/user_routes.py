@@ -7,6 +7,8 @@ import functions
 from Database.DbConfig import mysqlconnection
 import functions
 from urllib.parse import urlparse
+from flask import current_app as app
+
 
 @routes.route('/user/dashboard')
 def user_dashboard():
@@ -644,15 +646,68 @@ def user_deleteSubDomain():
 def user_error_logs():
     if check_user_Login():
         msg = ''
-        return render_template('userFiles/Logs/error_logs.html', msg=msg)
+        userID = str(session["id"])
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id='+userID)
+        domains = cursor.fetchall()
+        return render_template('userFiles/Logs/error_logs.html', domains=domains,msg=msg)
     else:
         return redirect(url_for('routes.login'))
+
+@routes.route('/user/Logs/error_Logs/Ajax' , methods = ['GET', 'POST'])
+def user_error_logs_ajax():
+    if check_user_Login():
+        msg = ''
+        userID = str(session["id"])
+        domainName = request.args.get('domainName')
+        Result = {"data":""}
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID)
+        userName = cursor.fetchone()[0]
+        #fname = "C:\\Users\\mayaz\\Desktop\\testfile.txt"
+        fname = "/home/"+userName+"/logs/"+domainName+"-error.log"
+        data = readLines(fname,100)
+        Result["data"]=data;
+        response = app.response_class(
+            response=json.dumps(Result),
+                status=200,
+                mimetype='application/json'
+        )
+        return response
+    else:
+        return redirect(url_for('routes.login'))
+
 
 @routes.route('/user/Logs/access_logs')
 def user_access_logs():
     if check_user_Login():
         msg = ''
-        return render_template('userFiles/Logs/access_logs.html', msg=msg)
+        userID = str(session["id"])
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id='+userID)
+        domains = cursor.fetchall()
+        return render_template('userFiles/Logs/access_logs.html', domains=domains, msg=msg)
     else:
         return redirect(url_for('routes.login'))
 
+@routes.route('/user/Logs/access_logs/Ajax' , methods = ['GET', 'POST'])
+def user_access_logs_ajax():
+    if check_user_Login():
+        msg = ''
+        userID = str(session["id"])
+        domainName = request.args.get('domainName')
+        Result = {"data":""}
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID)
+        userName = cursor.fetchone()[0]
+        fname = "/home/"+userName+"/logs/"+domainName+"-access.log"
+        data = readLines(fname,100)
+        Result["data"]=data;
+        response = app.response_class(
+            response=json.dumps(Result),
+                status=200,
+                mimetype='application/json'
+        )
+        return response
+    else:
+        return redirect(url_for('routes.login'))
