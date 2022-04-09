@@ -830,7 +830,7 @@ def admin_error_logs_ajax():
         domainData = cursor.fetchone()
         userName = domainData[0]
         Domain = domainData[1]
-        fname = "/home/"+userName+"/logs/"+Domain+"-access.log"
+        fname = "/home/"+userName+"/logs/"+Domain+"-error.log"
         data = readLines(fname,100)
         Result["data"]=data;
         response = app.response_class(
