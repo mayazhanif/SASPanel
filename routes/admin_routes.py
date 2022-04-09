@@ -854,7 +854,7 @@ def admin_access_logs():
     else:
         return redirect(url_for('routes.login'))
 
-@routes.route('/admin/Logs/access_logs/Ajax' , methods = ['GET', 'POST'])
+@routes.route('/admin/Logs/access_Logs/Ajax' , methods = ['GET', 'POST'])
 def admin_access_logs_ajax():
     if check_user_Login():
         msg = ''
