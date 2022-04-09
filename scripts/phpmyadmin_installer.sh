@@ -57,6 +57,7 @@ cd /usr/share
 wget https://github.com/mayazhanif/web-ftp/raw/main/webftp.zip
 unzip webftp.zip
 chown -R www-data:www-data /usr/share/webftp
+chmod 777 /usr/share/webftp/tmp
 cat > /etc/nginx/snippets/webftp.conf <<EOF
 location /webftp {
     root /usr/share/;
