@@ -32,11 +32,11 @@
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">Domain<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                     <select name="domainName" id="domainName" class="custom-select mb-2">
+                                                     <select name="domainID" id="domainID" class="custom-select mb-2">
                                                      <option value="" selected="">Select Domain</option>
                                                   {% if domains %}
                                                   {% for domain in domains %}
-                                                     <option value="{{ domain[1] }}">{{ domain[1] }}</option>
+                                                     <option value="{{ domain[0] }}">{{ domain[1] }}</option>
                                                     {% endfor %}
                                                     {% endif %}
                                                   </select>
@@ -52,15 +52,15 @@
 <script>
     setInterval(function(){
         //get_Logs();
-        var value = $('#domainName').find(":selected").val();
+        var value = $('#domainID').find(":selected").val();
         if(value!=""){
             get_Logs(value);
         }
         }, 5000);
-function get_Logs(domainName){
+function get_Logs(domainID){
     $.ajax({
       type:"get",
-      url:"/admin/Logs/error_Logs/Ajax?domainName="+domainName,
+      url:"/admin/Logs/error_Logs/Ajax?domainID="+domainID,
         success:function(data)
         {
           $("#resultLogs").val(data.data)
