@@ -820,7 +820,7 @@ def admin_error_logs():
 
 @routes.route('/admin/Logs/error_Logs/Ajax' , methods = ['GET', 'POST'])
 def admin_error_logs_ajax():
-    if check_user_Login():
+    if check_admin_Login():
         msg = ''
         #userID = str(session["id"])
         domainID = request.args.get('domainID')
@@ -856,10 +856,11 @@ def admin_access_logs():
 
 @routes.route('/admin/Logs/access_Logs/Ajax' , methods = ['GET', 'POST'])
 def admin_access_logs_ajax():
-    if check_user_Login():
+    if check_admin_Login():
         msg = ''
         #userID = str(session["id"])
         domainID = request.args.get('domainID')
+        #print(domainID)
         Result = {"data":""}
         cursor = mysqlconnection.cursor()
         cursor.execute('SELECT servUser,Domain_Name FROM `domains` Inner Join users ON domains.User_id = users.User_id where domains.Is_Deleted=0 and domains.Domain_Id='+domainID)

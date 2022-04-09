@@ -61,7 +61,7 @@
 function get_Logs(domainID){
     $.ajax({
       type:"get",
-      url:"/admin/Logs/access_Logs/Ajax??domainID="+domainID,
+      url:"/admin/Logs/access_Logs/Ajax?domainID="+domainID,
         success:function(data)
         {
           $("#resultLogs").val(data.data)

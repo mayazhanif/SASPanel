@@ -690,7 +690,7 @@ def user_access_logs():
     else:
         return redirect(url_for('routes.login'))
 
-@routes.route('/user/Logs/access_logs/Ajax' , methods = ['GET', 'POST'])
+@routes.route('/user/Logs/access_Logs/Ajax' , methods = ['GET', 'POST'])
 def user_access_logs_ajax():
     if check_user_Login():
         msg = ''
