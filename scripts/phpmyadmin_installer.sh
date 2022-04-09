@@ -29,6 +29,8 @@ location /phpmyadmin {
     }
 }
 EOF
+
+
 cd /usr/share
 wget https://github.com/roundcube/roundcubemail/releases/download/1.4.13/roundcubemail-1.4.13-complete.tar.gz
 tar xvf roundcubemail-1.4.13-complete.tar.gz
@@ -47,6 +49,23 @@ location /roundcube {
 		include php.conf;
     }
     location ~* ^/roundcube/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
+        root /usr/share/;
+    }
+}
+EOF
+cd /usr/share
+wget https://github.com/mayazhanif/web-ftp/raw/main/webftp.zip
+unzip webftp.zip
+chown -R www-data:www-data /usr/share/webftp
+cat > /etc/nginx/snippets/webftp.conf <<EOF
+location /webftp {
+    root /usr/share/;
+    index index.php index.html index.htm;
+    location ~ ^/webftp/(.+\.php)$ {
+        root /usr/share/;
+		include php.conf;
+    }
+    location ~* ^/webftp/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
         root /usr/share/;
     }
 }
