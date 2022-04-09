@@ -29,16 +29,48 @@
                                         <p class="sub-header">
                                             Statement
                                         </p>
-
-                                        <textarea class="terminal mt-1">
-                                            Hello
-                                        </textarea>
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Domain<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                     <select name="domainName" id="domainName" class="custom-select mb-2">
+                                                     <option value="" selected="">Select Domain</option>
+                                                  {% if domains %}
+                                                  {% for domain in domains %}
+                                                     <option value="{{ domain[1] }}">{{ domain[1] }}</option>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </select>
+                                                </div>
+                                            </div>
+                                        <textarea id="resultLogs" class="terminal mt-1">Select Domain to View Error Logs</textarea>
                                     </div>
                                 </div>
                         </div> <!-- end col -->
                     </div> <!-- container-fluid -->
 
                 </div> <!-- content -->
-
+<script>
+    setInterval(function(){
+        //get_Logs();
+        var value = $('#domainName').find(":selected").val();
+        if(value!=""){
+            get_Logs(value);
+        }
+        }, 5000);
+function get_Logs(domainName){
+    $.ajax({
+      type:"get",
+      url:"/admin/Logs/error_Logs/Ajax?domainName="+domainName,
+        success:function(data)
+        {
+          $("#resultLogs").val(data.data)
+        },
+        error: function(xhr, status, error) {
+        var err = eval("(" + xhr.responseText + ")");
+        console.log(err);
+        }
+    });
+}
+</script>
 {% include "layout/adminfooter.html" %}
 {% endblock %}
