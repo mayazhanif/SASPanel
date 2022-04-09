@@ -7,6 +7,19 @@ import hashlib
 from . import routes
 from functions import *
 from urllib.parse import urlparse
+from flask import current_app as app
+
+@routes.route('/readFile')
+def readFile():
+    f = open("C:\\Users\\mayaz\\Desktop\\testfile.txt", "r")
+    data=f.read()
+    Result = '{ "data":"'+data+'"}'
+    response = app.response_class(
+        response=Result,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 @routes.route('/admin/dashboard')

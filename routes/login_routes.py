@@ -4,19 +4,6 @@ from app import *
 from functions import *
 import hashlib
 from routes import routes
-from flask import current_app as app
-
-@routes.route('/readFile')
-def readFile():
-    f = open("C:\\Users\\mayaz\\Desktop\\testfile.txt", "r")
-    data=f.read()
-    Result = '{ "data":"'+data+'"}'
-    response = app.response_class(
-        response=Result,
-        status=200,
-        mimetype='application/json'
-    )
-    return response
 
 @routes.route('/login/', methods=['GET', 'POST'])
 def login(msg=""):
@@ -57,7 +44,7 @@ def login(msg=""):
                 session['id'] = result[0]
                 session['Email'] = result[2]
                 session['Name'] = result[4]
-
+                session['servUser'] = result[1]
                 return redirect(url_for('routes.user_dashboard'))
         else:
             return render_template('authentication/login.html', msg={"error":"primary","message":"Please fill all fields Correctly."})
