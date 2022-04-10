@@ -213,7 +213,7 @@ def listToString(s):
     returnData = ""
     return (returnData.join(s))
 
-def addCronJob(username,croncommand,logfile):
+def addCronJobOld(username,croncommand,logfile):
     os.system("mkdir -m 777 -p /home/"+username+"/crobjobs/logs")
     #os.system("chown -R www-data:www-data /home/"+username+"/crobjobs/logs/*")
     os.system("chown -R "+username+":"+username+" /home/"+username+"/crobjobs/logs/*")
@@ -223,6 +223,12 @@ def addCronJob(username,croncommand,logfile):
     os.system("rm mycron")
     print(comand)
     return True
+
+
+def addCronJob(username,croncommand,logfile):
+    os.system("/bin/bash scripts/add_cron_job.sh " + username+" "+croncommand)
+
+
 
 def install_packages():
     root_password="Master@786"
