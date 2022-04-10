@@ -24,20 +24,45 @@
                                             Use <a href="https://crontab.guru/">CronTab Guru</a> to learn how cron jobs Work.
                                         </p>
                                     <form method="POST" role="form" class="parsley-examples">
-                                            <h4 class="header-title mt-0">Select Cron Job Time</h4>
+                                            <h4 class="header-title mt-0">Cron Job</h4>
+                                            <div class="form-group row">
+                                                <label for="Name" class="col-md-2 col-form-label">User<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                     <select name="userID" id="userID" class="custom-select mb-2">
+                                                     <option selected="">Select User</option>
+                                                  {% if users %}
+                                                  {% for user in users %}
+                                                     <option value="{{ user[0] }}">{{ user[1] }}</option>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </select>
+
+                                                </div>
+                                            </div>
                                             <div class="mt-3">
-                                            <div class="custom-control custom-checkbox mb-2">
-                                                <input type="checkbox" class="custom-control-input" name="createFTP" id="createFTP">
-                                                <label class="custom-control-label" for="createFTP">Create FTP</label>
+                                            <h4 class="font-size-15 mt-3">Select Time</h4>
+                                            <div class="">
+                                            <div class="custom-control custom-radio mb-2">
+                                                <input type="radio" id="customRadio1" name="CronTime"
+                                                    class="custom-control-input" value="oneminute" checked="checked">
+                                                <label class="custom-control-label" for="customRadio1">Every Minute</label>
                                             </div>
-                                            <div class="custom-control custom-checkbox mb-2">
-                                                <input type="checkbox" class="custom-control-input" id="customCheck2">
-                                                <label class="custom-control-label" for="customCheck2">Create Default Mail</label>
+                                            <div class="custom-control custom-radio mb-2">
+                                                <input type="radio" id="customRadio2" value="fiveminute" name="CronTime"
+                                                    class="custom-control-input">
+                                                <label class="custom-control-label" for="customRadio2">Every 5 Minutes</label>
                                             </div>
-                                                <div class="custom-control custom-checkbox mb-2">
-                                                <input type="checkbox" class="custom-control-input" name="createMail" id="createMail">
-                                                <label class="custom-control-label" for="createMail">Create Mail</label>
+                                            <div class="custom-control custom-radio mb-2">
+                                                <input type="radio" id="customRadio3" value="everyday" name="CronTime"
+                                                    class="custom-control-input">
+                                                <label class="custom-control-label" for="customRadio3">Every Day</label>
                                             </div>
+                                            <div class="custom-control custom-radio mb-2">
+                                                <input type="radio" id="customRadio4" value="everymonth" name="CronTime"
+                                                    class="custom-control-input">
+                                                <label class="custom-control-label" for="customRadio4">Every Month</label>
+                                            </div>
+                                        </div>
                                             </div>
                                             <div class="form-group row">
                                                 <label for="Domain" class="col-md-2 col-form-label">Command to Execute<span class="text-danger">*</span></label>
@@ -54,7 +79,7 @@
                                             <div class="form-group row">
                                                 <div class="col-md-8 offset-md-4">
                                                     <button type="submit" class="btn btn-primary mr-1">
-                                                        Add Domain Name
+                                                        Add Cron Job
                                                     </button>
                                                     <button type="reset"
                                                             class="btn btn-secondary">
@@ -69,7 +94,7 @@
                         <div class="">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h4 class="header-title mt-0 mb-1">Add New User</h4>
+                                        <h4 class="header-title mt-0 mb-1">Cron Jobs List</h4>
                                         <p class="sub-header">
                                             Statement
                                         </p>

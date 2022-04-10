@@ -880,14 +880,49 @@ def admin_access_logs_ajax():
     else:
         return redirect(url_for('routes.login'))
 
-@routes.route('/admin/CronJobs/cron_jobs')
+@routes.route('/admin/CronJobs/cron_jobs' ,methods = ['GET', 'POST'])
 def admin_cron_jobs():
     if check_admin_Login():
         msg = ''
         cursor = mysqlconnection.cursor()
-        #cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')
         cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0;')
         cronjobs = cursor.fetchall()
-        return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+        cursor.execute('SELECT User_id,User_email FROM `users` where Is_Deleted=0;')
+        users = cursor.fetchall()
+        if request.method == 'POST' and 'userID' in request.form and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
+            userID = request.form['userID']
+            CommandFinal= ""
+            unixCommand =""
+            CronTime = request.form['CronTime']
+            if CronTime=="oneminute":
+                unixCommand = "* * * * *"
+            elif CronTime=="fiveminute":
+                unixCommand = "*/5 * * * *"
+            elif CronTime=="everyday":
+                unixCommand = "0 0 * * *"
+            elif CronTime=="everymonth":
+                unixCommand = "0 0 1 * *"
+            else:
+                msg={"error":"danger","message":"Cron Job Error."}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+            Command = request.form['Command']
+            logFile = request.form['logFile']
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted =0 and User_id='+userID)
+            getUsername = cursor.fetchone()[0]
+            logFileLink = "/home/"+getUsername+"/crobjobs/logs/"+logFile
+            CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
+            addCronJob(getUsername, CommandFinal, logFileLink)
+            query = "INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, '"+userID+"', '"+Command+"', '"+logFile+"', '0')"
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                msg = {"error": "success", "message": "Cron Job Added."}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+            else:
+                msg = {"error": "danger", "message": "Cron Job Not Added."}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+            #return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+        else:
+            return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
     else:
         return redirect(url_for('routes.login'))

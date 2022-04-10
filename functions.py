@@ -215,9 +215,11 @@ def listToString(s):
 
 def addCronJob(username,croncommand,logfile):
     os.system("mkdir -p /home/"+username+"/crobjobs/logs")
-    returnData = ""
+    comand='echo "'+croncommand+'" >> mycron'
+    os.system("crontab -u "+username+" mycron")
+    os.system("rm mycron")
+    print(comand)
     return True
-
 
 def install_packages():
     root_password="Master@786"
