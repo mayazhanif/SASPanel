@@ -879,3 +879,15 @@ def admin_access_logs_ajax():
         return response
     else:
         return redirect(url_for('routes.login'))
+
+@routes.route('/admin/CronJobs/cron_jobs')
+def admin_cron_jobs():
+    if check_admin_Login():
+        msg = ''
+        cursor = mysqlconnection.cursor()
+        #cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0;')
+        cronjobs = cursor.fetchall()
+        return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+    else:
+        return redirect(url_for('routes.login'))

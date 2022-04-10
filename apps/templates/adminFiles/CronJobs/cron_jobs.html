@@ -1,0 +1,71 @@
+{% include "layout/adminheader.html" %}
+{% block body %}
+            <div class="content-page">
+                <div class="content">
+
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+                        <div class="row page-title">
+                            <div class="col-md-12">
+                                <nav aria-label="breadcrumb" class="float-right mt-1">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="#">Logs</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Access Logs</li>
+                                    </ol>
+                                </nav>
+                                <h4 class="mb-1 mt-0">Access Logs</h4>
+                            </div>
+                        </div>
+
+                        <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Add New User</h4>
+                                        <p class="sub-header">
+                                            Statement
+                                        </p>
+                                        <table id="basic-datatable" class="table nowrap">
+                                            <thead>
+                                                <tr>
+                                                    <th>User's Name</th>
+                                                    <th>User's Email</th>
+                                                    <th>Domain Name</th>
+                                                    <th>Domain Directory</th>
+                                                    <th>Manage</th>
+                                                </tr>
+                                            </thead>
+
+
+                                            <tbody>
+                                            {% if results %}
+                                                  {% for record in results %}
+                                                      {% if record[3]==1 %}
+                                                          {% set msg = "Unsuspend" %}
+                                                          {% set badge = "success" %}
+                                                      {% else %}
+                                                          {% set msg = "Suspend" %}
+                                                          {% set badge = "danger" %}
+                                                      {% endif %}
+                                                    <tr>
+                                                        <td>{{record[9]}}</td>
+                                                        <td>{{record[7]}}</td>
+                                                        <td><a href="https://{{record[1]}}">{{record[1]}}</a></td>
+                                                        <td>/home/{{record[6]}}/domains/{{record[1]}}/html</td>
+                                                        <td><a href="{{ url_for('routes.admin_deleteDomain', domainID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a> <a href="{{ url_for('routes.admin_updateDomains', domainID=record[0]) }}"><button type="button" class="btn btn-{{ badge }} btn-sm">
+                                                            {{ msg }}</button></a></td>
+                                                    </tr>
+                                                  {% endfor %}
+                                            {% endif %}
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                        </div> <!-- end col -->
+                    </div> <!-- container-fluid -->
+
+                </div> <!-- content -->
+{% include "layout/adminfooter.html" %}
+{% endblock %}
