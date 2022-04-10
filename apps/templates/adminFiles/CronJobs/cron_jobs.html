@@ -10,14 +10,62 @@
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
                                         <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="#">Logs</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Access Logs</li>
+                                        <li class="breadcrumb-item active" aria-current="page"><a href="#">Cron Jobs</a></li>
                                     </ol>
                                 </nav>
-                                <h4 class="mb-1 mt-0">Access Logs</h4>
+                                <h4 class="mb-1 mt-0">Cron Jobs</h4>
                             </div>
                         </div>
-
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Add New Cron Job</h4>
+                                        <p class="sub-header">
+                                            Use <a href="https://crontab.guru/">CronTab Guru</a> to learn how cron jobs Work.
+                                        </p>
+                                    <form method="POST" role="form" class="parsley-examples">
+                                            <h4 class="header-title mt-0">Select Cron Job Time</h4>
+                                            <div class="mt-3">
+                                            <div class="custom-control custom-checkbox mb-2">
+                                                <input type="checkbox" class="custom-control-input" name="createFTP" id="createFTP">
+                                                <label class="custom-control-label" for="createFTP">Create FTP</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox mb-2">
+                                                <input type="checkbox" class="custom-control-input" id="customCheck2">
+                                                <label class="custom-control-label" for="customCheck2">Create Default Mail</label>
+                                            </div>
+                                                <div class="custom-control custom-checkbox mb-2">
+                                                <input type="checkbox" class="custom-control-input" name="createMail" id="createMail">
+                                                <label class="custom-control-label" for="createMail">Create Mail</label>
+                                            </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Command to Execute<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text" required="" parsley-type="text" name="Command" class="form-control" id="Command" placeholder="php example.php">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Log FileName<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="text" required="" parsley-type="text" name="logFile" class="form-control" id="logFile" placeholder="execution.log">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <div class="col-md-8 offset-md-4">
+                                                    <button type="submit" class="btn btn-primary mr-1">
+                                                        Add Domain Name
+                                                    </button>
+                                                    <button type="reset"
+                                                            class="btn btn-secondary">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+										</div>
+                                </div>
+                        </div> <!-- end col -->
                         <div class="">
                                 <div class="card">
                                     <div class="card-body">
@@ -30,30 +78,22 @@
                                                 <tr>
                                                     <th>User's Name</th>
                                                     <th>User's Email</th>
-                                                    <th>Domain Name</th>
-                                                    <th>Domain Directory</th>
+                                                    <th>Cron Command</th>
+                                                    <th>Logs Directory</th>
                                                     <th>Manage</th>
                                                 </tr>
                                             </thead>
 
 
                                             <tbody>
-                                            {% if results %}
-                                                  {% for record in results %}
-                                                      {% if record[3]==1 %}
-                                                          {% set msg = "Unsuspend" %}
-                                                          {% set badge = "success" %}
-                                                      {% else %}
-                                                          {% set msg = "Suspend" %}
-                                                          {% set badge = "danger" %}
-                                                      {% endif %}
+                                            {% if cronjobs %}
+                                                  {% for record in cronjobs %}
                                                     <tr>
                                                         <td>{{record[9]}}</td>
                                                         <td>{{record[7]}}</td>
-                                                        <td><a href="https://{{record[1]}}">{{record[1]}}</a></td>
-                                                        <td>/home/{{record[6]}}/domains/{{record[1]}}/html</td>
-                                                        <td><a href="{{ url_for('routes.admin_deleteDomain', domainID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a> <a href="{{ url_for('routes.admin_updateDomains', domainID=record[0]) }}"><button type="button" class="btn btn-{{ badge }} btn-sm">
-                                                            {{ msg }}</button></a></td>
+                                                        <td><a href="">{{record[2]}}</a></td>
+                                                        <td>{{record[3]}}</td>
+                                                        <td><a href="{{ url_for('routes.admin_deleteDomain', CronID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a></td>
                                                     </tr>
                                                   {% endfor %}
                                             {% endif %}

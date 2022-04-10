@@ -213,6 +213,12 @@ def listToString(s):
     returnData = ""
     return (returnData.join(s))
 
+def addCronJob(username,croncommand,logfile):
+    os.system("mkdir -p /home/"+username+"/crobjobs/logs")
+    returnData = ""
+    return True
+
+
 def install_packages():
     root_password="Master@786"
     os.system("sudo apt-get -y update")
