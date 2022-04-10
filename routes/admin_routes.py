@@ -913,7 +913,7 @@ def admin_cron_jobs():
             CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
             addCronJob(getUsername, CommandFinal, logFileLink)
             query = "INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, '"+userID+"', '"+Command+"', '"+logFile+"', '0')"
-            print(query)
+            #print(query)
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
