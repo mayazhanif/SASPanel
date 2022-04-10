@@ -747,3 +747,23 @@ def user_cron_jobs():
             return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
     else:
         return redirect(url_for('routes.login'))
+
+@routes.route('/user/CronJobs/deleteJob', methods =['GET', 'POST'])
+def user_deleteJob():
+    if check_user_Login():
+        if request.method == 'GET' and request.args.get('JobID'):
+            userID = str(session["id"])
+            JobID=request.args.get('JobID')
+            cursor = mysqlconnection.cursor()
+            query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID+" and User_id="+userID
+            cursor.execute(query)
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                return redirect(url_for("routes.user_cron_jobs"))
+            else:
+                return redirect(url_for("routes.user_cron_jobs"))
+
+        else:
+            return redirect(url_for("routes.user_cron_jobs"))
+    else:
+        return redirect(url_for('routes.login'))
