@@ -703,11 +703,11 @@ def user_access_logs_ajax():
 def user_cron_jobs():
     if check_user_Login():
         msg = ''
+        userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.User_id='+userID+';')
         cronjobs = cursor.fetchall()
         if request.method == 'POST' and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
-            userID = str(session["id"])
             CommandFinal= ""
             unixCommand =""
             CronTime = request.form['CronTime']
