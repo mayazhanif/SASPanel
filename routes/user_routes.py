@@ -627,21 +627,6 @@ def user_deleteSubDomain():
     else:
         return redirect(url_for('routes.login'))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @routes.route('/user/Logs/error_Logs')
 def user_error_logs():
     if check_user_Login():
