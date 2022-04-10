@@ -215,6 +215,7 @@ def listToString(s):
 
 def addCronJob(username,croncommand,logfile):
     os.system("mkdir -p /home/"+username+"/crobjobs/logs")
+    os.system("chown -R www-data:www-data /home/"+username+"/crobjobs/logs/*")
     comand='echo "'+croncommand+'" >> mycron'
     os.system(comand)
     os.system("crontab -u "+username+" mycron")
