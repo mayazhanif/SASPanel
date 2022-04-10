@@ -917,6 +917,9 @@ def admin_cron_jobs():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                cursor.execute(
+                    'SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0;')
+                cronjobs = cursor.fetchall()
                 msg = {"error": "success", "message": "Cron Job Added."}
                 return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
             else:
