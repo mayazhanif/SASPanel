@@ -934,13 +934,16 @@ def admin_cron_jobs():
 @routes.route('/admin/CronJobs/deleteJob', methods =['GET', 'POST'])
 def admin_deleteJob():
     if check_user_Login():
+        cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('JobID'):
             JobID=request.args.get('JobID')
-            cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT servUser FROM `users` INNER JOIN cronjobs ON  users.User_id=cronjobs.User_id where cronjobs.Is_Deleted=0 and  cronjobs.Job_ID='+JobID)
+            getUsername = cursor.fetchone()[0]
             query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                deleteCronJob(getUsername)
                 return redirect(url_for("routes.admin_cron_jobs"))
             else:
                 return redirect(url_for("routes.admin_cron_jobs"))

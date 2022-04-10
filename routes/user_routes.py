@@ -705,7 +705,7 @@ def user_cron_jobs():
         msg = ''
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.User_id='+userID+';')
+        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.User_id='+userID+' ORDER BY `cronjobs`.`Job_ID` ASC LIMIT 1;')
         cronjobs = cursor.fetchall()
         if request.method == 'POST' and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
             CommandFinal= ""
@@ -751,14 +751,17 @@ def user_cron_jobs():
 @routes.route('/user/CronJobs/deleteJob', methods =['GET', 'POST'])
 def user_deleteJob():
     if check_user_Login():
+        cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('JobID'):
             userID = str(session["id"])
             JobID=request.args.get('JobID')
-            cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT servUser FROM `users` INNER JOIN cronjobs ON  users.User_id=cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.Job_ID='+JobID+' and cronjobs.User_id='+userID)
+            getUsername = cursor.fetchone()[0]
             query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID+" and User_id="+userID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                deleteCronJob(getUsername)
                 return redirect(url_for("routes.user_cron_jobs"))
             else:
                 return redirect(url_for("routes.user_cron_jobs"))
