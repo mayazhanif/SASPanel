@@ -229,6 +229,11 @@ def addCronJob(username,croncommand,logfile):
     os.system("/bin/bash scripts/add_cron_job.sh " + username+" "+croncommand)
 
 
+def deleteCronJob(username):
+    comand='echo "" >> mycron'
+    os.system(comand)
+    os.system("crontab -u "+username+" mycron")
+    os.system("rm mycron")
 
 def install_packages():
     root_password="Master@786"
