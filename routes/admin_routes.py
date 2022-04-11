@@ -793,7 +793,7 @@ def admin_deleteSubDomain():
         if request.method == 'GET' and request.args.get('SdomainID'):
             SdomainID=request.args.get('SdomainID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Deleted=0 and `subdomains`.`SDomain_ID`=' + SdomainID + ';')
+            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=' + SdomainID + ';')
             SubDomainName = cursor.fetchone()[0]
             query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID
             cursor.execute(query)
