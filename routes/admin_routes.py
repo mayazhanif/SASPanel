@@ -382,10 +382,13 @@ def admin_deleteDomain():
         if request.method == 'GET' and request.args.get('domainID'):
             domainID=request.args.get('domainID')
             cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT Domain_Name FROM `domains` where Is_Deleted=0 and Domain_Id=' + domainID + ';')
+            DomainName = cursor.fetchone()[0]
             query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                remove_vhost(DomainName)
                 return redirect(url_for("routes.admin_viewDomains"))
             else:
                 return redirect(url_for("routes.admin_viewDomains"))
@@ -790,10 +793,13 @@ def admin_deleteSubDomain():
         if request.method == 'GET' and request.args.get('SdomainID'):
             SdomainID=request.args.get('SdomainID')
             cursor = mysqlconnection.cursor()
+            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Deleted=0 and `subdomains`.`SDomain_ID`=' + SdomainID + ';')
+            SubDomainName = cursor.fetchone()[0]
             query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                remove_vhost(SubDomainName)
                 return redirect(url_for("routes.admin_viewSubDomains"))
             else:
                 return redirect(url_for("routes.admin_viewSubDomains"))

@@ -167,6 +167,8 @@ def install():
 def add_vhost(username, domain):
     os.system("/bin/bash scripts/add_vhost.sh " + username+" "+domain)
 
+def remove_vhost(domain):
+    os.system("rm /etc/nginx/sites-enabled/"+domain+"-vhost.conf")
 
 def add_ftp_only(username, password):
     os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
