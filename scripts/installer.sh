@@ -7,6 +7,8 @@ echo "postfix postfix/mailname string saspanelmain.com" | debconf-set-selections
 echo "dovecot-core dovecot-core/create-ssl-cert boolean true" | debconf-set-selections
 
 apt-get install nginx vsftpd
+mkdir -p /etc/nginx/backupDomains
+
 cat > /etc/nginx/php.conf <<EOF
 	location ~ \.php$ {
 		include snippets/fastcgi-php.conf;
