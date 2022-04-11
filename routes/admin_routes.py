@@ -912,6 +912,8 @@ def admin_cron_jobs():
             logFileLink = "/home/"+getUsername+"/crobjobs/logs/"+logFile
             CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
             addCronJob(getUsername, CommandFinal, logFileLink)
+            query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = "+userID
+            cursor.execute(query)
             query = "INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, '"+userID+"', '"+Command+"', '"+logFile+"', '0')"
             #print(query)
             cursor.execute(query)
