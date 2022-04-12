@@ -38,6 +38,8 @@
                                                 <tr>
                                                     <th>Domain Name</th>
                                                     <th>Domain Directory</th>
+                                                    <th>SSL Cerificate</th>
+                                                    <th>SSL Expiry </th>
                                                     <th>Manage</th>
                                                 </tr>
                                             </thead>
@@ -49,6 +51,8 @@
                                                     <tr>
                                                         <td><a href="https://{{record[1]}}">{{record[1]}}</a></td>
                                                         <td>/home/{{record[6]}}/domains/{{record[1]}}/html</td>
+                                                        <td>SSL Cerificate</td>
+                                                        <td>2022-12-12</td>
                                                         <td><a href="{{ url_for('routes.user_deleteDomain', domainID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a></td>
                                                     </tr>
                                                   {% endfor %}

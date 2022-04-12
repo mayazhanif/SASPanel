@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Apr 12, 2022 at 04:45 AM
+-- Generation Time: Apr 12, 2022 at 11:02 AM
 -- Server version: 5.7.31
 -- PHP Version: 7.3.21
 
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS `cronjobs` (
   `Logs_Directory` varchar(200) NOT NULL,
   `Is_Deleted` int(11) NOT NULL,
   PRIMARY KEY (`Job_ID`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS `domains` (
   `Is_Deleted` int(11) NOT NULL,
   PRIMARY KEY (`Domain_Id`),
   UNIQUE KEY `Domain_Name` (`Domain_Name`)
-) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS `ftp_accounts` (
   `Is_Active` int(11) NOT NULL,
   PRIMARY KEY (`Account_Id`),
   UNIQUE KEY `FTP_Username` (`FTP_Username`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS `mail_accounts` (
   `Is_Active` int(11) NOT NULL,
   PRIMARY KEY (`Mail_Id`),
   UNIQUE KEY `Mail_Address` (`Mail_Address`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS `msqldatabases` (
   `Is_Active` int(11) NOT NULL,
   PRIMARY KEY (`DB_ID`),
   UNIQUE KEY `DbName` (`DbName`)
-) ENGINE=MyISAM AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -150,7 +150,7 @@ CREATE TABLE IF NOT EXISTS `mysqldbusers` (
   `Is_Active` int(11) NOT NULL,
   PRIMARY KEY (`DbUser_ID`),
   UNIQUE KEY `DbUsername` (`DbUsername`)
-) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS `packages` (
   `Storage_Limit` int(11) NOT NULL,
   `Is_Active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`Package_Id`)
-) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `packages`
@@ -198,9 +198,26 @@ CREATE TABLE IF NOT EXISTS `packages` (
 
 INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`, `Is_Active`) VALUES
 (1, 'Demo_Account', 1, 1, 55, 5, 1, 52, 55, 156, 0),
-(8, 'Test', 1, 5, 5, 5, 1, 5, 5, 5, 1),
-(9, 'Ultimate', 1, 100, 100, 550, 1, 100, 100, 10, 1),
-(10, 'Samar', 1, 0, 0, 500, 1, 0, 0, 0, 1);
+(2, 'Test', 1, 5, 5, 5, 1, 5, 5, 5, 1),
+(3, 'Ultimate', 1, 100, 100, 550, 1, 100, 100, 10, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sslcertificates`
+--
+
+DROP TABLE IF EXISTS `sslcertificates`;
+CREATE TABLE IF NOT EXISTS `sslcertificates` (
+  `Cert_ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Domain_Id` int(11) NOT NULL,
+  `User_id` int(11) NOT NULL,
+  `Certificate` varchar(200) NOT NULL,
+  `PrivateKey` varchar(200) NOT NULL,
+  `ExpiryDate` date NOT NULL,
+  `Is_Active` int(11) NOT NULL,
+  PRIMARY KEY (`Cert_ID`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -217,7 +234,7 @@ CREATE TABLE IF NOT EXISTS `subdomains` (
   `Is_Active` int(11) NOT NULL,
   PRIMARY KEY (`SDomain_ID`),
   UNIQUE KEY `SubDomain` (`SubDomain`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
 
@@ -240,7 +257,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `User_Reg_Date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`User_id`),
   UNIQUE KEY `User_email` (`User_email`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

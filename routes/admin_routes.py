@@ -12,19 +12,6 @@ from datetime import datetime
 from datetime import timedelta
 
 
-@routes.route('/readFile')
-def readFile():
-    f = open("C:\\Users\\mayaz\\Desktop\\testfile.txt", "r")
-    data=f.read()
-    Result = '{ "data":"'+data+'"}'
-    response = app.response_class(
-        response=Result,
-        status=200,
-        mimetype='application/json'
-    )
-    return response
-
-
 @routes.route('/admin/dashboard')
 def admin_dashboard():
     if check_admin_Login():
@@ -353,8 +340,8 @@ def admin_addDomain():
 def admin_viewDomains():
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
-        cursor.execute('SELECT * FROM `domains` INNER JOIN users ON domains.User_id = users.User_id where domains.Is_Deleted=0;')
+        #cursor.execute('SELECT * FROM `domains` INNER JOIN users ON domains.User_id = users.User_id where domains.Is_Deleted=0;')
+        cursor.execute('SELECT * FROM domains JOIN users ON domains.User_id = users.User_id JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id;')
         results = cursor.fetchall()
         return render_template('adminFiles/domains/viewDomains.html', results=results)
     else:
