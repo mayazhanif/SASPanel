@@ -8,6 +8,9 @@ from . import routes
 from functions import *
 from urllib.parse import urlparse
 from flask import current_app as app
+from datetime import datetime
+from datetime import timedelta
+
 
 @routes.route('/readFile')
 def readFile():
@@ -314,8 +317,10 @@ def admin_addDomain():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'DomainName' in request.form:
             userID = request.form['userID']
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
-            getUserName = cursor.fetchone()[0]
+            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            user = cursor.fetchone()
+            getUserName = user[0]
+            getEmail = user[1]
             DomainName = request.form['DomainName']
             query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '"+userID+"', '0', '0');"
             try:
@@ -325,8 +330,13 @@ def admin_addDomain():
                 msg={"error":"danger","message":"Domain Already Added."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             if cursor.rowcount>0:
+                DomainID = str(cursor.lastrowid)
                 add_vhost(getUserName,DomainName)
-                generate_SSL(DomainName,"test@test.com")
+                generate_SSL(DomainName,getEmail)
+                ExpiryDate = (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
+                query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
+                cursor.execute(query)
+                mysqlconnection.commit()
                 msg={"error":"success","message":"Domain Added."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             else:

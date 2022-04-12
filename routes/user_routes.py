@@ -8,6 +8,8 @@ from Database.DbConfig import mysqlconnection
 import functions
 from urllib.parse import urlparse
 from flask import current_app as app
+from datetime import datetime
+from datetime import timedelta
 
 
 @routes.route('/user/dashboard')
@@ -103,7 +105,9 @@ def user_addDomain():
                 msg = {"error": "danger", "message": "Domains Limit Reached."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
-            getUserName = cursor.fetchone()[0]
+            user = cursor.fetchone()
+            getUserName = user[0]
+            getEmail = user[1]
             query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '" + DomainName + "', '"+userID+"', '0', '0');"
             try:
                 cursor.execute(query)
@@ -112,7 +116,13 @@ def user_addDomain():
                 msg = {"error": "danger", "message": "Domain Already Added."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
             if cursor.rowcount > 0:
+                DomainID = str(cursor.lastrowid)
                 add_vhost(getUserName,DomainName)
+                generate_SSL(DomainName,getEmail)
+                ExpiryDate = (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
+                query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
+                cursor.execute(query)
+                mysqlconnection.commit()
                 msg = {"error": "success", "message": "Domain Added."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
             else:
