@@ -335,6 +335,12 @@ def admin_addDomain():
     else:
         return redirect(url_for('routes.login'))
 
+@routes.route('/admin/domains/renewSSL')
+def admin_renewSSL():
+    if check_admin_Login():
+        print()
+    else:
+        return redirect(url_for('routes.login'))
 
 @routes.route('/admin/domains/viewDomains')
 def admin_viewDomains():

@@ -134,6 +134,16 @@ def user_addDomain():
     else:
         return redirect(url_for('routes.login'))
 
+@routes.route('/user/domains/renewSSL', methods = ['GET','POST'])
+def user_renewSSL():
+    if check_user_Login():
+        cursor = mysqlconnection.cursor()
+        #cursor.execute('SELECT * FROM `domains` where domains.Is_Deleted=0 and domains.User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM domains JOIN users ON domains.User_id = users.User_id JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id and domains.User_id='+str(session["id"]))
+        results = cursor.fetchall()
+        return render_template('userFiles/domains/viewDomains.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
 
 
 @routes.route('/user/domains/viewDomains')

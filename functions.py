@@ -242,7 +242,8 @@ def deleteCronJob(username):
 
 def generate_SSL(domain,email):
     os.system("/bin/bash scripts/ssl_certificate_generate.sh " + domain+" "+email)
-
+def renewALLSSL():
+    os.system("certbot renew --force-renewal")
 
 def install_packages():
     root_password="Master@786"
