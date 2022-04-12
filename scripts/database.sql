@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Apr 06, 2022 at 03:52 AM
+-- Generation Time: Apr 12, 2022 at 04:45 AM
 -- Server version: 5.7.31
 -- PHP Version: 7.3.21
 
@@ -52,6 +52,22 @@ INSERT INTO `administrator` (`Admin_id`, `Admin_Name`, `Admin_Username`, `Admin_
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `cronjobs`
+--
+
+DROP TABLE IF EXISTS `cronjobs`;
+CREATE TABLE IF NOT EXISTS `cronjobs` (
+  `Job_ID` int(11) NOT NULL AUTO_INCREMENT,
+  `User_id` int(11) NOT NULL,
+  `Cron_Command` varchar(200) NOT NULL,
+  `Logs_Directory` varchar(200) NOT NULL,
+  `Is_Deleted` int(11) NOT NULL,
+  PRIMARY KEY (`Job_ID`)
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `domains`
 --
 
@@ -65,19 +81,6 @@ CREATE TABLE IF NOT EXISTS `domains` (
   PRIMARY KEY (`Domain_Id`),
   UNIQUE KEY `Domain_Name` (`Domain_Name`)
 ) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `domains`
---
-
-INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES
-(1, 'test.com', 2, 0, 0),
-(2, 'testdomain.com', 1, 0, 0),
-(8, 'testdomain1.com', 1, 0, 1),
-(6, 'devil.com', 1, 0, 1),
-(7, 'hello.com', 1, 0, 0),
-(9, 'testnewDomain.com', 1, 0, 0),
-(10, 'devial.com', 1, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -97,16 +100,6 @@ CREATE TABLE IF NOT EXISTS `ftp_accounts` (
   UNIQUE KEY `FTP_Username` (`FTP_Username`)
 ) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `ftp_accounts`
---
-
-INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES
-(1, 2, '/home/username/public_html', 'haxor', 'haxor', 1),
-(2, 2, 'test', 'test', 'VGVzdFBhc3M=', 1),
-(3, 11, '/home/username/public_html', 'ftp_account', 'YXNkZjEyMzQ=', 1),
-(4, 1, '/home/username/public_html', 'TestUser', 'VGVzdFVzZXI=', 1);
-
 -- --------------------------------------------------------
 
 --
@@ -125,17 +118,6 @@ CREATE TABLE IF NOT EXISTS `mail_accounts` (
   UNIQUE KEY `Mail_Address` (`Mail_Address`)
 ) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `mail_accounts`
---
-
-INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES
-(1, 1, 1, 'support@domain.com', 'AZ=', 0),
-(2, 2, 1, 'testAccount@testdomain.com', 'MTIzNDU2', 0),
-(3, 2, 1, 'ew@testdomain.com', 'TmV3UGFzcw==', 1),
-(4, 7, 1, 'testAccount@hello.com', 'YWRkRW1haWw=', 1),
-(5, 2, 1, 'dsdasdasdsadasd@testdomain.com', 'VGVzdA==', 1);
-
 -- --------------------------------------------------------
 
 --
@@ -153,21 +135,6 @@ CREATE TABLE IF NOT EXISTS `msqldatabases` (
   UNIQUE KEY `DbName` (`DbName`)
 ) ENGINE=MyISAM AUTO_INCREMENT=20 DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `msqldatabases`
---
-
-INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES
-(12, 'a231', 1, 7, 1),
-(13, 'NewDB', 1, 7, 1),
-(14, 'test_database', 14, 8, 0),
-(11, 'TESTCFD', 11, 4, 1),
-(15, 'abcd_db', 14, 8, 0),
-(16, 'abcde_db', 14, 8, 0),
-(17, 'abcdef_db', 14, 8, 0),
-(18, 'abcdefg_db', 14, 8, 0),
-(19, 'fulluser_db', 14, 8, 1);
-
 -- --------------------------------------------------------
 
 --
@@ -184,17 +151,6 @@ CREATE TABLE IF NOT EXISTS `mysqldbusers` (
   PRIMARY KEY (`DbUser_ID`),
   UNIQUE KEY `DbUsername` (`DbUsername`)
 ) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `mysqldbusers`
---
-
-INSERT INTO `mysqldbusers` (`DbUser_ID`, `DbUsername`, `DbPassword`, `User_id`, `Is_Active`) VALUES
-(4, 'zayazaya223', 'dGVzdHBhc3M=', 11, 1),
-(5, 'aArsalan7', '$S4uZ^Z2', 12, 1),
-(6, 'dProduct834', 'SDcrZ2RLeVs=', 13, 1),
-(7, 'testdatabase', 'dGVzdA==', 1, 1),
-(8, 'lfulluse105', 'bmV3cGFzcw==', 14, 1);
 
 -- --------------------------------------------------------
 
@@ -263,15 +219,6 @@ CREATE TABLE IF NOT EXISTS `subdomains` (
   UNIQUE KEY `SubDomain` (`SubDomain`)
 ) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
---
--- Dumping data for table `subdomains`
---
-
-INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES
-(1, 2, 1, 'test.testdomain.com', 0),
-(2, 7, 1, 'test.hello.com', 1),
-(3, 7, 1, 'dsdasdasdsadasd.hello.com', 0);
-
 -- --------------------------------------------------------
 
 --
@@ -294,17 +241,6 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`User_id`),
   UNIQUE KEY `User_email` (`User_email`)
 ) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`User_id`, `servUser`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES
-(1, 'test1', 'test@test.com', '202cb962ac59075b964b07152d234b70', 'Test Account', '', '2022-01-17 19:28:59', 1, 1, 0, '2022-01-17 19:28:59'),
-(14, 'lfulluse563', 'fulluser@fulluser.com', '202cb962ac59075b964b07152d234b70', 'fulluser', '', '2022-04-04 19:10:43', 1, 8, 0, '2022-04-04 19:10:43'),
-(13, 'dProduct818', 'ProductAdd@ProductAdd.com', '5255c0120430256776b55522f4c998d8', 'ProductAdd', '', '2022-03-20 12:11:57', 1, 8, 0, '2022-03-20 12:11:57'),
-(12, 'aArsalan85', 'Arsalan@Arsalan.com', '8d55950739cfafb232f90aef3970a41a', 'Arsalan', '', '2022-03-20 12:06:46', 1, 8, 0, '2022-03-20 12:06:46'),
-(11, 'zayazaya4', 'ayaz@ayaz.com', '29d867687b8d0b64f663f8e7a39b8df1', 'Ayaz', '', '2022-03-20 08:19:58', 1, 8, 0, '2022-03-20 08:19:58');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

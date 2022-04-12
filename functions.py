@@ -239,11 +239,17 @@ def deleteCronJob(username):
     os.system("crontab -u "+username+" mycron")
     os.system("rm mycron")
 
+
+def generate_SSL(domain,email):
+    os.system("/bin/bash scripts/ssl_certificate_generate.sh " + domain+" "+email)
+
+
 def install_packages():
     root_password="Master@786"
     os.system("sudo apt-get -y update")
     os.system("sudo apt-get -y upgrade")
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
+    os.system("sudo apt-get -y install certbot python3-certbot-nginx")
     set_mysql_root(root_password)
     os.system("sudo apt-get -y install php-common php-cli php-fpm")
     os.system("sudo apt-get install dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd dovecot-mysql -y > /dev/null 2>&1")
