@@ -326,6 +326,7 @@ def admin_addDomain():
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             if cursor.rowcount>0:
                 add_vhost(getUserName,DomainName)
+                generate_SSL(DomainName,"test@test.com")
                 msg={"error":"success","message":"Domain Added."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             else:
