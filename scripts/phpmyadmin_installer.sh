@@ -90,7 +90,7 @@ sed -i "s|^\(\$config\['smtp_pass'\] =\).*$|\1 \'\';|" /usr/share/roundcube/conf
 sed -i "s|^\(\$config\['smtp_port'\] =\).*$|\1 25;|" /usr/share/roundcube/config/config.inc.php
 #sed -i "s|^\(\$config\['support_url'\] =\).*$|\1 \'mailto:${E}\';|" /var/www/html/roundcube/config/config.inc.php
 #deskey=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9-_#&!*%?' | fold -w 24 | head -n 1)
-deskey=$(cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-24} | head -n 1)
+deskey=$(cat /dev/urandom | tr -dc '[:alpha:]' | fold -w 24 | head -n 1)
 sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 \'${deskey}\';|" /usr/share/roundcube/config/config.inc.php
 rm -rf /usr/share/roundcube/installer
 #echo -e "\n\$cfg['Servers'][\$i]['auth_type'] = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL'] = 'sso.php';\n" >> /usr/share/phpmyadmin/config.inc.php
