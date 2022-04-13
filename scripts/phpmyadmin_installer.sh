@@ -53,15 +53,15 @@ location /roundcube {
     }
 }
 EOF
-cp /usr/share/roundcube/config/config.inc.php.sample /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\$config\['db_dsnw'\] =\).*$|\1 \'mysqli://roundcube:${pwd}@localhost/roundcubedb\';|" /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\$config\['smtp_server'\] =\).*$|\1 \'localhost\';|" /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\$config\['smtp_user'\] =\).*$|\1 \'%u\';|" /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\$config\['smtp_pass'\] =\).*$|\1 \'%p\';|" /usr/share/roundcube/config/config.inc.php
+#cp /usr/share/roundcube/config/config.inc.php.sample /usr/share/roundcube/config/config.inc.php
+#sed -i "s|^\(\$config\['db_dsnw'\] =\).*$|\1 \'mysqli://roundcube:${pwd}@localhost/roundcubedb\';|" /usr/share/roundcube/config/config.inc.php
+#sed -i "s|^\(\$config\['smtp_server'\] =\).*$|\1 \'localhost\';|" /usr/share/roundcube/config/config.inc.php
+#sed -i "s|^\(\$config\['smtp_user'\] =\).*$|\1 \'%u\';|" /usr/share/roundcube/config/config.inc.php
+#sed -i "s|^\(\$config\['smtp_pass'\] =\).*$|\1 \'%p\';|" /usr/share/roundcube/config/config.inc.php
 #sed -i "s|^\(\$config\['support_url'\] =\).*$|\1 \'mailto:${E}\';|" /var/www/html/roundcube/config/config.inc.php
-deskey=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9-_#&!*%?' | fold -w 24 | head -n 1)
-sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 \'${deskey}\';|" /usr/share/roundcube/config/config.inc.php
-rm -rf /usr/share/roundcube/installer
+#deskey=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9-_#&!*%?' | fold -w 24 | head -n 1)
+#sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 \'${deskey}\';|" /usr/share/roundcube/config/config.inc.php
+#rm -rf /usr/share/roundcube/installer
 
 cd /usr/share
 wget https://github.com/mayazhanif/web-ftp/raw/main/webftp.zip
