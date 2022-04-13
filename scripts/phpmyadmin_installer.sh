@@ -93,3 +93,4 @@ deskey=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9-_#&!*%?' | fold -w 24 | head -n 1)
 sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 \'${deskey}\';|" /usr/share/roundcube/config/config.inc.php
 rm -rf /usr/share/roundcube/installer
 #echo -e "\n\$cfg['Servers'][\$i]['auth_type'] = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL'] = 'sso.php';\n" >> /usr/share/phpmyadmin/config.inc.php
+service nginx restart
