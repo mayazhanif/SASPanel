@@ -97,9 +97,10 @@ rm -rf /usr/share/roundcube/installer
 #echo -e "\n\$cfg['Servers'][\$i]['auth_type'] = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL'] = 'sso.php';\n" >> /usr/share/phpmyadmin/config.inc.php
 service nginx restart
 
-mysql -u root -p${pwd} -e "CREATE USER 'mail_admin'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} -e "CREATE USER 'mail_admin'@'%' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
 mysql -u root -p${pwd} -e "create database mail;FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'localhost';FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON `mail`.* TO 'mail_admin'@'%'; ALTER USER 'mail_admin'@'%';FLUSH PRIVILEGES;"
 mysql -u root -p${pwd} mail < /home/SASPanel/scripts/mail.sql
 chmod +x /var/lib/nginx -R
 sudo apt-get -y install ssl-cert
