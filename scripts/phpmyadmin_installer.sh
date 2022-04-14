@@ -3,7 +3,6 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 cd /usr/share
 pwd=$1
-#wget https://files.phpmyadmin.net/phpMyAdmin/4.8.5/phpMyAdmin-4.8.5-all-languages.zip
 wget https://files.phpmyadmin.net/phpMyAdmin/5.1.3/phpMyAdmin-5.1.3-all-languages.zip
 unzip phpMyAdmin-5.1.3-all-languages.zip
 mv phpMyAdmin-5.1.3-all-languages phpmyadmin

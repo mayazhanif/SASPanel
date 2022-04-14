@@ -2,6 +2,9 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 pwd=$1
+echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections
+echo "postfix postfix/mailname string mail.saspanel.org" | debconf-set-selections
+echo "dovecot-core dovecot-core/create-ssl-cert boolean true" | debconf-set-selections
 mysql -u root -e "CREATE USER 'root'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
 mysql -u root -e "CREATE USER 'admin'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
 mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost';FLUSH PRIVILEGES;"
