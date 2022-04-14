@@ -145,6 +145,30 @@ def drop_database(cursor, DatabaseName):
 
     except Exception as Ex:
         print("Error creating MySQL Database: %s"%(Ex))
+
+def create_mail_user(cursor, email,password):
+    try:
+        cursor.execute("USE mail")
+        cursor.execute("INSERT INTO `users` (`email`, `password`) VALUES ('"+email+"', '"+password+"');")
+        mysqlconnection.commit()
+        print("Mail Account Added.")
+        cursor.execute("USE saspanel;")
+    except Exception as Ex:
+        cursor.execute("USE saspanel;")
+        print("Error Adding Record: %s"%(Ex))
+
+def add_mail_domain(cursor, domain):
+    try:
+        cursor.execute("USE mail")
+        cursor.execute("INSERT INTO `domains` (`domain`) VALUES ('"+domain+"');")
+        mysqlconnection.commit()
+        print("Mail Account Added.")
+        cursor.execute("USE saspanel;")
+    except Exception as Ex:
+        cursor.execute("USE saspanel;")
+        print("Error Adding Record: %s"%(Ex))
+
+
 def WriteFile(filename, s_body, mode='w+'):
     try:
         fp = open(filename, mode)

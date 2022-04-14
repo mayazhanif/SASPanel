@@ -324,6 +324,7 @@ def admin_addDomain():
                 query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
                 cursor.execute(query)
                 mysqlconnection.commit()
+                add_mail_domain(cursor,DomainName)
                 msg={"error":"success","message":"Domain Added."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             else:
@@ -662,6 +663,7 @@ def admin_addEmail():
                 msg={"error":"danger","message":"Mail Account Already Exists."}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             if cursor.rowcount>0:
+                create_mail_user(cursor,mail_adress,Password)
                 msg={"error":"success","message":"Mail Account Added."}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             else:
