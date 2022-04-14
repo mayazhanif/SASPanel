@@ -217,7 +217,7 @@ userdb {
 protocol lda {
   auth_socket_path = /var/run/dovecot/auth-master
   log_path = /home/vmail/dovecot-deliver.log
-  postmaster_address = postmaster@sysadmins.co.za
+  postmaster_address = postmaster@saspanel.org
 }
 protocol pop3 {
   pop3_uidl_format = %08Xu%08Xv
@@ -226,7 +226,7 @@ EOF
 # generate dovecot-sql.conf
 cat > /etc/dovecot/dovecot-sql.conf << EOF
 driver = mysql
-connect = host=127.0.0.1 dbname=mail user=mail_admin password=password
+connect = host=127.0.0.1 dbname=mail user=mail_admin password=${pwd}
 default_pass_scheme = PLAIN
 password_query = SELECT email as user, password FROM users WHERE email='%u';
 EOF
