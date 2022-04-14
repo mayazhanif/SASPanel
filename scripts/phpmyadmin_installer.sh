@@ -96,3 +96,143 @@ sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 \'${deskey}\';|" /usr/share/roundcu
 rm -rf /usr/share/roundcube/installer
 #echo -e "\n\$cfg['Servers'][\$i]['auth_type'] = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL'] = 'sso.php';\n" >> /usr/share/phpmyadmin/config.inc.php
 service nginx restart
+
+mysql -u root -p${pwd} -e "CREATE USER 'mail_admin'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} -e "create database mail;FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'localhost';FLUSH PRIVILEGES;"
+mysql -u root -p${pwd} mail < /home/SASPanel/scripts/mail.sql
+chmod +x /var/lib/nginx -R
+sudo apt-get -y install ssl-cert
+sudo make-ssl-cert generate-default-snakeoil
+sudo usermod --append --groups ssl-cert mail
+ls -l /etc/ssl/certs/ssl-cert-snakeoil.pem /etc/ssl/private/ssl-cert-snakeoil.key
+
+cat > /etc/postfix/mysql-virtual_domains.cf << EOF
+user = mail_admin
+password = ${pwd}
+dbname = mail
+query = SELECT domain AS virtual_domain FROM domains WHERE domain='%s'
+hosts = 127.0.0.1
+EOF
+cat > /etc/postfix/mysql-virtual_forwardings.cf << EOF
+user = mail_admin
+password = ${pwd}
+dbname = mail
+query = SELECT destination FROM forwardings WHERE source='%s'
+hosts = 127.0.0.1
+EOF
+cat > /etc/postfix/mysql-virtual_mailboxes.cf << EOF
+user = mail_admin
+password = ${pwd}
+dbname = mail
+query = SELECT CONCAT(SUBSTRING_INDEX(email,'@',-1),'/',SUBSTRING_INDEX(email,'@',1),'/') FROM users WHERE email='%s'
+hosts = 127.0.0.1
+EOF
+cat > /etc/postfix/mysql-virtual_email2email.cf << EOF
+user = mail_admin
+password = ${pwd}
+dbname = mail
+query = SELECT email FROM users WHERE email='%s'
+hosts = 127.0.0.1
+EOF
+chmod o= /etc/postfix/mysql-virtual_*.cf
+chgrp postfix /etc/postfix/mysql-virtual_*.cf
+groupadd -g 5000 vmail
+useradd -g vmail -u 5000 vmail -d /home/vmail -m
+
+postconf -e 'myhostname = mail.saspanel.org'
+postconf -e 'mydestination = localhost'
+postconf -e 'mynetworks = 127.0.0.0/8'
+postconf -e 'inet_interfaces = all'
+postconf -e 'message_size_limit = 30720000'
+postconf -e 'virtual_alias_domains ='
+postconf -e 'virtual_alias_maps = proxy:mysql:/etc/postfix/mysql-virtual_forwardings.cf, mysql:/etc/postfix/mysql-virtual_email2email.cf'
+postconf -e 'virtual_mailbox_domains = proxy:mysql:/etc/postfix/mysql-virtual_domains.cf'
+postconf -e 'virtual_mailbox_maps = proxy:mysql:/etc/postfix/mysql-virtual_mailboxes.cf'
+postconf -e 'virtual_mailbox_base = /home/vmail'
+postconf -e 'virtual_uid_maps = static:5000'
+postconf -e 'virtual_gid_maps = static:5000'
+postconf -e 'smtpd_sasl_type = dovecot'
+postconf -e 'smtpd_sasl_path = private/auth'
+postconf -e 'smtpd_sasl_auth_enable = yes'
+postconf -e 'broken_sasl_auth_clients = yes'
+postconf -e 'smtpd_sasl_authenticated_header = yes'
+postconf -e 'smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination'
+postconf -e 'smtpd_use_tls = yes'
+postconf -e 'smtpd_tls_cert_file = /etc/pki/dovecot/certs/dovecot.pem'
+postconf -e 'smtpd_tls_key_file = /etc/pki/dovecot/private/dovecot.pem'
+postconf -e 'virtual_create_maildirsize = yes'
+postconf -e 'virtual_maildir_extended = yes'
+postconf -e 'proxy_read_maps = $local_recipient_maps $mydestination $virtual_alias_maps $virtual_alias_domains $virtual_mailbox_maps $virtual_mailbox_domains $relay_recipient_maps $relay_domains $canonical_maps $sender_canonical_maps $recipient_canonical_maps $relocated_maps $transport_maps $mynetworks $virtual_mailbox_limit_maps'
+postconf -e 'virtual_transport = virtual_domain'
+postconf -e 'dovecot_destination_recipient_limit = 1'
+# postfix master.conf configuration
+echo "
+dovecot   unix  -       n       n       -       -       pipe
+    flags=DRhu user=vmail:vmail argv=/usr/libexec/dovecot/deliver -f ${sender} -d ${recipient}
+" >> /etc/postfix/master.cf
+# start postfix
+service sendmail stop
+chkconfig sendmail off
+chkconfig postfix on
+service postfix start
+# backup dovecot.conf
+mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf-backup
+# generate dovecot.conf
+cat > /etc/dovecot/dovecot.conf << EOF
+listen = *
+protocols = imap pop3
+log_timestamp = "%Y-%m-%d %H:%M:%S "
+mail_location = maildir:/home/vmail/%d/%n
+maildir_stat_dirs = yes
+mail_privileged_group = postfix
+namespace {
+  type = private
+  separator = .
+  prefix = INBOX.
+  inbox = yes
+}
+passdb {
+  args = /etc/dovecot/dovecot-sql.conf
+  driver = sql
+}
+service auth {
+  unix_listener /var/spool/postfix/private/auth {
+    group = postfix
+    mode = 0660
+    user = postfix
+  }
+  unix_listener auth-master {
+    mode = 0600
+    user = vmail
+  }
+  user = root
+}
+ssl_cert = </etc/dovecot/private/dovecot.pem
+ssl_key = </etc/dovecot/private/dovecot.key
+userdb {
+  args = uid=5000 gid=5000 home=/home/vmail/%d/%n allow_all_users=yes
+  driver = static
+}
+protocol lda {
+  auth_socket_path = /var/run/dovecot/auth-master
+  log_path = /home/vmail/dovecot-deliver.log
+  postmaster_address = postmaster@sysadmins.co.za
+}
+protocol pop3 {
+  pop3_uidl_format = %08Xu%08Xv
+}
+EOF
+# generate dovecot-sql.conf
+cat > /etc/dovecot/dovecot-sql.conf << EOF
+driver = mysql
+connect = host=127.0.0.1 dbname=mail user=mail_admin password=password
+default_pass_scheme = PLAIN
+password_query = SELECT email as user, password FROM users WHERE email='%u';
+EOF
+# apply permissions
+chgrp dovecot /etc/dovecot/dovecot-sql.conf
+chmod o= /etc/dovecot/dovecot-sql.conf
+# start dovecot
+chkconfig dovecot on
+service dovecot start
