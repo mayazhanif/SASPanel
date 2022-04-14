@@ -236,4 +236,6 @@ chgrp dovecot /etc/dovecot/dovecot-sql.conf
 chmod o= /etc/dovecot/dovecot-sql.conf
 # start dovecot
 chkconfig dovecot on
-service dovecot start
+service dovecot restart
+systemctl restart postfix
+systemctl restart dovecot
