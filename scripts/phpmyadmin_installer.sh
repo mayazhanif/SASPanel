@@ -173,8 +173,8 @@ dovecot   unix  -       n       n       -       -       pipe
 " >> /etc/postfix/master.cf
 # start postfix
 service sendmail stop
-chkconfig sendmail off
-chkconfig postfix on
+#chkconfig sendmail off
+#chkconfig postfix on
 service postfix start
 # backup dovecot.conf
 mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf-backup
@@ -234,7 +234,7 @@ EOF
 chgrp dovecot /etc/dovecot/dovecot-sql.conf
 chmod o= /etc/dovecot/dovecot-sql.conf
 # start dovecot
-chkconfig dovecot on
+#chkconfig dovecot on
 service dovecot restart
 systemctl restart postfix
 systemctl restart dovecot
