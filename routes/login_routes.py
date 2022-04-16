@@ -50,6 +50,13 @@ def login(msg=""):
             return render_template('authentication/login.html', msg={"error":"primary","message":"Please fill all fields Correctly."})
     return render_template('authentication/login.html',title="Login")
 
+@routes.route('/forgot/', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        return render_template('authentication/forgot-password.html',
+                               msg=True)
+    else:
+        return render_template('authentication/forgot-password.html', msg=False)
 
 @routes.route('/logout/', methods=['GET', 'POST'])
 def logout():
