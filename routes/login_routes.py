@@ -8,7 +8,6 @@ import secrets
 from datetime import date
 @routes.route('/login/', methods=['GET', 'POST'])
 def login(msg=""):
-    #check_user_Login()
     if request.method == 'POST' and 'Email' in request.form and 'password' in request.form and 'logintype' in request.form:
         Email = request.form['Email']
         password = request.form['password']
@@ -19,8 +18,6 @@ def login(msg=""):
             cursor.execute('SELECT * FROM administrator WHERE Admin_Email = %s AND Admin_Password = %s', (Email, md5password))
             result = cursor.fetchone()
             if result==None:
-                #return redirect(url_for('routes.login'))
-                #flash('You were successfully logged in')
                 return render_template('authentication/login.html', msg={"error":"primary","message":"Invalid email or password."})
             else:
                 session['usertype'] = "Admin"
@@ -29,15 +26,12 @@ def login(msg=""):
                 session['Email'] = result[4]
                 session['Name'] = result[1]
                 return redirect(url_for('routes.admin_dashboard'))
-            #return render_template('authentication/login.html', msg="Error")
         elif logintype == "User":
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
             result = cursor.fetchone()
             #print(result)
             if result==None:
-                #return redirect(url_for('routes.login'))
-                #flash('You were successfully logged in')
                 return render_template('authentication/login.html',msg={"error":"primary","message":"Invalid email or password."})
             else:
                 session['usertype'] = "User"
@@ -56,12 +50,13 @@ def forgot_password():
     if request.method == 'POST' and 'Email' in request.form:
         Email = request.form['Email']
         cursor = mysqlconnection.cursor()
-        cursor.execute("SELECT * FROM users WHERE User_email = '"+Email+"' and Is_Deleted=0")
+        cursor.execute("SELECT User_id,User_email FROM users WHERE User_email = '"+Email+"' and Is_Deleted=0")
         result = cursor.fetchone()
         if result == None:
             return render_template('authentication/forgot-password.html', reset=True)
         else:
             userID = str(result[0])
+            userEmail = result[1]
             today = date.today()
             Token = secrets.token_urlsafe()
             query = "UPDATE `users` SET `UserResetToken` = '"+Token+"', Token_Expiry=CURRENT_TIMESTAMP WHERE `users`.`User_id` = "+userID+";"
@@ -70,9 +65,7 @@ def forgot_password():
             mainhost = o.hostname+":"+str(o.port)
             url = 'http://'+mainhost+'/reset?token=' + Token
             msg = '<p style="text-align: center; "><b>Password Reset</b></p><p style="text-align: center; ">Open This Link to Reset Your Password</p><p style="text-align: center; "><a href="'+url+'" target="_blank"><span style="font-family: &quot;Arial Black&quot;;">Click here</span></a><br></p>'
-            mailSender("Password Reset", "mayazhanif@gmail.com", msg, "HTML")
-            #url = 'http://127.0.0.1:5000/reset?token=' + Token
-            #print(url)
+            mailSender("Password Reset", userEmail, msg, "HTML")
             return render_template('authentication/forgot-password.html', reset=True)
     else:
         return render_template('authentication/forgot-password.html', reset=False)

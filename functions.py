@@ -38,14 +38,12 @@ def check_user_Login():
     if check_Session("User"):
         return True
     else:
-        #print("Redirecting")
         return False
 
 def check_admin_Login():
     if check_Session("Admin"):
         return True
     else:
-        #print("Redirecting")
         return False
 
 def generateservUser(name, email):
@@ -54,7 +52,7 @@ def generateservUser(name, email):
     name = name.replace(" ", "")
     email = email.replace(" ", "")
     num = str(random.randint(0, 999))
-    uname = name[3] + email[:7] + num
+    uname = name + email[:3] + num
     return uname
 
 def generatePassword():
@@ -113,12 +111,10 @@ def add_default_user(username, password):
     os.system("chmod 755 /home/" + username + "")
     os.system("setfacl -m user:" + username + ":rx /home/" + username + "")
     print("User Added.")
-    #os.system("useradd -p `openssl passwd -1 "+password+"` "+username+"")
     os.system('echo "'+username+'" >> /etc/vsftpd.chroot_list')
     os.system("chown -R "+username+":"+username+" /home/"+username+"")
     os.system("chmod 0777 /home/"+username+"")
     #os.system("/bin/bash add_vhost.sh " + username+" "+domain)
-#add_usr("testuser3", "testuser3")
 
 def createUser(cursor, userName, password):
     try:
@@ -263,17 +259,14 @@ def addCronJobOld(username,croncommand,logfile):
     print(comand)
     return True
 
-
 def addCronJob(username,croncommand,logfile):
     os.system("/bin/bash scripts/add_cron_job.sh " + username+" "+croncommand)
-
 
 def deleteCronJob(username):
     comand='echo "" >> mycron'
     os.system(comand)
     os.system("crontab -u "+username+" mycron")
     os.system("rm mycron")
-
 
 def generate_SSL(domain,email):
     os.system("/bin/bash scripts/ssl_certificate_generate.sh " + domain+" "+email)
@@ -292,7 +285,6 @@ def install_packages():
     os.system("sudo apt-get -y install postfix-mysql")
     os.system("/bin/bash scripts/installer.sh")
     os.system("sudo apt install -y php-mysql php-net-ldap2 php-net-ldap3 php-imagick php-common php-gd php-imap php-json php-curl php-zip php-xml php-mbstring php-bz2 php-intl php-gmp php-net-smtp php-mail-mime php-net-idna2 mailutils")
-    #os.system("sudo apt-get -y install pure-ftpd")
     os.system("sudo apt-get -y install zip php-mbstring php-zip php-gd php-mysql")
     os.system("/bin/bash scripts/phpmyadmin_installer.sh "+root_password)
     #os.system("/bin/bash nginx_config.sh")
