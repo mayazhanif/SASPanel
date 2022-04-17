@@ -6,6 +6,8 @@ from routes.login_routes import *
 from routes.custom_pages import *
 from routes.user_routes import *
 from functions import *
+from flask_mail import Mail, Message
+
 app = Flask(__name__,
             static_url_path='',
             static_folder='apps/static',
@@ -13,6 +15,12 @@ app = Flask(__name__,
 app.register_blueprint(routes)
 app.secret_key = 'SecRET@Key123'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['MAIL_SERVER']='185.162.10.153'
+app.config['MAIL_PORT'] = 25
+app.config['MAIL_USERNAME'] = 'support@saspanel.org'
+app.config['MAIL_PASSWORD'] = 'support'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = False
 @app.after_request
 def add_header(r):
     r.headers["Pragma"] = "no-cache"

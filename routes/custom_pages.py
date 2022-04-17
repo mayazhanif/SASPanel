@@ -1,4 +1,5 @@
 from flask import render_template
+from app import app
 from . import routes
 from app import *
 from Database.DbConfig import mysqlconnection
@@ -6,14 +7,14 @@ from Database.DbConfig import mysqlconnection
 
 @routes.route('/test/')
 def hello_world():  # put application's code here
-    return 'Hello World!'
+    msg='<p style="text-align: center; "><b>Password Reset</b></p><p style="text-align: center; ">Open This Link to Reset Your Password</p><p style="text-align: center; "><a href="https://pythonbasics.org/flask-mail/#Flask-mail-example" target="_blank"><span style="font-family: &quot;Arial Black&quot;;">Click here</span></a><br></p>'
+    mailSender("Password Reset","mayazhanif@gmail.com",msg,"HTML")
+    return "Sent"
 
 
 @routes.route('/installer')
 def installer():
     install()
-    #add_vhost("mayazhanif","google1.com")
-    #set_mysql_root("Master_DeVIL")
     return render_template('installer/installer.html')
 
 

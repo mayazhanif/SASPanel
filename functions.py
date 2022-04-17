@@ -8,7 +8,9 @@ from flask import session, render_template
 import random
 import string
 from Database.DbConfig import mysqlconnection
+from flask_mail import Mail, Message
 
+from flask import current_app as app
 
 def WriteFile(filename,s_body,mode='w+'):
     try:
@@ -76,6 +78,15 @@ def md5encode(string):
     md5Password = hashlib.md5(string.encode()).hexdigest()
     return md5Password
 
+def mailSender(title,receipt,body,type="PLAIN"):
+    mail = Mail(app)
+    msg = Message(title, sender='support@saspanel.com', recipients=[receipt])
+    if type=="PLAIN":
+        msg.body = body
+    else:
+        msg.html = body
+    mail.send(msg)
+    return "Sent"
 
 # add user function
 def add_usr(name, password):

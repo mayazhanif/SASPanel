@@ -85,9 +85,6 @@ def admin_profile():
             if pass1==pass2:
                 cursor = mysqlconnection.cursor()
                 md5Password = md5encode(pass1)
-                #query = 'UPDATE `users` SET `User_Password` = %s WHERE User_id = %s;', (Name,session['id'])
-                #cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
-                #print("UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id'])")
                 cursor.execute('UPDATE `administrator` SET `Admin_Password` = %s WHERE Admin_id = %s;', (md5Password,session['id']))
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
