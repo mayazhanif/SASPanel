@@ -13,7 +13,7 @@ def hello_world():
 
 @routes.route('/installer')
 def installer():
-    #install()
+    install()
     return render_template('installer/installer.html')
 
 
