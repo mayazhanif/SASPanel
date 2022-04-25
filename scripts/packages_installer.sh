@@ -98,7 +98,7 @@ rm -rf /usr/share/roundcube/installer
 service nginx restart
 
 mysql -u root -p${rootpwd} -e "CREATE USER 'mail_admin'@'%' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
-mysql -u root -p${rootpwd} -e "create database mail;FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "create database mail;use mail;FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON `mail`.* TO 'mail_admin'@'%'; ALTER USER 'mail_admin'@'%';FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} mail < /home/SASPanel/scripts/mail.sql
