@@ -34,7 +34,7 @@ def installer():
         return render_template('installer/installer.html')
     else:
         #print(mysqlconnection)
-        return render_template('installer/installer.html')
+        return render_template('installer/installed.html')
 
 
 @routes.route('/')
