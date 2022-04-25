@@ -11,7 +11,7 @@ def hello_world():
     return "Sent"
 
 
-@routes.route('/installer', methods=['POST'])
+@routes.route('/installer', methods=['POST','GET'])
 def installer():
     msg=''
     if request.method == 'POST' and 'DBpass1' in request.form and 'DBpass2' in request.form and 'mailserverpassword' in request.form and 'emailaddress' in request.form and 'domain' in request.form and 'emailpassword' in request.form and mysqlconnection is None:
