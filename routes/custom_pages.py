@@ -11,10 +11,28 @@ def hello_world():
     return "Sent"
 
 
-@routes.route('/installer')
+@routes.route('/installer', methods=['POST'])
 def installer():
-    install()
-    return render_template('installer/installer.html')
+    msg=''
+    if request.method == 'POST' and 'DBpass1' in request.form and 'DBpass2' in request.form and 'mailserverpassword' in request.form and 'emailaddress' in request.form and 'domain' in request.form and 'emailpassword' in request.form and mysqlconnection is None:
+        #install()
+        DBpass1 = request.form['DBpass1']
+        DBpass2 = request.form['DBpass2']
+        mailserverpassword = request.form['mailserverpassword']
+        emailaddress = request.form['emailaddress']
+        emailpassword = request.form['emailpassword']
+        domain = request.form['domain']
+        if DBpass1 == DBpass2:
+            install_packages(DBpass1,mailserverpassword,domain,emailaddress,emailpassword)
+            return render_template('installer/installer.html',msg={"error": "success", "message": "Installation Completed. Please Reload."})
+        else:
+            return render_template('installer/installer.html',
+                                   msg={"error": "danger", "message": "Password and Confirm Password Mismatch."})
+    elif mysqlconnection is None:
+        return render_template('installer/installer.html')
+    else:
+        #print(mysqlconnection)
+        return render_template('installer/installer.html')
 
 
 @routes.route('/')

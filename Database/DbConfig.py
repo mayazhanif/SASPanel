@@ -1,11 +1,21 @@
 import mysql.connector
 import configparser
 import os
-localconfig=True
+
+def WriteConfig(password):
+  currentDirectory = os.path.dirname(os.path.abspath(__file__))
+  initfile = os.path.join(currentDirectory, 'config.ini')
+  config = configparser.RawConfigParser()
+  config.read(initfile)
+  DatabaseDetails = config["config"]
+  DatabaseDetails["password"] = password
+  with open(initfile, 'w') as conf:
+    config.write(conf)
+
+
+localconfig=False
 currentDirectory = os.path.dirname(os.path.abspath(__file__))
-initfile = os.path.join(currentDirectory, 'DB.txt')
-
-
+initfile = os.path.join(currentDirectory, 'config.ini')
 config = configparser.RawConfigParser()
 config.read(initfile)
 if localconfig==True:
@@ -15,7 +25,6 @@ else:
 
 mysqlconnection = None
 try:
-  #print(DatabaseDetails['password'])
   mysqlconnection = mysql.connector.connect(
     host=DatabaseDetails['host'],
     user=DatabaseDetails['user'],
@@ -24,3 +33,5 @@ try:
   )
 except:
   mysqlconnection = None
+
+

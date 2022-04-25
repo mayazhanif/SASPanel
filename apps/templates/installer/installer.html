@@ -39,77 +39,56 @@
                                     <div class="card-body">
                                         <h4 class="header-title mt-0 mb-1">Default wizard</h4>
                                         <p class="sub-header">Example of Default wizard</p>
-                                        <div id="smartwizard-default">
-                                            <ul>
-                                                <li><a href="#sw-default-step-1">Database Password<small class="d-block">Change Mysql Password</small></a></li>
-                                                <li><a href="#sw-default-step-2">Mailer Password<small class="d-block">SMTP IMAP</small></a></li>
-                                                <li><a href="#sw-default-step-3">Final<small class="d-block">Confirmation</small></a></li>
-                                            </ul>
-
+                                        <form method="post" action="">
                                             <div class="p-3">
-                                                <div id="sw-default-step-1">
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <div class="form-group">
                                                                 <label for="sw-default-userName">Enter Database Root Password</label>
-                                                                <input type="text" class="form-control" id="sw-default-userName" placeholder="Enter User name...">
+                                                                <input type="text" class="form-control" name="DBpass1" id="sw-default-userName" placeholder="Database Root Password">
 
                                                             </div>
                                                             <div class="form-group">
-                                                                <label for="sw-default-password"> Password</label>
-                                                                <input type="password" id="sw-default-password" class="form-control" placeholder="Enter Password...">
-                                                            </div>
-
-                                                            <div class="form-group">
-                                                                <label for="sw-default-confirm">Re Password</label>
-                                                                <input type="password" id="sw-default-confirm" class="form-control" placeholder="Enter Re Password...">
+                                                                <label for="sw-default-password"> Retype Password</label>
+                                                                <input type="text" id="sw-default-password" name="DBpass2" class="form-control" placeholder="ReType Password">
                                                             </div>
                                                         </div> <!-- end col -->
                                                     </div> <!-- end row -->
-                                                </div>
-                                                <div id="sw-default-step-2">
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <div class="form-group">
-                                                                <label for="sw-default-first-name">First name</label>
-                                                                <input type="text" id="sw-default-first-name" class="form-control" placeholder="Enter First name...">
+                                                                <label for="sw-default-server-pass">Enter Domain</label>
+                                                                <input type="text" id="sw-default-server-pass" name="domain" class="form-control" placeholder="Enter Domain">
                                                             </div>
                                                             <div class="form-group">
-                                                                <label for="sw-default-last-name">Last name</label>
-                                                                <input type="text" id="sw-default-last-name" class="form-control" placeholder="Enter Last name...">
+                                                                <label for="sw-default-server-pass">Enter Mail-Server Password</label>
+                                                                <input type="text" id="sw-default-server-pass" name="mailserverpassword" class="form-control" placeholder="Enter Mail Server Password">
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="sw-default-email-email">Enter Default Email</label>
+                                                                <input type="text" id="sw-default-email-email" name="emailaddress"  class="form-control" placeholder="Prefix Only">
                                                             </div>
 
                                                             <div class="form-group">
-                                                                <label for="sw-default-email">Email</label>
-                                                                <input type="email" id="sw-default-email" class="form-control" placeholder="Enter Email...">
+                                                                <label for="sw-default-email-password">Enter Email Password</label>
+                                                                <input type="text" id="sw-default-email-password" name="emailpassword" class="form-control" placeholder="Email Mail Password">
                                                             </div>
                                                         </div> <!-- end col -->
                                                     </div> <!-- end row -->
-                                                </div>
-                                                <div id="sw-default-step-3">
                                                     <div class="row">
                                                         <div class="col-12">
                                                             <div class="text-center">
                                                                 <div class="mb-3">
                                                                     <i class="uil uil-check-square text-success h2"></i>
                                                                 </div>
-                                                                <h3>Thank you !</h3>
-
-                                                                <p class="w-75 mb-2 mx-auto text-muted">Quisque nec turpis at urna dictum luctus. Suspendisse convallis dignissim eros at volutpat. In egestas mattis dui. Aliquam
-                                                                    mattis dictum aliquet.</p>
-
-                                                                <div class="mb-3">
-                                                                    <div class="custom-control custom-checkbox">
-                                                                        <input type="checkbox" class="custom-control-input" id="sm-default-customCheck">
-                                                                        <label class="custom-control-label" for="sm-default-customCheck">I agree with the Terms and Conditions</label>
-                                                                    </div>
-                                                                </div>
+                                                                <h3>Click to Start Installtion !</h3>
+                                                                <p class="w-75 mb-2 mx-auto text-muted">Click Install Wait for all Packages to be Installed and Reboot Server.</p>
                                                             </div>
+                                                            <button class="btn btn-success btn-block" type="submit">Submit</button>
                                                         </div> <!-- end col -->
                                                     </div> <!-- end row -->
-                                                </div>
                                             </div>
-                                        </div>
+                                            </form>
                                     </div>
                                 </div>
                                 <!-- end card -->

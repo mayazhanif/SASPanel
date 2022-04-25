@@ -7,7 +7,7 @@ from this import d
 from flask import session, render_template
 import random
 import string
-from Database.DbConfig import mysqlconnection
+from Database.DbConfig import mysqlconnection, WriteConfig
 from flask_mail import Mail, Message
 
 from flask import current_app as app
@@ -227,10 +227,6 @@ def change_ftp_pass(ftpUsername,ftpPassword):
 def set_mysql_root(password):
     os.system("/bin/bash scripts/mysql_admin.sh " + password)
 
-def install():
-    install_packages()
-    print("Install packages Completed.")
-
 
 def readLines(fname, N):
     data=""
@@ -273,8 +269,12 @@ def generate_SSL(domain,email):
 def renewALLSSL():
     os.system("certbot renew --force-renewal")
 
-def install_packages():
-    root_password="Master@786"
+def install():
+    install_packages()
+    print("Install packages Completed.")
+
+def install_packages(root_password, mail_password,domain,emailaddress,emailpassword):
+    WriteConfig(root_password)
     os.system("sudo apt-get -y update")
     os.system("sudo apt-get -y upgrade")
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
@@ -286,5 +286,6 @@ def install_packages():
     os.system("/bin/bash scripts/installer.sh")
     os.system("sudo apt install -y php-mysql php-net-ldap2 php-net-ldap3 php-imagick php-common php-gd php-imap php-json php-curl php-zip php-xml php-mbstring php-bz2 php-intl php-gmp php-net-smtp php-mail-mime php-net-idna2 mailutils")
     os.system("sudo apt-get -y install zip php-mbstring php-zip php-gd php-mysql")
-    os.system("/bin/bash scripts/phpmyadmin_installer.sh "+root_password)
+    os.system("/bin/bash scripts/packages_installer.sh "+root_password+" "+mail_password+" "+domain+" "+emailaddress+" "+emailpassword)
+    print("Install packages Completed.")
     #os.system("/bin/bash nginx_config.sh")
