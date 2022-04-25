@@ -3,7 +3,10 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 cd /usr/share
 rootpwd=$1
-pwd=$1
+pwd=$2
+domain=$3
+emailaddress=$4
+emailpassword=$5
 wget https://files.phpmyadmin.net/phpMyAdmin/5.1.3/phpMyAdmin-5.1.3-all-languages.zip
 unzip phpMyAdmin-5.1.3-all-languages.zip
 mv phpMyAdmin-5.1.3-all-languages phpmyadmin
@@ -100,7 +103,8 @@ service nginx restart
 mysql -u root -p${rootpwd} -e "CREATE USER 'mail_admin'@'%' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "create database mail;use mail;FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';FLUSH PRIVILEGES;"
-mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON `mail`.* TO 'mail_admin'@'%'; ALTER USER 'mail_admin'@'%';FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "use mail;GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%'; ALTER USER 'mail_admin'@'%';FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "use mail;INSERT INTO domains VALUES ('${domain}');INSERT INTO users VALUES ('${emailaddress}','${emailpassword}')"
 mysql -u root -p${rootpwd} mail < /home/SASPanel/scripts/mail.sql
 chmod +x /var/lib/nginx -R
 sudo apt-get -y install ssl-cert
