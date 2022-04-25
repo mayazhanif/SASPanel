@@ -26,6 +26,7 @@ def installer():
             install_packages(DBpass1,mailserverpassword,domain,emailaddress,emailpassword)
             return render_template('installer/installer.html',msg={"error": "success", "message": "Installation Completed. Please Reload."})
         else:
+            print("Password and Confirm Password Mismatch.")
             return render_template('installer/installer.html',
                                    msg={"error": "danger", "message": "Password and Confirm Password Mismatch."})
     elif mysqlconnection is None:
