@@ -286,7 +286,7 @@ def install_packages(root_password, mail_password,domain,emailaddress,emailpassw
     os.system("/bin/bash scripts/installer.sh")
     os.system("sudo apt install -y php-mysql php-net-ldap2 php-net-ldap3 php-imagick php-common php-gd php-imap php-json php-curl php-zip php-xml php-mbstring php-bz2 php-intl php-gmp php-net-smtp php-mail-mime php-net-idna2 mailutils")
     os.system("sudo apt-get -y install zip php-mbstring php-zip php-gd php-mysql")
-    os.system("/bin/bash scripts/packages_installer.sh "+root_password+" "+mail_password+" "+domain+" "+emailaddress+" "+emailpassword)
+    os.system("/bin/bash scripts/packages_installer.sh "+root_password+" "+mail_password+" "+domain+" "+emailaddress+" "+emailpassword+" &")
     #os.system("/bin/bash scripts/packages_installer.sh "+root_password+" "+mail_password)
     print("Install packages Completed.")
     #os.system("/bin/bash nginx_config.sh")
