@@ -23,6 +23,7 @@ def installer():
         emailpassword = request.form['emailpassword']
         domain = request.form['domain']
         if DBpass1 == DBpass2:
+            emailaddress=emailaddress+"@"+domain
             install_packages(DBpass1,mailserverpassword,domain,emailaddress,emailpassword)
             return render_template('installer/installer.html',msg={"error": "success", "message": "Installation Completed. Please Reload."})
         else:
