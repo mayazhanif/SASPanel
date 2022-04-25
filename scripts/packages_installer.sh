@@ -104,8 +104,8 @@ mysql -u root -p${rootpwd} -e "CREATE USER 'mail_admin'@'%' IDENTIFIED BY '${pwd
 mysql -u root -p${rootpwd} -e "create database mail;use mail;FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "use mail;GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%'; ALTER USER 'mail_admin'@'%';FLUSH PRIVILEGES;"
-mysql -u root -p${rootpwd} -e "use mail;INSERT INTO domains VALUES ('${domain}');INSERT INTO users VALUES ('${emailaddress}','${emailpassword}')"
 mysql -u root -p${rootpwd} mail < /home/SASPanel/scripts/mail.sql
+mysql -u root -p${rootpwd} -e "use mail;INSERT INTO domains VALUES ('${domain}');INSERT INTO users VALUES ('${emailaddress}','${emailpassword}')"
 chmod +x /var/lib/nginx -R
 sudo apt-get -y install ssl-cert
 sudo make-ssl-cert generate-default-snakeoil
