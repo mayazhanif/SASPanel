@@ -2,6 +2,7 @@
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 cd /usr/share
+rootpwd=$1
 pwd=$1
 wget https://files.phpmyadmin.net/phpMyAdmin/5.1.3/phpMyAdmin-5.1.3-all-languages.zip
 unzip phpMyAdmin-5.1.3-all-languages.zip
@@ -35,10 +36,10 @@ wget https://github.com/roundcube/roundcubemail/releases/download/1.4.13/roundcu
 tar xvf roundcubemail-1.4.13-complete.tar.gz
 mv roundcubemail-1.4.13 roundcube
 chown -R www-data:www-data /usr/share/roundcube
-mysql -u root -p${pwd} -e "CREATE USER 'roundcube'@'localhost' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} -e "create database roundcubedb;FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON roundcubedb.* TO 'roundcube'@'localhost';FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} roundcubedb < /usr/share/roundcube/SQL/mysql.initial.sql
+mysql -u root -p${rootpwd} -e "CREATE USER 'roundcube'@'localhost' IDENTIFIED BY '${rootpwd}';FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "create database roundcubedb;FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON roundcubedb.* TO 'roundcube'@'localhost';FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} roundcubedb < /usr/share/roundcube/SQL/mysql.initial.sql
 cat > /etc/nginx/snippets/roundcube.conf <<EOF
 location /roundcube {
     root /usr/share/;
@@ -82,7 +83,7 @@ location /webftp {
 EOF
 service nginx restart
 cp /usr/share/roundcube/config/config.inc.php.sample /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\$config\['db_dsnw'\] =\).*$|\1 \'mysqli://roundcube:${pwd}@localhost/roundcubedb\';|" /usr/share/roundcube/config/config.inc.php
+sed -i "s|^\(\$config\['db_dsnw'\] =\).*$|\1 \'mysqli://roundcube:${rootpwd}@localhost/roundcubedb\';|" /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\$config\['smtp_server'\] =\).*$|\1 \'localhost\';|" /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\$config\['smtp_user'\] =\).*$|\1 \'\';|" /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\$config\['smtp_pass'\] =\).*$|\1 \'\';|" /usr/share/roundcube/config/config.inc.php
@@ -96,11 +97,11 @@ rm -rf /usr/share/roundcube/installer
 #echo -e "\n\$cfg['Servers'][\$i]['auth_type'] = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL'] = 'sso.php';\n" >> /usr/share/phpmyadmin/config.inc.php
 service nginx restart
 
-mysql -u root -p${pwd} -e "CREATE USER 'mail_admin'@'%' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} -e "create database mail;FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} -e "GRANT ALL PRIVILEGES ON `mail`.* TO 'mail_admin'@'%'; ALTER USER 'mail_admin'@'%';FLUSH PRIVILEGES;"
-mysql -u root -p${pwd} mail < /home/SASPanel/scripts/mail.sql
+mysql -u root -p${rootpwd} -e "CREATE USER 'mail_admin'@'%' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "create database mail;FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON `mail`.* TO 'mail_admin'@'%'; ALTER USER 'mail_admin'@'%';FLUSH PRIVILEGES;"
+mysql -u root -p${rootpwd} mail < /home/SASPanel/scripts/mail.sql
 chmod +x /var/lib/nginx -R
 sudo apt-get -y install ssl-cert
 sudo make-ssl-cert generate-default-snakeoil
