@@ -39,6 +39,14 @@
                                     <div class="card-body">
                                         <h4 class="header-title mt-0 mb-1">Default wizard</h4>
                                         <p class="sub-header">Example of Default wizard</p>
+                                                                            {% if msg %}
+                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
+                                        {{ msg.message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                {% endif %}
                                         <form method="post" action="">
                                             <div class="p-3">
                                                     <div class="row">
