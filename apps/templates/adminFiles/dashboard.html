@@ -594,9 +594,9 @@ function get_updates(){
       url:"/get_updates",
         success:function(res)
         {
+            console.log(res);
             var loadCount = Math.round((res.load.one / res.load.max) * 100) > 100 ? 100 : Math.round((res.load.one / res.load.max) * 100);
             console.log(loadCount);
-            console.log(res);
             //return res;
         },
         error: function(xhr, status, error) {
