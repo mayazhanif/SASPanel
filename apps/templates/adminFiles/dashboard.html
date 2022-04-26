@@ -608,14 +608,15 @@ function get_updates(){
 }
 function update_cart_ram(){
         var options = {
-          series: [44, 55, 13, 43, 22],
+          series: [44, 55],
           chart: {
           width: 580,
           type: 'pie',
         },
-        labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
+        labels: ['Used Memory', 'Free Memory'],
           dataLabels: {
-    enabled: false},
+            enabled: false
+          },
         responsive: [{
           breakpoint: 480,
           options: {
