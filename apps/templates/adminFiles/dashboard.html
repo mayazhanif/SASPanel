@@ -608,58 +608,110 @@ function get_updates(){
     });
 }
 function update_cart_ram(){
-    var options = {
-          series: [44, 55, 13, 33],
-          chart: {
-          width: 380,
-          type: 'donut',
-        },
-        dataLabels: {
-          enabled: false
-        },
-        responsive: [{
-          breakpoint: 480,
-          options: {
-            chart: {
-              width: 200
+    var optionsColumn = {
+  chart: {
+    height: 350,
+    type: "bar",
+    animations: {
+      enabled: false
+    },
+    events: {
+      animationEnd: function (chartCtx) {
+        const newData = chartCtx.w.config.series[0].data.slice();
+        newData.shift();
+        window.setTimeout(function () {
+          chartCtx.updateOptions(
+            {
+              series: [
+                {
+                  data: newData
+                }
+              ],
+              xaxis: {
+                min: chartCtx.minX,
+                max: chartCtx.maxX
+              },
+              subtitle: {
+                text:
+                  parseInt(getRangeRandom({ min: 1, max: 20 })).toString() + "%"
+              }
             },
-            legend: {
-              show: false
-            }
-          }
-        }],
-        legend: {
-          position: 'right',
-          offsetY: 0,
-          height: 230,
+            false,
+            false
+          );
+        }, 300);
+      }
+    },
+    toolbar: {
+      show: false
+    },
+    zoom: {
+      enabled: false
+    }
+  },
+  dataLabels: {
+    enabled: false
+  },
+  stroke: {
+    width: 0
+  },
+  series: [
+    {
+      name: "Load Average",
+      data: generateMinuteWiseTimeSeries(
+        new Date("12/12/2016 00:20:00").getTime(),
+        12,
+        {
+          min: 10,
+          max: 110
         }
-        };
-
-        var chart = new ApexCharts(document.querySelector("#chart"), options);
-        chart.render();
-
-
-        function appendData() {
-        var arr = chart.w.globals.series.slice()
-        arr.push(Math.floor(Math.random() * (100 - 1 + 1)) + 1)
-        return arr;
-      }
-
-      function removeData() {
-        var arr = chart.w.globals.series.slice()
-        arr.pop()
-        return arr;
-      }
-
-      function randomize() {
-        return chart.w.globals.series.map(function() {
-            return Math.floor(Math.random() * (100 - 1 + 1)) + 1
-        })
-      }
-
-      function reset() {
-          return options.series
-      }
+      )
+    }
+  ],
+  title: {
+    text: "Load Average",
+    align: "left",
+    style: {
+      fontSize: "12px"
+    }
+  },
+  subtitle: {
+    text: "20%",
+    floating: true,
+    align: "right",
+    offsetY: 0,
+    style: {
+      fontSize: "22px"
+    }
+  },
+  fill: {
+    type: "gradient",
+    gradient: {
+      shade: "dark",
+      type: "vertical",
+      shadeIntensity: 0.5,
+      inverseColors: false,
+      opacityFrom: 1,
+      opacityTo: 0.8,
+      stops: [0, 100]
+    }
+  },
+  xaxis: {
+    type: "datetime",
+    range: 2700000
+  },
+  legend: {
+    show: true
+  }
+};
+var chartColumn = new ApexCharts(
+  document.querySelector("#chart"),
+  optionsColumn
+);
+chartColumn.render();
+}
+function getRangeRandom(yrange) {
+  return Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min;
 }
 </script>
 {% include "layout/adminfooter.html" %}
