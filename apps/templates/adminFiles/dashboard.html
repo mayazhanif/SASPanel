@@ -262,11 +262,12 @@ function update_cart_ram(used, free){
 
 }
 function update_cart_cpu(load){
+        total=100-load;
         console.log(load);
         var text = document.getElementById('memtext');
         //text.innerHTML=free+"/"+used;
         var options = {
-          series: [load, 100],
+          series: [load, total],
           chart: {
           width: 250,
           height: 150,
@@ -282,10 +283,12 @@ function update_cart_cpu(load){
         chart.render();
 }
 function update_cart_load(load){
+        total=100-load;
+        console.log(load);
         var text = document.getElementById('memtext');
         //text.innerHTML=free+"/"+used;
         var options = {
-          series: [load, 100],
+          series: [load, total],
           chart: {
           width: 250,
           height: 150,
