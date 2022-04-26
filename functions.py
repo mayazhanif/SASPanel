@@ -6,7 +6,7 @@ from this import d
 from flask import session, render_template
 import random
 import string
-from Database.DbConfig import mysqlconnection, WriteConfig
+from Database.DbConfig import mysqlconnection, WriteConfig, WriteMailConfig
 from flask_mail import Mail, Message
 from flask import current_app as app
 from cachelib import SimpleCache
@@ -557,6 +557,7 @@ def install():
 
 def install_packages(root_password, mail_password,domain,emailaddress,emailpassword):
     WriteConfig(root_password)
+    WriteMailConfig(emailaddress,emailpassword)
     os.system("sudo apt-get -y update")
     os.system("sudo apt-get -y upgrade")
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
