@@ -615,33 +615,6 @@ function update_cart_ram(){
     animations: {
       enabled: false
     },
-    events: {
-      animationEnd: function (chartCtx) {
-        const newData = chartCtx.w.config.series[0].data.slice();
-        newData.shift();
-        window.setTimeout(function () {
-          chartCtx.updateOptions(
-            {
-              series: [
-                {
-                  data: newData
-                }
-              ],
-              xaxis: {
-                min: chartCtx.minX,
-                max: chartCtx.maxX
-              },
-              subtitle: {
-                text:
-                  parseInt(getRangeRandom({ min: 1, max: 20 })).toString() + "%"
-              }
-            },
-            false,
-            false
-          );
-        }, 300);
-      }
-    },
     toolbar: {
       show: false
     },
@@ -657,15 +630,7 @@ function update_cart_ram(){
   },
   series: [
     {
-      name: "Load Average",
-      data: generateMinuteWiseTimeSeries(
-        new Date("12/12/2016 00:20:00").getTime(),
-        12,
-        {
-          min: 10,
-          max: 110
-        }
-      )
+      name: "Load Average"
     }
   ],
   title: {
@@ -709,37 +674,6 @@ var chartColumn = new ApexCharts(
   optionsColumn
 );
 chartColumn.render();
-}
-var trigoStrength = 3;
-var iteration = 11;
-function getRangeRandom(yrange) {
-  return Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min;
-}
-
-function generateMinuteWiseTimeSeries(baseval, count, yrange) {
-  var i = 0;
-  var series = [];
-  while (i < count) {
-    var x = baseval;
-    var y =
-      (Math.sin(i / trigoStrength) * (i / trigoStrength) +
-        i / trigoStrength +
-        1) *
-      (trigoStrength * 2);
-
-    series.push([x, y]);
-    baseval += 300000;
-    i++;
-  }
-  return series;
-}
-
-function getNewData(baseval, yrange) {
-  var newTime = baseval + 300000;
-  return {
-    x: newTime,
-    y: Math.floor(Math.random() * (yrange.max - yrange.min + 1)) + yrange.min
-  };
 }
 </script>
 {% include "layout/adminfooter.html" %}
