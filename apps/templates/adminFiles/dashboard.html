@@ -606,7 +606,7 @@ function get_updates(){
 }
 function update_cart_ram(used, free){
         var text = document.getElementById('memtext');
-        text.innerHTML=used+"/"+free;
+        text.innerHTML=free+"/"+used;
         var options = {
           series: [used, free],
           chart: {
