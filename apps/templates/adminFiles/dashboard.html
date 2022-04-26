@@ -595,7 +595,7 @@ function get_updates(){
             console.log(res);
             var loadCount = Math.round((res.load_average.one / res.load_average.max) * 100) > 100 ? 100 : Math.round((res.load_average.one / res.load_average.max) * 100);
             console.log(loadCount);
-            update_cart_ram();
+            update_cart_ram(res.mem.memTotal,res.mem.memFree);
             //return res;
         },
         error: function(xhr, status, error) {
@@ -604,19 +604,19 @@ function get_updates(){
         }
     });
 }
-function update_cart_ram(){
+function update_cart_ram(used, free){
         var options = {
-          series: [44, 55],
+          series: [used, free],
           chart: {
           width: 250,
           height: 150,
           type: 'pie',
         },
-        labels: ['Used Memory', 'Free Memory'],
+        labels: ['Used', 'Free'],
             show: false,
-          dataLabels: {
+            dataLabels: {
             enabled: false
-          },
+            },
         };
 
         var chart = new ApexCharts(document.querySelector("#chart"), options);
