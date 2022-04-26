@@ -264,8 +264,8 @@ function update_cart_ram(used, free){
 function update_cart_cpu(load){
         total=100-load;
         console.log(load);
-        var text = document.getElementById('memtext');
-        //text.innerHTML=free+"/"+used;
+        var text = document.getElementById('cputext');
+        text.innerHTML=load+"/"+total;
         var options = {
           series: [load, total],
           chart: {
@@ -285,8 +285,8 @@ function update_cart_cpu(load){
 function update_cart_load(load){
         total=100-load;
         console.log(load);
-        var text = document.getElementById('memtext');
-        //text.innerHTML=free+"/"+used;
+        var text = document.getElementById('loadtext');
+        text.innerHTML=load+"/"+total;
         var options = {
           series: [load, total],
           chart: {
