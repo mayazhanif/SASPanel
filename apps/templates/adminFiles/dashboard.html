@@ -584,6 +584,25 @@
                     </div>
                 </div>
 
+<script>
+    setInterval(function(){
+        res=get_updates();
 
+        }, 5000);
+function get_Logs(domainID){
+    $.ajax({
+      type:"get",
+      url:"/admin/Logs/access_Logs/Ajax?domainID="+domainID,
+        success:function(data)
+        {
+          return data
+        },
+        error: function(xhr, status, error) {
+        var err = eval("(" + xhr.responseText + ")");
+        console.log(err);
+        }
+    });
+}
+</script>
 {% include "layout/adminfooter.html" %}
 {% endblock %}
