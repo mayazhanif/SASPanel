@@ -22,8 +22,8 @@
                                             </div>
                                             <div class="align-self-center">
                                                 <div id="chart" class="apex-charts"></div>
-                                                										<div id="circlechart"> </div>
-
+                                                <div id="chart">
+                                                </div>
                                                 <span class="text-success font-weight-bold font-size-13"><i
                                                         class='uil uil-arrow-up'></i> 10.21%</span>
                                             </div>
@@ -599,6 +599,8 @@ function get_updates(){
             console.log(res);
             var loadCount = Math.round((res.load_average.one / res.load_average.max) * 100) > 100 ? 100 : Math.round((res.load_average.one / res.load_average.max) * 100);
             console.log(loadCount);
+            update_cart_ram();
+            chart.updateSeries(randomize());
             //return res;
         },
         error: function(xhr, status, error) {
