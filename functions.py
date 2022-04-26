@@ -3,14 +3,294 @@ import hashlib
 import re
 import os
 from this import d
-
 from flask import session, render_template
 import random
 import string
 from Database.DbConfig import mysqlconnection, WriteConfig
 from flask_mail import Mail, Message
-
 from flask import current_app as app
+from cachelib import SimpleCache
+import psutil
+import sys
+import time
+from hashlib import md5
+cache = SimpleCache()
+
+def get_error_info():
+    import traceback
+    errorMsg = traceback.format_exc()
+    return errorMsg
+
+def get_preexec_fn(run_user):
+    import pwd
+    pid = pwd.getpwnam(run_user)
+    uid = pid.pw_uid
+    gid = pid.pw_gid
+
+    def _exec_rn():
+        os.setgid(gid)
+        os.setuid(uid)
+    return _exec_rn
+
+def ExecShell(cmdstring, timeout=None, shell=True,cwd=None,env=None,user = None):
+    a = ''
+    e = ''
+    import subprocess,tempfile
+    preexec_fn = None
+    tmp_dir = '/dev/shm'
+    if user:
+        preexec_fn = get_preexec_fn(user)
+        tmp_dir = '/tmp'
+    try:
+        rx = md5(cmdstring)
+        succ_f = tempfile.SpooledTemporaryFile(max_size=4096,mode='wb+',suffix='_succ',prefix='btex_' + rx ,dir=tmp_dir)
+        err_f = tempfile.SpooledTemporaryFile(max_size=4096,mode='wb+',suffix='_err',prefix='btex_' + rx ,dir=tmp_dir)
+        sub = subprocess.Popen(cmdstring, close_fds=True, shell=shell,bufsize=128,stdout=succ_f,stderr=err_f,cwd=cwd,env=env,preexec_fn=preexec_fn)
+        if timeout:
+            s = 0
+            d = 0.01
+            while sub.poll() is None:
+                time.sleep(d)
+                s += d
+                if s >= timeout:
+                    if not err_f.closed: err_f.close()
+                    if not succ_f.closed: succ_f.close()
+                    return 'Timed out'
+        else:
+            sub.wait()
+
+        err_f.seek(0)
+        succ_f.seek(0)
+        a = succ_f.read()
+        e = err_f.read()
+        if not err_f.closed: err_f.close()
+        if not succ_f.closed: succ_f.close()
+    except:
+        return '',get_error_info()
+    try:
+        #编码修正
+        if type(a) == bytes: a = a.decode('utf-8')
+        if type(e) == bytes: e = e.decode('utf-8')
+    except:pass
+
+    return a,e
+
+def getCpuType():
+    cpuinfo = open('/proc/cpuinfo', 'r').read()
+    rep = "model\s+name\s+:\s+(.+)"
+    tmp = re.search(rep, cpuinfo, re.I)
+    cpuType = ''
+    if tmp:
+        cpuType = tmp.groups()[0]
+    else:
+        cpuinfo = ExecShell('LANG="en_US.UTF-8" && lscpu')[0]
+        rep = "Model\s+name:\s+(.+)"
+        tmp = re.search(rep, cpuinfo, re.I)
+        if tmp: cpuType = tmp.groups()[0]
+    return cpuType
+
+
+def GetCpuInfo(interval=1):
+    cpuCount = psutil.cpu_count()
+    cpuNum = psutil.cpu_count(logical=False)
+    c_tmp = readFile('/proc/cpuinfo')
+    d_tmp = re.findall("physical id.+", c_tmp)
+    cpuW = len(set(d_tmp))
+    import threading
+    p = threading.Thread(target=get_cpu_percent_thead, args=(interval,))
+    p.setDaemon(True)
+    p.start()
+
+    used = cache.get('cpu_used_all')
+    if not used: used = get_cpu_percent_thead(interval)
+
+    used_all = psutil.cpu_percent(percpu=True)
+    cpu_name = getCpuType() + " * {}".format(cpuW)
+
+    return used, cpuCount, used_all, cpu_name, cpuNum, cpuW
+
+
+def get_cpu_percent_thead(interval=1):
+    used = psutil.cpu_percent(interval)
+    cache.set('cpu_used_all', used, 10)
+    return used
+
+
+def ReadFile(filename, mode='r'):
+    import os
+    if not os.path.exists(filename): return False
+    try:
+        fp = open(filename, mode)
+        f_body = fp.read()
+        fp.close()
+    except Exception as ex:
+        if sys.version_info[0] != 2:
+            try:
+                fp = open(filename, mode, encoding="utf-8")
+                f_body = fp.read()
+                fp.close()
+            except:
+                fp = open(filename, mode, encoding="GBK")
+                f_body = fp.read()
+                fp.close()
+        else:
+            return False
+    return f_body
+
+
+def readFile(filename, mode='r'):
+    return ReadFile(filename, mode)
+
+
+def GetLoadAverage():
+    try:
+        c = os.getloadavg()
+    except:
+        c = [0, 0, 0]
+    data = {}
+    data['one'] = float(c[0])
+    data['five'] = float(c[1])
+    data['fifteen'] = float(c[2])
+    data['max'] = psutil.cpu_count() * 2
+    data['limit'] = data['max']
+    data['safe'] = data['max'] * 0.75
+    return data
+
+
+def GetMemInfo(get=None):
+    skey = 'memInfo'
+    memInfo = cache.get(skey)
+    if memInfo: return memInfo
+    mem = psutil.virtual_memory()
+    memInfo = {'memTotal': int(mem.total / 1024 / 1024), 'memFree': int(mem.free / 1024 / 1024),
+               'memBuffers': int(mem.buffers / 1024 / 1024), 'memCached': int(mem.cached / 1024 / 1024)}
+    memInfo['memRealUsed'] = memInfo['memTotal'] - memInfo['memFree'] - memInfo['memBuffers'] - memInfo['memCached']
+    cache.set(skey, memInfo, 60)
+    return memInfo
+
+
+def GetSystemVersion():
+    key = 'sys_version'
+    version = cache.get(key)
+    if version: return version
+    version = readFile('/etc/redhat-release')
+    if not version:
+        version = readFile('/etc/issue').strip().split("\n")[0].replace('\\n', '').replace('\l', '').strip()
+    else:
+        version = version.replace('release ', '').replace('Linux', '').replace('(Core)', '').strip()
+    v_info = sys.version_info
+    version = version + '(Py' + str(v_info.major) + '.' + str(v_info.minor) + '.' + str(v_info.micro) + ')'
+    cache.set(key, version, 600)
+    return version
+
+
+def GetBootTime():
+    key = 'sys_time'
+    sys_time = cache.get(key)
+    if sys_time: return sys_time
+    import math
+    conf = readFile('/proc/uptime').split()
+    tStr = float(conf[0])
+    min = tStr / 60
+    hours = min / 60
+    days = math.floor(hours / 24)
+    hours = math.floor(hours - (days * 24))
+    min = math.floor(min - (days * 60 * 24) - (hours * 60))
+    sys_time = "{} Day(s)".format(int(days))
+    cache.set(key, sys_time, 1800)
+    return sys_time
+
+
+def get_cpu_times():
+    skey = 'cpu_times'
+    data = cache.get(skey)
+    if data: return data
+    try:
+        data = {}
+        cpu_times_p = psutil.cpu_times_percent()
+        data['user'] = cpu_times_p.user
+        data['nice'] = cpu_times_p.nice
+        data['system'] = cpu_times_p.system
+        data['idle'] = cpu_times_p.idle
+        data['iowait'] = cpu_times_p.iowait
+        data['irq'] = cpu_times_p.irq
+        data['softirq'] = cpu_times_p.softirq
+        data['steal'] = cpu_times_p.steal
+        data['guest'] = cpu_times_p.guest
+        data['guest_nice'] = cpu_times_p.guest_nice
+        data['total_processes'] = 0
+        data['active_processes'] = 0
+        for pid in psutil.pids():
+            try:
+                p = psutil.Process(pid)
+                if p.status() == 'running':
+                    data['active_processes'] += 1
+            except:
+                continue
+            data['total_processes'] += 1
+
+        cache.set(skey, data, 60)
+    except:
+        return None
+    return data
+
+
+def get_process_cpu_time():
+    pids = psutil.pids()
+    cpu_time = 0.00
+    for pid in pids:
+        try:
+            cpu_times = psutil.Process(pid).cpu_times()
+            for s in cpu_times: cpu_time += s
+        except:
+            continue
+    return cpu_time
+
+
+def get_cpu_time():
+    cpu_time = 0.00
+    cpu_times = psutil.cpu_times()
+    for s in cpu_times: cpu_time += s
+    return cpu_time
+
+
+def get_cpu_percent():
+    percent = 0.00
+    old_cpu_time = cache.get('old_cpu_time')
+    old_process_time = cache.get('old_process_time')
+    if not old_cpu_time:
+        old_cpu_time = get_cpu_time()
+        old_process_time = get_process_cpu_time()
+        time.sleep(1)
+    new_cpu_time = get_cpu_time()
+    new_process_time = get_process_cpu_time()
+    try:
+        percent = round(100.00 * ((new_process_time - old_process_time) / (new_cpu_time - old_cpu_time)), 2)
+    except:
+        percent = 0.00
+    cache.set('old_cpu_time', new_cpu_time)
+    cache.set('old_process_time', new_process_time)
+    if percent > 100: percent = 100
+    if percent > 0: return percent
+    return 0.00
+
+
+def GetAllInfo():
+    data = {}
+    data['load_average'] = GetLoadAverage()
+    # data['title'] = GetTitle()
+    # data['network'] = GetNetWorkApi(get)
+    data['cpu'] = GetCpuInfo(1)
+    data['time'] = GetBootTime()
+    data['system'] = GetSystemVersion()
+    data['mem'] = GetMemInfo()
+    data['cpu_percentage'] = get_cpu_percent()
+    # data['version'] = session['version']
+    return data
+
+
+
+
 
 def WriteFile(filename,s_body,mode='w+'):
     try:
