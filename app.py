@@ -5,6 +5,7 @@ from routes.admin_routes import *
 from routes.login_routes import *
 from routes.custom_pages import *
 from routes.user_routes import *
+from routes.ajax_routes import *
 from functions import *
 from flask_mail import Mail, Message
 
