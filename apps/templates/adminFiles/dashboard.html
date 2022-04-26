@@ -234,7 +234,7 @@ function get_updates(){
             update_cart_cpu(res.cpu_percentage);
             update_cart_load(loadCount);
             document.getElementById('cpuname').innerHTML=res.system;
-            document.getElementById('systemname').innerHTML=res.cpu[1];
+            document.getElementById('systemname').innerHTML=res.cpu[3];
             document.getElementById('systemuptime').innerHTML=res.time;
         },
         error: function(xhr, status, error) {
