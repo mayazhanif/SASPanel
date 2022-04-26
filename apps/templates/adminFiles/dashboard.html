@@ -605,7 +605,7 @@ function get_updates(){
     });
 }
 function update_cart_ram(used, free){
-        var text = document.getElementById('memchart');
+        var text = document.getElementById('memtext');
         text.innerHTML=used+"/"+free;
         var options = {
           series: [used, free],
