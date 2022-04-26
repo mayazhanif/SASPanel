@@ -230,9 +230,9 @@ function get_updates(){
         {
             console.log(res);
             var loadCount = Math.round((res.load_average.one / res.load_average.max) * 100) > 100 ? 100 : Math.round((res.load_average.one / res.load_average.max) * 100);
-            console.log(loadCount);
             update_cart_ram(res.mem.memTotal,res.mem.memFree);
-            //return res;
+            update_cart_cpu(cpu_percentage);
+            update_cart_load(loadCount);
         },
         error: function(xhr, status, error) {
         var err = eval("(" + xhr.responseText + ")");
@@ -260,16 +260,10 @@ function update_cart_ram(used, free){
         var chart = new ApexCharts(document.querySelector("#memchart"), options);
         chart.render();
 
-        var chart = new ApexCharts(document.querySelector("#cpuchart"), options);
-        chart.render();
-
-        var chart = new ApexCharts(document.querySelector("#loadchart"), options);
-        chart.render();
-
 }
 function update_cart_cpu(load){
         var text = document.getElementById('memtext');
-        text.innerHTML=free+"/"+used;
+        //text.innerHTML=free+"/"+used;
         var options = {
           series: [load, 100],
           chart: {
@@ -286,11 +280,11 @@ function update_cart_cpu(load){
         var chart = new ApexCharts(document.querySelector("#cpuchart"), options);
         chart.render();
 }
-function update_cart_load(used, free){
+function update_cart_load(load){
         var text = document.getElementById('memtext');
-        text.innerHTML=free+"/"+used;
+        //text.innerHTML=free+"/"+used;
         var options = {
-          series: [used, free],
+          series: [load, 100],
           chart: {
           width: 250,
           height: 150,
@@ -302,13 +296,6 @@ function update_cart_load(used, free){
             enabled: false
             },
         };
-
-        var chart = new ApexCharts(document.querySelector("#memchart"), options);
-        chart.render();
-
-        var chart = new ApexCharts(document.querySelector("#cpuchart"), options);
-        chart.render();
-
         var chart = new ApexCharts(document.querySelector("#loadchart"), options);
         chart.render();
 
