@@ -11,7 +11,6 @@ from cachelib import SimpleCache
 def UpdateDashboard():
     if check_admin_Login() or check_user_Login():
         Result = GetAllInfo()
-        #return reponse
         response = app.response_class(
             response=json.dumps(Result),
                 status=200,
