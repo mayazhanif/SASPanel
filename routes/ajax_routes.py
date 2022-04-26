@@ -7,7 +7,7 @@ from cachelib import SimpleCache
 import json
 
 
-@routes.route('/UpdateDashboard')
+@routes.route('/get_updates')
 def UpdateDashboard():
     if check_admin_Login() or check_user_Login():
         Result = GetAllInfo()
