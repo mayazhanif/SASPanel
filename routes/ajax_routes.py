@@ -7,7 +7,7 @@ from cachelib import SimpleCache
 
 
 
-@routes.route('UpdateDashboard')
+@routes.route('/UpdateDashboard')
 def UpdateDashboard():
     if check_admin_Login() or check_user_Login():
         GetMemInfo()
