@@ -586,7 +586,8 @@
 
 <script>
     setInterval(function(){
-        res = get_updates();
+        console.log(get_updates());
+        //res = get_updates();
         console.log(res);
         }, 5000);
 function get_updates(){
@@ -595,7 +596,6 @@ function get_updates(){
       url:"/get_updates",
         success:function(data)
         {
-            console.log(data);
             return data;
         },
         error: function(xhr, status, error) {
