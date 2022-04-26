@@ -231,7 +231,7 @@ function get_updates(){
             console.log(res);
             var loadCount = Math.round((res.load_average.one / res.load_average.max) * 100) > 100 ? 100 : Math.round((res.load_average.one / res.load_average.max) * 100);
             update_cart_ram(res.mem.memTotal,res.mem.memFree);
-            update_cart_cpu(cpu_percentage);
+            update_cart_cpu(res.cpu_percentage);
             update_cart_load(loadCount);
         },
         error: function(xhr, status, error) {
