@@ -271,28 +271,20 @@ function update_cart_cpu(load){
         var text = document.getElementById('memtext');
         text.innerHTML=free+"/"+used;
         var options = {
-          series: [used, free],
+          series: [load, 100],
           chart: {
           width: 250,
           height: 150,
           type: 'pie',
         },
-        labels: ['Used', 'Free'],
+        labels: ['CPU Load', 'Free'],
             show: false,
             dataLabels: {
             enabled: false
             },
         };
-
-        var chart = new ApexCharts(document.querySelector("#memchart"), options);
-        chart.render();
-
         var chart = new ApexCharts(document.querySelector("#cpuchart"), options);
         chart.render();
-
-        var chart = new ApexCharts(document.querySelector("#loadchart"), options);
-        chart.render();
-
 }
 function update_cart_load(used, free){
         var text = document.getElementById('memtext');
