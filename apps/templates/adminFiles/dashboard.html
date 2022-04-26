@@ -587,12 +587,12 @@
 <script>
     setInterval(function(){
         res=get_updates();
-
+        console.log(res);
         }, 5000);
-function get_Logs(domainID){
+function get_updates(){
     $.ajax({
       type:"get",
-      url:"/admin/Logs/access_Logs/Ajax?domainID="+domainID,
+      url:"/get_updates",
         success:function(data)
         {
           return data
