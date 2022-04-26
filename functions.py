@@ -145,7 +145,8 @@ def readFile(filename, mode='r'):
 def GetLoadAverage():
     try:
         c = os.getloadavg()
-    except:
+    except Exception as e:  # work on python 3.x
+        print('Failed to upload to ftp: ' + str(e))
         c = [0, 0, 0]
     data = {}
     data['one'] = float(c[0])
