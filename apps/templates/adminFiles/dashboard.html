@@ -258,6 +258,9 @@ function update_cart_ram(used, free){
         };
 
         var chart = new ApexCharts(document.querySelector("#memchart"), options);
+        var chart = new ApexCharts(document.querySelector("#cpuchart"), options);
+        var chart = new ApexCharts(document.querySelector("#loadchart"), options);
+
         chart.render();
 }
 get_updates();
