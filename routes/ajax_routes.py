@@ -10,8 +10,8 @@ from cachelib import SimpleCache
 @routes.route('/UpdateDashboard')
 def UpdateDashboard():
     if check_admin_Login() or check_user_Login():
-        GetMemInfo()
-
+        reponse = GetAllInfo()
+        return reponse
         #return render_template('adminFiles/dashboard.html', msg=msg, mainhost=mainhost)
     else:
         return redirect(url_for('routes.login'))
