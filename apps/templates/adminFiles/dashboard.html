@@ -616,17 +616,6 @@ function update_cart_ram(){
           dataLabels: {
             enabled: false
           },
-        responsive: [{
-          breakpoint: 480,
-          options: {
-            chart: {
-              width: 200, height: 100
-            },
-            legend: {
-              position: 'right'
-            }
-          }
-        }]
         };
 
         var chart = new ApexCharts(document.querySelector("#chart"), options);
