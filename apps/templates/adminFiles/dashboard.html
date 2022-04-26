@@ -267,7 +267,7 @@ function update_cart_ram(used, free){
         chart.render();
 
 }
-function update_cart_cpu(used, free){
+function update_cart_cpu(load){
         var text = document.getElementById('memtext');
         text.innerHTML=free+"/"+used;
         var options = {
