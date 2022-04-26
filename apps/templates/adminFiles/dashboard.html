@@ -595,7 +595,7 @@ function get_updates(){
       url:"/get_updates",
         success:function(data)
         {
-          return data
+          return data;
         },
         error: function(xhr, status, error) {
         var err = eval("(" + xhr.responseText + ")");
