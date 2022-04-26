@@ -18,10 +18,10 @@
                                             <div class="media-body">
                                                 <span class="text-muted text-uppercase font-size-12 font-weight-bold">Today
                                                     Ram Usage</span>
-                                                <h2 class="mb-0">$2189</h2>
+                                                <h2 id="memtext" class="mb-0">0/0</h2>
                                             </div>
                                             <div class="align-self-center">
-                                                <div id="chart" class="apex-charts"></div>
+                                                <div id="memchart" class="apex-charts"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -605,7 +605,8 @@ function get_updates(){
     });
 }
 function update_cart_ram(used, free){
-
+        var text = document.getElementById('memchart');
+        text.value=used+"/"+free;
         var options = {
           series: [used, free],
           chart: {
@@ -620,7 +621,7 @@ function update_cart_ram(used, free){
             },
         };
 
-        var chart = new ApexCharts(document.querySelector("#chart"), options);
+        var chart = new ApexCharts(document.querySelector("#memchart"), options);
         chart.render();
 
 }
