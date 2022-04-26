@@ -17,6 +17,5 @@ def UpdateDashboard():
                 mimetype='application/json'
         )
         return response
-        #return render_template('adminFiles/dashboard.html', msg=msg, mainhost=mainhost)
     else:
         return redirect(url_for('routes.login'))
