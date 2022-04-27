@@ -46,11 +46,4 @@ try:
 except:
   mysqlconnection = None
 
-mailDetails = dict(config.items('mail'))
-app.config['MAIL_SERVER'] = mailDetails['server']
-app.config['MAIL_PORT'] = 25
-app.config['MAIL_USERNAME'] = mailDetails['email']
-app.config['MAIL_PASSWORD'] = mailDetails['password']
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = False
 
