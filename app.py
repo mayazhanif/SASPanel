@@ -19,9 +19,9 @@ app.secret_key = 'SecRET@Key123'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 initfile = os.path.join("/home/SASPanel/Database/", 'config.ini')
 config = configparser.RawConfigParser()
-config.read("config.ini")
+config.read(initfile)
 #print(config.items.mail)
-mailDetails = dict(config.items('config'))
+mailDetails = dict(config.items('mail'))
 app.config['MAIL_SERVER'] = mailDetails['server']
 app.config['MAIL_PORT'] = 25
 app.config['MAIL_USERNAME'] = mailDetails['email']
