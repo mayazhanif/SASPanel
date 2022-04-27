@@ -20,7 +20,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 initfile = os.path.join("/home/SASPanel/Database/", 'config.ini')
 config = configparser.RawConfigParser()
 config.read("config.ini")
-print(config.items)
+print(config.items['mail'])
 mailDetails = dict(config.items('mail'))
 app.config['MAIL_SERVER'] = mailDetails['server']
 app.config['MAIL_PORT'] = 25
