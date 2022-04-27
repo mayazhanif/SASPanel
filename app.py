@@ -17,7 +17,10 @@ app = Flask(__name__,
 app.register_blueprint(routes)
 app.secret_key = 'SecRET@Key123'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-initfile = os.path.join("/home/SASPanel/Database/", 'config.ini')
+currentDirectory = os.path.dirname(os.path.abspath(__file__))
+#print(currentDirectory)
+initfile = os.path.join(currentDirectory+"/Database/", 'config.ini')
+#initfile = os.path.join("/home/SASPanel/Database/", 'config.ini')
 config = configparser.RawConfigParser()
 config.read(initfile)
 #print(config.items.mail)
