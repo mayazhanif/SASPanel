@@ -1,0 +1,12 @@
+[Unit]
+Description=SASPanel - Web Hosting Control Panel
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/home/SASPanel
+ExecStart=python3 app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
