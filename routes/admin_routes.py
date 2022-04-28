@@ -140,7 +140,7 @@ def admin_addUser():
 
                     # session["Name"]=Package_Name;
                     return render_template('adminFiles/users/addUser.html',
-                                           msg={"error": "success", "message": "User Added Successfully."})
+                                           msg={"error": "success", "message": "User Added Successfully."}, UserInfo=UserInfo )
                 else:
                     return render_template('adminFiles/users/addUser.html',
                                            msg={"error": "primary", "message": "Fill all fields Correctly."})
