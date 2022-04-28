@@ -224,7 +224,6 @@ def admin_addPackage():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                #session["Name"]=Package_Name;
                 return render_template('adminFiles/Packages/addPackage.html', msg={"error":"success","message":"Package Added."})
             else:
                 return render_template('adminFiles/Packages/addPackage.html', msg={"error":"primary","message":"Fill all fields Correctly."})
