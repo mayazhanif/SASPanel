@@ -18,40 +18,21 @@
                                 <h4 class="mb-1 mt-0">New User</h4>
                             </div>
                         </div>
+                        {% if UserInfo %}
                         <div class="card">
                                 <div class="card-body">
                                     <div class="text-center mt-3">
                                         <h5 class="mt-2 mb-0 font-weight-bold">User Details</h5>
-                                        <h6 class="text-muted font-weight-bold">Name:<div>demousername</div></h6>
-                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Server Username:</h6> demousername
-                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Password:</h6> demousername
-                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Database Username:</h6> demousername
-                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Database Password:</h6> demousername
-                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Email:</h6> demousername
-                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Package:</h6> demousername
-                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Package:</h6> demousername
-                                        <div class="table-responsive">
-                                            <table class="table table-borderless mb-0 text-muted">
-                                                <tbody>
-                                                    <tr>
-                                                        <th scope="row">Email</th>
-                                                        <td>xyz123@gmail.com</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Phone</th>
-                                                        <td>(123) 123 1234</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Address</th>
-                                                        <td>1975 Boring Lane, San Francisco, California, United States -
-                                                            94108</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                        <h6 class="text-muted font-weight-bold">Name:</h6>{{ UserInfo.Name }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Server Username:</h6> {{ UserInfo.ServUser }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Password:</h6> {{ UserInfo.Password }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Database Username:</h6> {{ UserInfo.DBUser }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Database Password:</h6> {{ UserInfo.DBPass }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Email:</h6> {{ UserInfo.Email }}
                                 </div>
                             </div><!-- end card -->
                         </div>
+                        {% endif %}
                             <div class="">
                                 <div class="card">
                                     <div class="card-body">

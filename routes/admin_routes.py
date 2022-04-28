@@ -130,6 +130,13 @@ def admin_addUser():
                     cursor.execute(query)
                     mysqlconnection.commit()
                     createUser(cursor,dbUser,dbPassword)
+                    UserInfo = {}
+                    UserInfo["Name"] = User_email;
+                    UserInfo["ServUser"] = servUser;
+                    UserInfo["Email"] = User_email;
+                    UserInfo["Password"] = User_Password;
+                    UserInfo["DBUser"] = dbUser;
+                    UserInfo["DBPass"] = dbPassword;
 
                     # session["Name"]=Package_Name;
                     return render_template('adminFiles/users/addUser.html',
