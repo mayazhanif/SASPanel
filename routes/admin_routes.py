@@ -127,9 +127,13 @@ def admin_addUser():
                     dbPassword = generatePassword()
                     base64dbPassword = Base64Encode(dbPassword)
                     query = "INSERT INTO `mysqldbusers` (`DbUser_ID`, `DbUsername`, `DbPassword`, `User_id`, `Is_Active`) VALUES (NULL, '"+dbUser+"', '"+base64dbPassword+"', '"+userID+"', '1')"
-                    cursor.execute(query)
-                    mysqlconnection.commit()
-                    createUser(cursor,dbUser,dbPassword)
+                    try:
+                        cursor.execute(query)
+                        mysqlconnection.commit()
+                        createUser(cursor,dbUser,dbPassword)
+                    except:
+                        return render_template('adminFiles/users/addUser.html',
+                                               msg={"error": "primary", "message": "Email Already Exists."})
                     UserInfo = {}
                     UserInfo["Name"] = User_email;
                     UserInfo["ServUser"] = servUser;
