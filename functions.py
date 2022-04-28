@@ -571,6 +571,7 @@ def install_packages(root_password, mail_password,domain,emailaddress,emailpassw
     os.system("sudo apt-get -y install zip php-mbstring php-zip php-gd php-mysql")
     os.system("/bin/bash scripts/packages_installer.sh "+root_password+" "+mail_password+" "+domain+" "+emailaddress+" "+emailpassword+" &")
     os.system("cp /home/SASPanel/scripts/saspanel.service /etc/systemd/system")
+    os.system("systemctl daemon-reload")
     os.system("systemctl enable saspanel")
     #os.system("/bin/bash scripts/packages_installer.sh "+root_password+" "+mail_password)
     print("Install packages Completed.")
