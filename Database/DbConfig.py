@@ -64,5 +64,6 @@ def mysql_reconnect():
       password=DatabaseDetails['password'],
       database=DatabaseDetails['database']
     )
+    mysqlconnection= "testValue"
   except:
     mysqlconnection = None
