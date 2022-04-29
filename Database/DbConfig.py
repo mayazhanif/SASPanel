@@ -67,3 +67,4 @@ def mysql_reconnect():
     mysqlconnection= "testValue"
   except:
     mysqlconnection = None
+  return mysqlconnection
