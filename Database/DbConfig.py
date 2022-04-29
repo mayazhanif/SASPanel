@@ -46,4 +46,23 @@ try:
 except:
   mysqlconnection = None
 
+def mysql_reconnect():
+  currentDirectory = os.path.dirname(os.path.abspath(__file__))
+  initfile = os.path.join(currentDirectory, 'config.ini')
+  config = configparser.RawConfigParser()
+  config.read(initfile)
+  if localconfig == True:
+    DatabaseDetails = dict(config.items('configlocal'))
+  else:
+    DatabaseDetails = dict(config.items('config'))
 
+  mysqlconnection = None
+  try:
+    mysqlconnection = mysql.connector.connect(
+      host=DatabaseDetails['host'],
+      user=DatabaseDetails['user'],
+      password=DatabaseDetails['password'],
+      database=DatabaseDetails['database']
+    )
+  except:
+    mysqlconnection = None
