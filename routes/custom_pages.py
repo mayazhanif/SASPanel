@@ -9,8 +9,8 @@ from Database.DbConfig import mysqlconnection,mysql_reconnect
 def hello_world():
     print(mysqlconnection)
     mysql_reconnect()
-    print(mysqlconnection)
-    print(generateservUser("testuser","testuser@gmail.com"))
+    #print(mysqlconnection)
+    #print(generateservUser("testuser","testuser@gmail.com"))
     return "Sent"
 
 
