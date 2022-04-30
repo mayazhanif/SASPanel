@@ -56,7 +56,8 @@ def mysql_connect():
       host=DatabaseDetails['host'],
       user=DatabaseDetails['user'],
       password=DatabaseDetails['password'],
-      database=DatabaseDetails['database']
+      database=DatabaseDetails['database'],
+      connection_timeout = 86400
     )
     #mysqlconnection= "testValue"
   except:
