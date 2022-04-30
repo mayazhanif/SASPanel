@@ -26,7 +26,8 @@ def admin_dashboard():
 def admin_viewUser():
     if check_admin_Login():
         mysqlconnection=mysql_connect()
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
         cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')
         results = cursor.fetchall()
@@ -39,7 +40,8 @@ def admin_deleteUser():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('userID'):
             userID=request.args.get('userID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             #query="UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` ="+userID
             query="UPDATE `users` SET `Is_Deleted` = '1' WHERE `users`.`User_id` ="+userID
             cursor.execute(query)
@@ -58,7 +60,8 @@ def admin_deleteUser():
 @routes.route('/admin/profile', methods=['GET', 'POST'])
 def admin_profile():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('select * from users where Is_Deleted=0 and Admin_id='+str(session["id"]))
         cursor.fetchall()
         totalUsers=str(cursor.rowcount)
@@ -84,7 +87,8 @@ def admin_profile():
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1==pass2:
-                cursor = mysqlconnection.cursor()
+                mysqlconnection=mysql_connect()
+				cursor = mysqlconnection.cursor()
                 md5Password = md5encode(pass1)
                 cursor.execute('UPDATE `administrator` SET `Admin_Password` = %s WHERE Admin_id = %s;', (md5Password,session['id']))
                 mysqlconnection.commit()
@@ -103,7 +107,8 @@ def admin_profile():
 @routes.route('/admin/users/adduser', methods=['GET', 'POST'])
 def admin_addUser():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
         results = cursor.fetchall()
         if request.method == 'POST' and 'Name' in request.form and 'Email' in request.form and 'pass1' in request.form and 'pass2' in request.form and 'packageID' in request.form:
@@ -116,7 +121,8 @@ def admin_addUser():
                 md5Password = hashlib.md5(User_Password.encode()).hexdigest()
                 packageID = request.form['packageID']
                 servUser = generateservUser(User_Name,User_email)
-                cursor = mysqlconnection.cursor()
+                mysqlconnection=mysql_connect()
+				cursor = mysqlconnection.cursor()
                 # query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
                 query = "INSERT INTO `users` (`User_id`, `servUser`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '"+servUser+"', '" + User_email + "', '" + md5Password + "', '" + User_Name + "', '', CURRENT_TIMESTAMP, '" + Admin_id + "', '" + packageID + "', '0', CURRENT_TIMESTAMP);"
                 cursor.execute(query)
@@ -163,7 +169,8 @@ def admin_updateUser():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('userID'):
             userID=request.args.get('userID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
             results = cursor.fetchall()
             query="SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
@@ -184,7 +191,8 @@ def admin_updateUser():
             md5Password = hashlib.md5(password.encode()).hexdigest()
 
             #Package_Name = request.form['packagename']
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             query = "UPDATE `users` SET `Package_Id` = '"+packageID+"', `User_email` = '"+Email+"',`User_Password` = '"+md5Password+"', `User_Name` = '"+Name+"' WHERE `users`.`User_id` = "+userID+""
             print(query)
             #query = "UPDATE `packages` SET  `Name` = '"+Package_Name+"', `Limit_FTP` = '"+Limit_FTP+"', `Limit_Mails` = '"+Limit_Mails+"', `Limit_Domains` = '"+Limit_Domains+"', `CGI_ACCESS` = '"+CGI_ACCESS+"', `Limit_DB` = '"+Limit_DB+"', `Sub_Domains` = '"+Sub_Domains+"', `Storage_Limit` = '"+Storage_Limit+"' WHERE `packages`.`Package_Id` = "+packageID+""
@@ -220,7 +228,8 @@ def admin_addPackage():
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
             #print(CGI_ACCESS)
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
             cursor.execute(query)
             mysqlconnection.commit()
@@ -238,7 +247,8 @@ def admin_addPackage():
 @routes.route('/admin/Packages/viewPackages')
 def admin_viewPackages():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
         results = cursor.fetchall()
         #msg=''
@@ -252,7 +262,8 @@ def admin_updatePackage():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('packageID'):
             packageID=request.args.get('packageID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             cursor.execute('SELECT * FROM `packages` where Package_Id='+packageID)
             package = cursor.fetchone()
             if cursor.rowcount>0:
@@ -273,7 +284,8 @@ def admin_updatePackage():
             CGI_ACCESS='0'
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             query = "UPDATE `packages` SET  `Package_Name` = '"+Package_Name+"', `Limit_FTP` = '"+Limit_FTP+"', `Limit_Mails` = '"+Limit_Mails+"', `Limit_Domains` = '"+Limit_Domains+"', `CGI_ACCESS` = '"+CGI_ACCESS+"', `Limit_DB` = '"+Limit_DB+"', `Sub_Domains` = '"+Sub_Domains+"', `Storage_Limit` = '"+Storage_Limit+"' WHERE `packages`.`Package_Id` = "+packageID+""
             cursor.execute(query)
             mysqlconnection.commit()
@@ -292,7 +304,8 @@ def admin_deletePackage():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('packageID'):
             packageID=request.args.get('packageID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             query="UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` ="+packageID
             cursor.execute(query)
             mysqlconnection.commit()
@@ -308,7 +321,8 @@ def admin_deletePackage():
 @routes.route('/admin/domains/addDomain', methods = ['GET', 'POST'])
 def admin_addDomain():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'DomainName' in request.form:
@@ -357,7 +371,8 @@ def admin_renewSSL():
 @routes.route('/admin/domains/viewDomains')
 def admin_viewDomains():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         #cursor.execute('SELECT * FROM `domains` INNER JOIN users ON domains.User_id = users.User_id where domains.Is_Deleted=0;')
         cursor.execute('SELECT * FROM domains JOIN users ON domains.User_id = users.User_id JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id;')
         results = cursor.fetchall()
@@ -371,7 +386,8 @@ def admin_updateDomains():
         msg=''
         if request.method == 'GET' and request.args.get('domainID'):
             domainID=request.args.get('domainID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             query="select * from domains WHERE `domains`.`Domain_Id` ="+domainID
             cursor.execute(query)
             domain = cursor.fetchone()
@@ -397,7 +413,8 @@ def admin_deleteDomain():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('domainID'):
             domainID=request.args.get('domainID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             cursor.execute('SELECT Domain_Name FROM `domains` where Is_Deleted=0 and Domain_Id=' + domainID + ';')
             DomainName = cursor.fetchone()[0]
             query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID
@@ -417,7 +434,8 @@ def admin_deleteDomain():
 @routes.route('/admin/Databases/addDB', methods = ['GET','POST'])
 def admin_addDB():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'databaseName' in request.form:
@@ -452,7 +470,8 @@ def admin_addDB():
 @routes.route('/admin/Databases/MysqlDatabase/viewDatabases')
 def admin_viewDatabases():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM mysqldbusers LEFT JOIN msqldatabases ON msqldatabases.DbUser_ID = mysqldbusers.DbUser_ID LEFT JOIN users ON users.User_id = mysqldbusers.User_id WHERE msqldatabases.Is_Active = 1')
         results = cursor.fetchall()
         msg = ''
@@ -465,7 +484,8 @@ def admin_deleteDatabase():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('DbID'):
             DbID=request.args.get('DbID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID='+DbID+';')
             #print(cursor.fetchone()[0])
             getDBName = cursor.fetchone()[0]
@@ -489,7 +509,8 @@ def admin_deleteDatabase():
 @routes.route('/admin/Databases/updateDBPass', methods=['GET', 'POST'])
 def admin_updateDBPass():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         msg=''
         if request.method == 'GET' and request.args.get('DbID'):
             DbUser_ID=request.args.get('DbID')
@@ -531,7 +552,8 @@ def admin_updateDBPass():
 @routes.route('/admin/FTPAccounts/addAccounts', methods=['GET', 'POST'])
 def admin_addAccounts():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form :
@@ -567,7 +589,8 @@ def admin_addAccounts():
 @routes.route('/admin/FTPAccounts/viewAccounts')
 def admin_viewAccounts():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id where ftp_accounts.Is_Active=1;')
         results = cursor.fetchall()
         msg = ''
@@ -579,7 +602,8 @@ def admin_viewAccounts():
 def admin_updateAccountPass():
     if check_admin_Login():
         msg=''
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('AccID'):
             AccID=request.args.get('AccID')
             query="SELECT * FROM `ftp_accounts` where Account_Id="+AccID
@@ -622,7 +646,8 @@ def admin_deleteAccount():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('AccID'):
             AccID=request.args.get('AccID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`='+AccID+';')
             ftpUsername = cursor.fetchone()[0]
             query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID
@@ -651,7 +676,8 @@ def admin_ftpServer():
 @routes.route('/admin/EmailAccounts/addEmail', methods=['GET','POST'])
 def admin_addEmail():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `domains` where Is_Deleted=0;')
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form :
@@ -687,7 +713,8 @@ def admin_addEmail():
 @routes.route('/admin/EmailAccounts/viewEmail')
 def admin_viewEmail():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1')
         results = cursor.fetchall()
         msg = ''
@@ -700,7 +727,8 @@ def admin_deleteEmail():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('mailID'):
             mailID=request.args.get('mailID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             query="UPDATE `mail_accounts` SET `Is_Active` = '0' WHERE `mail_accounts`.`Mail_Id` = "+mailID
             cursor.execute(query)
             mysqlconnection.commit()
@@ -721,7 +749,8 @@ def admin_updateEmail():
         msg=''
         if request.method == 'GET' and request.args.get('mailID'):
             mailID=request.args.get('mailID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             query="SELECT * FROM `mail_accounts` where Mail_Id="+mailID
             cursor.execute(query)
             mail = cursor.fetchone()
@@ -735,7 +764,8 @@ def admin_updateEmail():
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
-                cursor = mysqlconnection.cursor()
+                mysqlconnection=mysql_connect()
+				cursor = mysqlconnection.cursor()
                 query = "UPDATE `mail_accounts` SET `Mail_Pass` = '"+EncodedPassword+"' WHERE `mail_accounts`.`Mail_Id` = "+mailID+""
                 cursor.execute(query)
                 mysqlconnection.commit()
@@ -760,7 +790,8 @@ def admin_updateEmail():
 @routes.route('/admin/SubDomains/addSubDomain', methods=['GET','POST'])
 def admin_addSubDomain():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `domains` where Is_Deleted=0;')
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form :
@@ -796,7 +827,8 @@ def admin_addSubDomain():
 @routes.route('/admin/SubDomains/viewSubDomains')
 def admin_viewSubDomains():
     if check_admin_Login():
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM subdomains LEFT JOIN users ON users.User_id = subdomains.User_id LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id WHERE subdomains.Is_Active = 1')
         results = cursor.fetchall()
         msg = ''
@@ -809,7 +841,8 @@ def admin_deleteSubDomain():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('SdomainID'):
             SdomainID=request.args.get('SdomainID')
-            cursor = mysqlconnection.cursor()
+            mysqlconnection=mysql_connect()
+			cursor = mysqlconnection.cursor()
             cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=' + SdomainID + ';')
             SubDomainName = cursor.fetchone()[0]
             query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID
@@ -834,7 +867,8 @@ def admin_deleteSubDomain():
 def admin_error_logs():
     if check_admin_Login():
         msg = ''
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `domains` where Is_Deleted=0')
         domains = cursor.fetchall()
         return render_template('adminFiles/Logs/error_logs.html', msg=msg, domains=domains)
@@ -848,7 +882,8 @@ def admin_error_logs_ajax():
         #userID = str(session["id"])
         domainID = request.args.get('domainID')
         Result = {"data":""}
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT servUser,Domain_Name FROM `domains` Inner Join users ON domains.User_id = users.User_id where domains.Is_Deleted=0 and domains.Domain_Id='+domainID)
         domainData = cursor.fetchone()
         userName = domainData[0]
@@ -870,7 +905,8 @@ def admin_error_logs_ajax():
 def admin_access_logs():
     if check_admin_Login():
         msg = ''
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `domains` where Is_Deleted=0')
         domains = cursor.fetchall()
         return render_template('adminFiles/Logs/access_logs.html', msg=msg, domains=domains)
@@ -885,7 +921,8 @@ def admin_access_logs_ajax():
         domainID = request.args.get('domainID')
         #print(domainID)
         Result = {"data":""}
-        cursor = mysqlconnection.cursor()
+        mysqlconnection=mysql_connect()
+		cursor = mysqlconnection.cursor()
         cursor.execute('SELECT servUser,Domain_Name FROM `domains` Inner Join users ON domains.User_id = users.User_id where domains.Is_Deleted=0 and domains.Domain_Id='+domainID)
         domainData = cursor.fetchone()
         userName = domainData[0]
@@ -907,6 +944,7 @@ def admin_access_logs_ajax():
 def admin_cron_jobs():
     if check_admin_Login():
         msg = ''
+	    mysqlconnection=mysql_connect()
         cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0;')
         cronjobs = cursor.fetchall()
@@ -959,6 +997,7 @@ def admin_cron_jobs():
 @routes.route('/admin/CronJobs/deleteJob', methods =['GET', 'POST'])
 def admin_deleteJob():
     if check_user_Login():
+	    mysqlconnection=mysql_connect()
         cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('JobID'):
             JobID=request.args.get('JobID')
