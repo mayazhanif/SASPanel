@@ -2,13 +2,13 @@ from flask import render_template
 from app import app
 from . import routes
 from app import *
-from Database.DbConfig import mysqlconnection,mysql_reconnect
+from Database.DbConfig import mysqlconnection,mysql_connect
 
 
 @routes.route('/test/')
 def hello_world():
     print(mysqlconnection)
-    mysql_reconnect()
+    mysql_connect()
     print(mysqlconnection)
     #print(generateservUser("testuser","testuser@gmail.com"))
     return "Sent"

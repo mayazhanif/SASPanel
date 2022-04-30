@@ -1,7 +1,7 @@
 import base64
 
 from flask import render_template, request,redirect, url_for, flash
-from Database.DbConfig import mysqlconnection
+from Database.DbConfig import mysqlconnection,mysql_connect
 import hashlib
 import json
 from . import routes
@@ -25,6 +25,7 @@ def admin_dashboard():
 @routes.route('/admin/users/viewUser')
 def admin_viewUser():
     if check_admin_Login():
+        mysqlconnection=mysql_connect()
         cursor = mysqlconnection.cursor()
         #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
         cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')

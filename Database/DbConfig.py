@@ -58,8 +58,9 @@ def mysql_connect():
       password=DatabaseDetails['password'],
       database=DatabaseDetails['database']
     )
-    mysqlconnection= "testValue"
+    #mysqlconnection= "testValue"
   except:
     mysqlconnection = None
   return mysqlconnection
-mysql_connect()
+
+mysqlconnection = mysql_connect()
