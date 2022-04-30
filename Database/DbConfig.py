@@ -60,7 +60,8 @@ def mysql_connect():
     )
     #mysqlconnection= "testValue"
     print("Connection Successfull.")
-  except:
+  except Exception as e:
+    print(e.message)
     mysqlconnection = None
   return mysqlconnection
 
