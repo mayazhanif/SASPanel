@@ -52,6 +52,7 @@ def mysql_connect():
     mysqlconnection = None
   mysqlconnection = None
   try:
+    print(DatabaseDetails['password'])
     mysqlconnection = mysql.connector.connect(
       host=DatabaseDetails['host'],
       user=DatabaseDetails['user'],
