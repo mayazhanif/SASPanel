@@ -59,6 +59,7 @@ def mysql_connect():
       database=DatabaseDetails['database'],
     )
     #mysqlconnection= "testValue"
+    print("Connection Successfull.")
   except:
     mysqlconnection = None
   return mysqlconnection
