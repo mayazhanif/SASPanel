@@ -227,7 +227,7 @@ def user_addDB():
 
 
 
-@routes.route('/user/Databases/MysqlDatabase/viewDatabases')
+@routes.route('/user/Databases/viewDatabases')
 def user_viewDatabases():
     if check_user_Login():
         cursor = mysqlconnection.cursor()
