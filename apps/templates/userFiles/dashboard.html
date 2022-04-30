@@ -156,8 +156,8 @@ function get_updates(){
             update_cart_ram(res.mem.memTotal,res.mem.memFree);
             update_cart_cpu(res.cpu_percentage);
             update_cart_load(res.cpu[0]);
-            document.getElementById('cpuname').innerHTML=res.system;
-            document.getElementById('systemname').innerHTML=res.cpu[3];
+            document.getElementById('cpuname').innerHTML=res.cpu[3];
+            document.getElementById('systemname').innerHTML=res.system;
             document.getElementById('systemuptime').innerHTML=res.time;
         },
         error: function(xhr, status, error) {
