@@ -560,6 +560,7 @@ def install_packages(root_password, mail_password,domain,emailaddress,emailpassw
     WriteMailConfig(emailaddress,emailpassword)
     os.system("sudo apt-get -y update")
     os.system("sudo apt-get -y upgrade")
+    os.system("mv /home/SASPanel/scripts/sample.config.ini /home/SASPanel/Database/config.ini")
     os.system("sudo apt-get -y install mysql-server nginx curl wget acl vsftpd")
     os.system("sudo apt-get -y install certbot python3-certbot-nginx")
     set_mysql_root(root_password)

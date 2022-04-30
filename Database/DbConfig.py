@@ -25,37 +25,31 @@ def WriteMailConfig(email,password):
   with open(initfile, 'w') as conf:
     config.write(conf)
 
-localconfig=False
-currentDirectory = os.path.dirname(os.path.abspath(__file__))
-initfile = os.path.join(currentDirectory, 'config.ini')
-config = configparser.RawConfigParser()
-config.read(initfile)
-if localconfig==True:
-  DatabaseDetails = dict(config.items('configlocal'))
-else:
-  DatabaseDetails = dict(config.items('config'))
+# currentDirectory = os.path.dirname(os.path.abspath(__file__))
+# initfile = os.path.join(currentDirectory, 'config.ini')
+# config = configparser.RawConfigParser()
+# config.read(initfile)
+# DatabaseDetails = dict(config.items('config'))
+# mysqlconnection = None
+# try:
+#   mysqlconnection = mysql.connector.connect(
+#     host=DatabaseDetails['host'],
+#     user=DatabaseDetails['user'],
+#     password=DatabaseDetails['password'],
+#     database=DatabaseDetails['database']
+#   )
+# except:
+#   mysqlconnection = None
 
-mysqlconnection = None
-try:
-  mysqlconnection = mysql.connector.connect(
-    host=DatabaseDetails['host'],
-    user=DatabaseDetails['user'],
-    password=DatabaseDetails['password'],
-    database=DatabaseDetails['database']
-  )
-except:
-  mysqlconnection = None
-
-def mysql_reconnect():
+def mysql_connect():
   currentDirectory = os.path.dirname(os.path.abspath(__file__))
   initfile = os.path.join(currentDirectory, 'config.ini')
   config = configparser.RawConfigParser()
   config.read(initfile)
-  if localconfig == True:
-    DatabaseDetails = dict(config.items('configlocal'))
-  else:
+  try:
     DatabaseDetails = dict(config.items('config'))
-
+  except:
+    mysqlconnection = None
   mysqlconnection = None
   try:
     mysqlconnection = mysql.connector.connect(
@@ -68,3 +62,4 @@ def mysql_reconnect():
   except:
     mysqlconnection = None
   return mysqlconnection
+mysql_connect()
