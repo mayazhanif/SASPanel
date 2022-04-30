@@ -45,7 +45,7 @@ def mysql_connect():
   currentDirectory = os.path.dirname(os.path.abspath(__file__))
   initfile = os.path.join(currentDirectory, 'config.ini')
   config = configparser.RawConfigParser()
-  print(initfile)
+  #print(initfile)
   config.read(initfile)
   try:
     DatabaseDetails = dict(config.items('config'))
@@ -53,7 +53,7 @@ def mysql_connect():
     mysqlconnection = None
   mysqlconnection = None
   try:
-    print(DatabaseDetails['password'])
+    #print(DatabaseDetails['password'])
     mysqlconnection = mysql.connector.connect(
       host=DatabaseDetails['host'],
       user=DatabaseDetails['user'],
