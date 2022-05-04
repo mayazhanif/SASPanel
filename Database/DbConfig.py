@@ -41,7 +41,7 @@ def WriteMailConfig(email,password):
 # except:
 #   mysqlconnection = None
 global mysqlconnection
-
+mysqlconnection = None
 def mysql_connect():
   currentDirectory = os.path.dirname(os.path.abspath(__file__))
   initfile = os.path.join(currentDirectory, 'config.ini')
