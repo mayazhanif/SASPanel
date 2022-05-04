@@ -51,7 +51,6 @@ def mysql_connect():
     DatabaseDetails = dict(config.items('config'))
   except:
     mysqlconnection = None
-  mysqlconnection = None
   try:
     #print(DatabaseDetails['password'])
     print(mysqlconnection)
