@@ -40,7 +40,7 @@ def WriteMailConfig(email,password):
 #   )
 # except:
 #   mysqlconnection = None
-mysqlconnection = None
+mysqlconnection = "Hello"
 def mysql_connect():
   currentDirectory = os.path.dirname(os.path.abspath(__file__))
   initfile = os.path.join(currentDirectory, 'config.ini')
@@ -54,7 +54,7 @@ def mysql_connect():
   mysqlconnection = None
   try:
     #print(DatabaseDetails['password'])
-    global mysqlconnection
+    print(mysqlconnection)
     mysqlconnection = mysql.connector.connect(
       host=DatabaseDetails['host'],
       user=DatabaseDetails['user'],
