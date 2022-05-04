@@ -54,6 +54,7 @@ def mysql_connect():
   mysqlconnection = None
   try:
     #print(DatabaseDetails['password'])
+    global mysqlconnection
     mysqlconnection = mysql.connector.connect(
       host=DatabaseDetails['host'],
       user=DatabaseDetails['user'],
@@ -67,4 +68,5 @@ def mysql_connect():
     mysqlconnection = None
   return mysqlconnection
 
+global mysqlconnection
 mysqlconnection = mysql_connect()
