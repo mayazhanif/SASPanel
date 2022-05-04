@@ -40,6 +40,7 @@ def WriteMailConfig(email,password):
 #   )
 # except:
 #   mysqlconnection = None
+global mysqlconnection
 
 def mysql_connect():
   currentDirectory = os.path.dirname(os.path.abspath(__file__))
@@ -68,5 +69,4 @@ def mysql_connect():
     mysqlconnection = None
   return mysqlconnection
 
-global mysqlconnection
 mysqlconnection = mysql_connect()
