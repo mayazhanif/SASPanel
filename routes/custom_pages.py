@@ -13,6 +13,11 @@ def hello_world():
     #print(generateservUser("testuser","testuser@gmail.com"))
     return "Sent"
 
+@routes.route('/reboot/')
+def hello_world():
+    os.system("systemctl restart saspanel")
+    #print(generateservUser("testuser","testuser@gmail.com"))
+    return "ReBooted"
 
 @routes.route('/installer', methods=['POST','GET'])
 def installer():
