@@ -14,7 +14,7 @@ def hello_world():
     return "Sent"
 
 @routes.route('/reboot/')
-def hello_world():
+def reboot():
     os.system("systemctl restart saspanel")
     #print(generateservUser("testuser","testuser@gmail.com"))
     return "ReBooted"
