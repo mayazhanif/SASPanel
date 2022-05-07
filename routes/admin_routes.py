@@ -26,6 +26,7 @@ def admin_dashboard():
 def admin_viewUser():
     if check_admin_Login():
         mysqlconnection=mysql_connect()
+        #mysqlconnection.reconnect()
         cursor = mysqlconnection.cursor()
         #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
         cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')
