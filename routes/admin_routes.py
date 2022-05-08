@@ -11,9 +11,7 @@ from flask import current_app as app
 from datetime import datetime
 from datetime import timedelta
 
-@app.before_request
-def before_request():
-    mysqlconnection.reconnect()
+
 
 @routes.route('/admin/dashboard')
 def admin_dashboard():
