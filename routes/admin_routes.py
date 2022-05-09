@@ -17,9 +17,7 @@ from datetime import timedelta
 def admin_dashboard():
     if check_admin_Login():
         msg=''
-        o = urlparse(request.base_url)
-        mainhost = o.hostname
-        return render_template('adminFiles/dashboard.html', msg=msg, mainhost=mainhost)
+        return render_template('adminFiles/dashboard.html', msg=msg)
     else:
         return redirect(url_for('routes.login'))
 

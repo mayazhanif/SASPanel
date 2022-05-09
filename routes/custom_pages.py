@@ -10,7 +10,6 @@ def hello_world():
     print(mysqlconnection)
     mysql_connect()
     print(mysqlconnection)
-    #print(generateservUser("testuser","testuser@gmail.com"))
     return "Sent"
 
 @routes.route('/reboot/')

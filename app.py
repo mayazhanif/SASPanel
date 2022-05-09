@@ -45,3 +45,11 @@ if __name__ == '__main__':
 def before_request():
     print("Reloading Server.")
     mysqlconnection.reconnect()
+
+@app.context_processor
+def server_host():
+    o = urlparse(request.base_url)
+    mainhost = o.hostname
+    return dict(
+        mainhost = mainhost,
+    )
