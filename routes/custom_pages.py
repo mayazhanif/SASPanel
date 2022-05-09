@@ -47,7 +47,7 @@ def installer():
 
 @routes.route('/')
 def home_route():
-    mysqlconnection.reconnect()
+    mysqlconnection = mysql_connect()
     if mysqlconnection is None:
         return redirect(url_for('routes.installer'))
     if 'loggedin' in session:
