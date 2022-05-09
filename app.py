@@ -41,15 +41,15 @@ if __name__ == '__main__':
     #app.run(debug=True)
     app.run(host="0.0.0.0", port=int("5000"), debug=True)
 
-@app.before_request
-def before_request():
-    print("Reloading Server.")
-    #mysqlconnection.reconnect()
+# @app.before_request
+# def before_request():
+#     print("Reloading Server.")
+#     #mysqlconnection.reconnect()
 
 @app.context_processor
 def server_host():
     o = urlparse(request.base_url)
-    mainhost = o.hostname
+    hosturl = o.hostname
     return dict(
-        mainhost = mainhost,
+        mainhost = hosturl,
     )
