@@ -14,6 +14,7 @@ from datetime import timedelta
 
 @routes.route('/user/dashboard')
 def user_dashboard():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg=""
         o = urlparse(request.base_url)
@@ -25,6 +26,7 @@ def user_dashboard():
 
 @routes.route('/user/profile', methods=['GET', 'POST'])
 def user_profile():
+    mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         cursor.execute('SELECT packages.*, users.User_Reg_Date FROM packages INNER JOIN users ON packages.Package_Id = users.Package_id WHERE users.Is_Deleted=0 and users.User_id='+str(session["id"]))
@@ -88,6 +90,7 @@ def user_profile():
 
 @routes.route('/user/domains/addDomain', methods = ['GET', 'POST'])
 def user_addDomain():
+    mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         if request.method == 'POST' and 'DomainName' in request.form:
@@ -137,6 +140,7 @@ def user_addDomain():
 
 @routes.route('/user/domains/renewSSL', methods = ['GET','POST'])
 def user_renewSSL():
+    mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         #cursor.execute('SELECT * FROM `domains` where domains.Is_Deleted=0 and domains.User_id='+str(session["id"]))
@@ -149,6 +153,7 @@ def user_renewSSL():
 
 @routes.route('/user/domains/viewDomains')
 def user_viewDomains():
+    mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         #cursor.execute('SELECT * FROM `domains` where domains.Is_Deleted=0 and domains.User_id='+str(session["id"]))
@@ -161,6 +166,7 @@ def user_viewDomains():
 
 @routes.route('/user/Packages/deleteDomain', methods =['GET', 'POST'])
 def user_deleteDomain():
+    mysqlconnection.reconnect()
     if check_user_Login():
         if request.method == 'GET' and request.args.get('domainID'):
             userID = str(session["id"])
@@ -185,6 +191,7 @@ def user_deleteDomain():
 
 @routes.route('/user/Databases/addDB', methods =['GET', 'POST'])
 def user_addDB():
+    mysqlconnection.reconnect()
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
@@ -229,6 +236,7 @@ def user_addDB():
 
 @routes.route('/user/Databases/viewDatabases')
 def user_viewDatabases():
+    mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         userID = str(session["id"])
@@ -242,6 +250,7 @@ def user_viewDatabases():
 
 @routes.route('/user/Databases/deleteDatabase', methods =['GET', 'POST'])
 def user_deleteDatabase():
+    mysqlconnection.reconnect()
     if check_user_Login():
         userID = str(session["id"])
         if request.method == 'GET' and request.args.get('DbID'):
@@ -268,6 +277,7 @@ def user_deleteDatabase():
 
 @routes.route('/user/Databases/updateDBPass', methods=['GET', 'POST'])
 def user_updateDBPass():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg=''
         cursor = mysqlconnection.cursor()
@@ -310,6 +320,7 @@ def user_updateDBPass():
 
 @routes.route('/user/FTPAccounts/addAccounts', methods=['GET', 'POST'])
 def user_addAccounts():
+    mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         if request.method == 'POST' and 'ftpUsername' in request.form and 'ftpPassword' in request.form:
@@ -354,6 +365,7 @@ def user_addAccounts():
 
 @routes.route('/user/FTPAccounts/viewAccounts')
 def user_viewAccounts():
+    mysqlconnection.reconnect()
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
@@ -368,8 +380,8 @@ def user_viewAccounts():
 
 @routes.route('/user/FTPAccounts/updateAccountPass', methods=['GET', 'POST'])
 def user_updateAccountPass():
-    if check_user_Login\
-                ():
+    mysqlconnection.reconnect()
+    if check_user_Login():
         msg=''
         userID = str(session["id"])
         if request.method == 'GET' and request.args.get('AccID'):
@@ -414,6 +426,7 @@ def user_updateAccountPass():
 
 @routes.route('/user/FTPAccounts/deleteAccount', methods =['GET', 'POST'])
 def user_deleteAccount():
+    mysqlconnection.reconnect()
     if check_user_Login():
         if request.method == 'GET' and request.args.get('AccID'):
             AccID=request.args.get('AccID')
@@ -438,6 +451,7 @@ def user_deleteAccount():
 
 @routes.route('/user/FTPAccounts/ftpServer')
 def user_ftpServer():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg = ''
         return render_template('userFiles/ftpAccounts/ftpServer.html', msg=msg)
@@ -446,6 +460,7 @@ def user_ftpServer():
 
 @routes.route('/user/EmailAccounts/addEmail', methods=['GET','POST'])
 def user_addEmail():
+    mysqlconnection.reconnect()
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
@@ -494,6 +509,7 @@ def user_addEmail():
 
 @routes.route('/user/EmailAccounts/viewEmail')
 def user_viewEmail():
+    mysqlconnection.reconnect()
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
@@ -507,6 +523,7 @@ def user_viewEmail():
 
 @routes.route('/user/EmailAccounts/deleteEmail', methods =['GET', 'POST'])
 def user_deleteEmail():
+    mysqlconnection.reconnect()
     if check_user_Login():
         if request.method == 'GET' and request.args.get('mailID'):
             userID = str(session["id"])
@@ -528,6 +545,7 @@ def user_deleteEmail():
 
 @routes.route('/user/EmailAccounts/updateEmail', methods=['GET', 'POST'])
 def user_updateEmail():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg=''
         userID = str(session["id"])
@@ -572,6 +590,7 @@ def user_updateEmail():
 
 @routes.route('/user/SubDomains/addSubDomain', methods=['GET','POST'])
 def user_addSubDomain():
+    mysqlconnection.reconnect()
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
@@ -622,6 +641,7 @@ def user_addSubDomain():
 
 @routes.route('/user/SubDomains/viewSubDomains')
 def user_viewSubDomains():
+    mysqlconnection.reconnect()
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
@@ -635,6 +655,7 @@ def user_viewSubDomains():
 
 @routes.route('/user/SubDomains/deleteSubDomain', methods =['GET', 'POST'])
 def user_deleteSubDomain():
+    mysqlconnection.reconnect()
     if check_user_Login():
         if request.method == 'GET' and request.args.get('SdomainID'):
             userID = str(session["id"])
@@ -658,6 +679,7 @@ def user_deleteSubDomain():
 
 @routes.route('/user/Logs/error_Logs')
 def user_error_logs():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg = ''
         userID = str(session["id"])
@@ -670,6 +692,7 @@ def user_error_logs():
 
 @routes.route('/user/Logs/error_Logs/Ajax' , methods = ['GET', 'POST'])
 def user_error_logs_ajax():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg = ''
         userID = str(session["id"])
@@ -694,6 +717,7 @@ def user_error_logs_ajax():
 
 @routes.route('/user/Logs/access_logs')
 def user_access_logs():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg = ''
         userID = str(session["id"])
@@ -706,6 +730,7 @@ def user_access_logs():
 
 @routes.route('/user/Logs/access_Logs/Ajax' , methods = ['GET', 'POST'])
 def user_access_logs_ajax():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg = ''
         userID = str(session["id"])
@@ -730,6 +755,7 @@ def user_access_logs_ajax():
 
 @routes.route('/user/CronJobs/cron_jobs' ,methods = ['GET', 'POST'])
 def user_cron_jobs():
+    mysqlconnection.reconnect()
     if check_user_Login():
         msg = ''
         userID = str(session["id"])
@@ -781,6 +807,7 @@ def user_cron_jobs():
 
 @routes.route('/user/CronJobs/deleteJob', methods =['GET', 'POST'])
 def user_deleteJob():
+    mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('JobID'):

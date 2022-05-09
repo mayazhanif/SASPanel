@@ -9,6 +9,7 @@ import json
 
 @routes.route('/get_updates')
 def get_updates():
+    mysqlconnection.reconnect()
     if check_admin_Login() or check_user_Login():
         Result = GetAllInfo()
         response = app.response_class(

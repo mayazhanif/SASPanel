@@ -8,7 +8,7 @@ import secrets
 from datetime import date
 @routes.route('/login/', methods=['GET', 'POST'])
 def login(msg=""):
-    mysqlconnection=mysql_connect()
+    mysqlconnection.reconnect()
     if request.method == 'POST' and 'Email' in request.form and 'password' in request.form and 'logintype' in request.form:
         Email = request.form['Email']
         password = request.form['password']
@@ -48,8 +48,7 @@ def login(msg=""):
 
 @routes.route('/forgot/', methods=['GET', 'POST'])
 def forgot_password():
-    mysqlconnection=mysql_connect()
-
+    mysqlconnection.reconnect()
     if request.method == 'POST' and 'Email' in request.form:
         Email = request.form['Email']
         cursor = mysqlconnection.cursor()
@@ -75,8 +74,7 @@ def forgot_password():
 
 @routes.route('/reset/', methods=['GET', 'POST'])
 def reset_password():
-    mysqlconnection=mysql_connect()
-
+    mysqlconnection.reconnect()
     if request.method == 'GET' and request.args.get('token'):
         cursor = mysqlconnection.cursor()
         token = request.args.get('token')
