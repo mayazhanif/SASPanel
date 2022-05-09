@@ -24,9 +24,9 @@ def admin_dashboard():
 @routes.route('/admin/users/viewUser')
 def admin_viewUser():
     if check_admin_Login():
-        mysqlconnection=mysql_connect()
-        #mysqlconnection.reconnect()
+        mysqlconnection.reconnect()
         cursor = mysqlconnection.cursor()
+        #cursor.close()
         #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
         cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')
         results = cursor.fetchall()
