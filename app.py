@@ -44,7 +44,7 @@ if __name__ == '__main__':
 @app.before_request
 def before_request():
     print("Reloading Server.")
-    mysqlconnection.reconnect()
+    #mysqlconnection.reconnect()
 
 @app.context_processor
 def server_host():
