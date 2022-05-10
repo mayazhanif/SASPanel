@@ -79,15 +79,10 @@ sed -i "s|^\(\$config\['smtp_server'\] =\).*$|\1 \'localhost\';|" /usr/share/rou
 sed -i "s|^\(\$config\['smtp_user'\] =\).*$|\1 \'\';|" /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\$config\['smtp_pass'\] =\).*$|\1 \'\';|" /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\$config\['smtp_port'\] =\).*$|\1 25;|" /usr/share/roundcube/config/config.inc.php
-#sed -i "s|^\(\$config\['support_url'\] =\).*$|\1 \'mailto:${E}\';|" /var/www/html/roundcube/config/config.inc.php
-#deskey=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9-_#&!*%?' | fold -w 24 | head -n 1)
-#deskey=$(cat /dev/urandom | tr -dc '[:alpha:]' | fold -w ${1:-24} | head -n 1)
 deskey=$(xxd -l 12 -c 12 -p < /dev/random)
 sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 \'${deskey}\';|" /usr/share/roundcube/config/config.inc.php
 rm -rf /usr/share/roundcube/installer
-#echo -e "\n\$cfg['Servers'][\$i]['auth_type'] = 'signon';\n\$cfg['Servers'][\$i]['SignonSession'] = 'SignonSession';\n\$cfg['Servers'][\$i]['SignonURL'] = 'sso.php';\n" >> /usr/share/phpmyadmin/config.inc.php
 service nginx restart
-
 mysql -u root -p${rootpwd} -e "CREATE USER 'mail_admin'@'%' IDENTIFIED BY '${pwd}';FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "create database mail;use mail;FLUSH PRIVILEGES;"
 mysql -u root -p${rootpwd} -e "GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';FLUSH PRIVILEGES;"
@@ -219,8 +214,4 @@ connect = host=127.0.0.1 dbname=mail user=mail_admin password=${pwd}
 default_pass_scheme = PLAIN
 password_query = SELECT email as user, password FROM users WHERE email='%u';
 EOF
-chgrp dovecot /etc/dovecot/dovecot-sql.conf
-chmod o= /etc/dovecot/dovecot-sql.conf
-service dovecot restart
-systemctl restart postfix
-systemctl restart dovecot
+w
