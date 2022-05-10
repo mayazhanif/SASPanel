@@ -17,6 +17,7 @@ cp -a -r /usr/share/phpmyadmin/config.sample.inc.php  /usr/share/phpmyadmin/conf
 sed -i "s#^\$cfg\['blowfish_secret'\].*#\$cfg\['blowfish_secret'\] = '${secret}';#" /usr/share/phpmyadmin/config.inc.php
 sed -i "s#^\$cfg\['blowfish_secret'\].*#\$cfg\['blowfish_secret'\] = '${secret}';#" /usr/share/phpmyadmin//libraries/config.default.php
 
+
 cat > /etc/nginx/snippets/phpmyadmin.conf <<EOF
 location /phpmyadmin {
     root /usr/share/;
