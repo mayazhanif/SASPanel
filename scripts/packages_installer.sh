@@ -214,4 +214,3 @@ connect = host=127.0.0.1 dbname=mail user=mail_admin password=${pwd}
 default_pass_scheme = PLAIN
 password_query = SELECT email as user, password FROM users WHERE email='%u';
 EOF
-w
