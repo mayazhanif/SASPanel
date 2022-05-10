@@ -13,11 +13,9 @@ mv phpMyAdmin-5.1.3-all-languages phpmyadmin
 chown -R www-data:www-data /usr/share/phpmyadmin
 chmod -R 755 /usr/share/phpmyadmin
 secret=`cat /dev/urandom | head -n 32 | md5sum | head -c 32`;
-\cp -a -r /usr/share/phpmyadmin/config.sample.inc.php  /usr/share/phpmyadmin/config.inc.php
+cp -a -r /usr/share/phpmyadmin/config.sample.inc.php  /usr/share/phpmyadmin/config.inc.php
 sed -i "s#^\$cfg\['blowfish_secret'\].*#\$cfg\['blowfish_secret'\] = '${secret}';#" /usr/share/phpmyadmin/config.inc.php
 sed -i "s#^\$cfg\['blowfish_secret'\].*#\$cfg\['blowfish_secret'\] = '${secret}';#" /usr/share/phpmyadmin//libraries/config.default.php
-#sed -i "s#^\$i]['host'\].*#\$i]['host'\] = '127.0.0.1';#" /usr/share/phpmyadmin/config.inc.php
-#sed -i "s#^\$i]['host'\].*#\$i]['host'\] = '127.0.0.1';#" /usr/share/phpmyadmin//libraries/config.default.php
 
 cat > /etc/nginx/snippets/phpmyadmin.conf <<EOF
 location /phpmyadmin {
@@ -32,7 +30,6 @@ location /phpmyadmin {
     }
 }
 EOF
-
 
 cd /usr/share
 wget https://github.com/roundcube/roundcubemail/releases/download/1.4.13/roundcubemail-1.4.13-complete.tar.gz
@@ -56,16 +53,6 @@ location /roundcube {
     }
 }
 EOF
-#cp /usr/share/roundcube/config/config.inc.php.sample /usr/share/roundcube/config/config.inc.php
-#sed -i "s|^\(\$config\['db_dsnw'\] =\).*$|\1 \'mysqli://roundcube:${pwd}@localhost/roundcubedb\';|" /usr/share/roundcube/config/config.inc.php
-#sed -i "s|^\(\$config\['smtp_server'\] =\).*$|\1 \'localhost\';|" /usr/share/roundcube/config/config.inc.php
-#sed -i "s|^\(\$config\['smtp_user'\] =\).*$|\1 \'%u\';|" /usr/share/roundcube/config/config.inc.php
-#sed -i "s|^\(\$config\['smtp_pass'\] =\).*$|\1 \'%p\';|" /usr/share/roundcube/config/config.inc.php
-#sed -i "s|^\(\$config\['support_url'\] =\).*$|\1 \'mailto:${E}\';|" /var/www/html/roundcube/config/config.inc.php
-#deskey=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9-_#&!*%?' | fold -w 24 | head -n 1)
-#sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 \'${deskey}\';|" /usr/share/roundcube/config/config.inc.php
-#rm -rf /usr/share/roundcube/installer
-
 cd /usr/share
 wget https://github.com/mayazhanif/web-ftp/raw/main/webftp.zip
 unzip webftp.zip
@@ -176,10 +163,6 @@ echo "
 dovecot   unix  -       n       n       -       -       pipe
     flags=DRhu user=vmail:vmail argv=/usr/libexec/dovecot/deliver -f ${sender} -d ${recipient}
 " >> /etc/postfix/master.cf
-# start postfix
-service sendmail stop
-#chkconfig sendmail off
-#chkconfig postfix on
 service postfix start
 # backup dovecot.conf
 mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf-backup
@@ -235,11 +218,8 @@ connect = host=127.0.0.1 dbname=mail user=mail_admin password=${pwd}
 default_pass_scheme = PLAIN
 password_query = SELECT email as user, password FROM users WHERE email='%u';
 EOF
-# apply permissions
 chgrp dovecot /etc/dovecot/dovecot-sql.conf
 chmod o= /etc/dovecot/dovecot-sql.conf
-# start dovecot
-#chkconfig dovecot on
 service dovecot restart
 systemctl restart postfix
 systemctl restart dovecot
