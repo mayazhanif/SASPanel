@@ -167,8 +167,9 @@ function get_updates(){
     });
 }
 function update_cart_ram(used, free){
+        var totalram = used+free;
         var text = document.getElementById('memtext');
-        text.innerHTML=used+"/"+free;
+        text.innerHTML=used+"/"+totalram;
         var options = {
           series: [used, free],
           chart: {
