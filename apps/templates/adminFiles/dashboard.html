@@ -16,7 +16,7 @@
                                     <div class="card-body p-0">
                                         <div class="media p-3">
                                             <div class="media-body">
-                                                <span class="text-muted text-uppercase font-size-12 font-weight-bold">Today
+                                                <span class="text-muted text-uppercase font-size-12 font-weight-bold">Total
                                                     Ram Usage</span>
                                                 <h2 id="memtext" class="mb-0">0/0</h2>
                                             </div>
@@ -168,7 +168,7 @@ function get_updates(){
 }
 function update_cart_ram(used, free){
         var text = document.getElementById('memtext');
-        text.innerHTML=used+"/"+used;
+        text.innerHTML=used+"/"+free;
         var options = {
           series: [used, free],
           chart: {
