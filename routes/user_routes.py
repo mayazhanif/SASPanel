@@ -107,7 +107,7 @@ def user_addDomain():
             if cursor.rowcount>=limit:
                 msg = {"error": "danger", "message": "Domains Limit Reached."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id='+userID+';')
             user = cursor.fetchone()
             getUserName = user[0]
             getEmail = user[1]
