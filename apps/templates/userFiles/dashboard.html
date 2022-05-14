@@ -143,7 +143,18 @@
 
 <script>
     setInterval(function(){
+var focused = false;
+
+function onBlur() {
+    focused = false;
+};
+function onFocus(){
+    focused = true;
+};
+if (focused)
+{
         get_updates()
+}
         }, 5000);
 function get_updates(){
     $.ajax({

@@ -18,12 +18,9 @@ app.register_blueprint(routes)
 app.secret_key = 'SecRET@Key123'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 currentDirectory = os.path.dirname(os.path.abspath(__file__))
-#print(currentDirectory)
 initfile = os.path.join(currentDirectory+"/Database/", 'config.ini')
-#initfile = os.path.join("/home/SASPanel/Database/", 'config.ini')
 config = configparser.RawConfigParser()
 config.read(initfile)
-#print(config.items.mail)
 mailDetails = dict(config.items('mail'))
 app.config['MAIL_SERVER'] = mailDetails['server']
 app.config['MAIL_PORT'] = 25
