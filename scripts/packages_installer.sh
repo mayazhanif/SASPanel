@@ -128,7 +128,7 @@ chgrp postfix /etc/postfix/mysql-virtual_*.cf
 groupadd -g 5000 vmail
 useradd -g vmail -u 5000 vmail -d /home/vmail -m
 
-postconf -e 'myhostname = mail.saspanel.org'
+postconf -e 'myhostname = mail.${domain}'
 postconf -e 'mydestination = localhost'
 postconf -e 'mynetworks = 127.0.0.0/8'
 postconf -e 'inet_interfaces = all'
