@@ -142,11 +142,19 @@
                 </div>
 
 <script>
+var focused = true;
 document.addEventListener("visibilitychange", function() {
-      document.title = document.hidden ? "I'm away" : "I'm here";
+    if(document.hidden){
+        focused = false;
+    }
+    else {
+        focused = true;
+    }
 });
     setInterval(function(){
+        if(focused){
         get_updates()
+        }
         }, 5000);
 function get_updates(){
     $.ajax({
