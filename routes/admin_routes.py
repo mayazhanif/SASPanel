@@ -34,7 +34,7 @@ def admin_viewUser():
     else:
         return redirect(url_for('routes.login'))
 
-@routes.route('/admin/Packages/deleteUser', methods =['GET', 'POST'])
+@routes.route('/admin/users/deleteUser', methods =['GET', 'POST'])
 def admin_deleteUser():
     if check_admin_Login():
         if request.method == 'GET' and request.args.get('userID'):
@@ -305,10 +305,11 @@ def admin_deletePackage():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                flash('Hosting Package Deleted.')
                 return redirect(url_for("routes.admin_viewPackages"))
             else:
+                flash('Hosting Package Not Deleted.')
                 return redirect(url_for("routes.admin_viewPackages"))
-
         else:
             return redirect(url_for("routes.admin_viewPackages"))
     else:
