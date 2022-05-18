@@ -179,8 +179,10 @@ def user_deleteDomain():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(DomainName)
+                flash('Domain Deleted.')
                 return redirect(url_for("routes.user_viewDomains"))
             else:
+                flash('Domain not Deleted.')
                 return redirect(url_for("routes.user_viewDomains"))
 
         else:
@@ -264,8 +266,10 @@ def user_deleteDatabase():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 drop_database(cursor,getDBName)
+                flash('Database Deleted.')
                 return redirect(url_for("routes.user_viewDatabases"))
             else:
+                flash('Database not Deleted.')
                 return redirect(url_for("routes.user_viewDatabases"))
 
         else:
@@ -439,8 +443,10 @@ def user_deleteAccount():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_ftp(ftpUsername)
+                flash('FTP Account Deleted.')
                 return redirect(url_for("routes.user_viewAccounts"))
             else:
+                flash('FTP Account not Deleted.')
                 return redirect(url_for("routes.user_viewAccounts"))
 
         else:
@@ -533,8 +539,10 @@ def user_deleteEmail():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                flash('Email Account Deleted.')
                 return redirect(url_for("routes.user_viewEmail"))
             else:
+                flash('Email Account not Deleted.')
                 return redirect(url_for("routes.user_viewEmail"))
 
         else:
@@ -668,8 +676,10 @@ def user_deleteSubDomain():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(SubDomainName)
+                flash('Subdomain Deleted.')
                 return redirect(url_for("routes.user_viewSubDomains"))
             else:
+                flash('Subdomain not Deleted.')
                 return redirect(url_for("routes.user_viewSubDomains"))
 
         else:
@@ -820,8 +830,10 @@ def user_deleteJob():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 deleteCronJob(getUsername)
+                flash('CronJobs Deleted.')
                 return redirect(url_for("routes.user_cron_jobs"))
             else:
+                flash('CronJobs Not Deleted.')
                 return redirect(url_for("routes.user_cron_jobs"))
 
         else:
