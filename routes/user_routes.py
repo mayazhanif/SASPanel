@@ -488,6 +488,9 @@ def user_addEmail():
                 msg = {"error": "danger", "message": "Mail Accounts Limit Reached."}
                 return render_template('userFiles/Mails/addEmail.html', msg=msg)
             domainID = request.form['domainID']
+            if(domainID==""):
+                msg={"error":"danger", "message": "Domain not Selected."}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
@@ -622,6 +625,9 @@ def user_addSubDomain():
                 msg = {"error": "danger", "message": "Subdomains Limit Reached."}
                 return render_template('userFiles/SubDomains/addSubDomain.html', msg=msg)
             domainID = request.form['domainID']
+            if(domainID==""):
+                msg={"error":"danger", "message": "Domain not Selected."}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
             query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
             cursor.execute(query)
