@@ -327,6 +327,9 @@ def admin_addDomain():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'DomainName' in request.form:
             userID = request.form['userID']
+            if(userID==""):
+                msg={"error":"danger", "message": "User not Selected."}
+                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id='+userID+';')
             user = cursor.fetchone()
             getUserName = user[0]
@@ -443,6 +446,9 @@ def admin_addDB():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'databaseName' in request.form:
             userID = request.form['userID']
+            if(userID==""):
+                msg={"error":"danger", "message": "User not Selected"}
+                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
             cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id='+userID+';')
             DBUserbyID = cursor.fetchone()
 
@@ -563,6 +569,9 @@ def admin_addAccounts():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form :
             userID = request.form['userID']
+            if(userID==""):
+                msg={"error":"danger", "message": "User not Selected."}
+                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
             getUserName = cursor.fetchone()[0]
             ftpUsername = request.form['ftpUsername']
@@ -690,6 +699,9 @@ def admin_addEmail():
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form :
             domainID = request.form['domainID']
+            if(domainID==""):
+                msg={"error":"danger", "message": "Domain not Selected."}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
@@ -805,6 +817,9 @@ def admin_addSubDomain():
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form :
             domainID = request.form['domainID']
+            if(domainID==""):
+                msg={"error":"danger", "message": "Domain not Selected."}
+                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             cursor.execute('SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id where domains.Is_Deleted=0 and Domain_Id='+domainID+';')
             getUserName = cursor.fetchone()[0]
             suffix = request.form['suffix']
