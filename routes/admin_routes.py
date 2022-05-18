@@ -1,5 +1,4 @@
 import base64
-
 from flask import render_template, request,redirect, url_for, flash
 from Database.DbConfig import mysqlconnection,mysql_connect
 import hashlib
@@ -365,8 +364,8 @@ def admin_renewSSL():
     mysqlconnection.reconnect()
     if check_admin_Login():
         renewALLSSL()
+        flash('SSL Certificates Renewed.')
         return redirect(url_for('routes.admin_viewDomains'))
-
     else:
         return redirect(url_for('routes.login'))
 
