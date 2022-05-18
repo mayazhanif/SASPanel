@@ -285,8 +285,10 @@ def admin_updatePackage():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                flash('Hosting Package Updated.')
                 return redirect(request.referrer)
             else:
+                flash('Hosting Package Not Updated.')
                 return redirect(request.referrer)
         else:
             return redirect(request.referrer)
