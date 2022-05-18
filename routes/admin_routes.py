@@ -46,8 +46,10 @@ def admin_deleteUser():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                flash('User Deleted.')
                 return redirect(url_for("routes.admin_viewUser"))
             else:
+                flash('User not Deleted.')
                 return redirect(url_for("routes.admin_viewUser"))
 
         else:
@@ -195,9 +197,10 @@ def admin_updateUser():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                flash('Please choose a different Shortcode, that one is already in use')
+                flash('User Updated.')
                 return redirect(request.referrer)
             else:
+                flash('User Not Updated.')
                 return redirect(request.referrer)
         else:
             return redirect(request.referrer)
@@ -395,11 +398,13 @@ def admin_updateDomains():
                     query = "UPDATE `domains` SET `Domain_Suspended` = '1' WHERE `domains`.`Domain_Id` =" + domainID
                     cursor.execute(query)
                     mysqlconnection.commit()
+                    flash('Domain Suspended.')
                     return redirect(url_for("routes.admin_viewDomains"))
                 else:
                     query = "UPDATE `domains` SET `Domain_Suspended` = '0' WHERE `domains`.`Domain_Id` =" + domainID
                     cursor.execute(query)
                     mysqlconnection.commit()
+                    flash('Domain not Suspended.')
                     return redirect(url_for("routes.admin_viewDomains"))
             else:
                 return redirect(url_for("routes.admin_viewDomains"))
@@ -494,8 +499,10 @@ def admin_deleteDatabase():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 drop_database(cursor,getDBName)
+                flash('Database Dropped.')
                 return redirect(url_for("routes.admin_viewDatabases"))
             else:
+                flash('Database not Updated.')
                 return redirect(url_for("routes.admin_viewDatabases"))
 
         else:
@@ -654,8 +661,10 @@ def admin_deleteAccount():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_ftp(ftpUsername)
+                flash('FTP Account Deleted.')
                 return redirect(url_for("routes.admin_viewAccounts"))
             else:
+                flash('FTP Account Not Deleted.')
                 return redirect(url_for("routes.admin_viewAccounts"))
 
         else:
@@ -733,8 +742,10 @@ def admin_deleteEmail():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                flash('Email Account Deleted.')
                 return redirect(url_for("routes.admin_viewEmail"))
             else:
+                flash('Email Account not Deleted.')
                 return redirect(url_for("routes.admin_viewEmail"))
 
         else:
@@ -848,8 +859,10 @@ def admin_deleteSubDomain():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(SubDomainName)
+                flash('Subdomain Deleted.')
                 return redirect(url_for("routes.admin_viewSubDomains"))
             else:
+                flash('Subdomain Not Deleted.')
                 return redirect(url_for("routes.admin_viewSubDomains"))
 
         else:
@@ -1006,10 +1019,11 @@ def admin_deleteJob():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 deleteCronJob(getUsername)
+                flash('CronJobs Deleted.')
                 return redirect(url_for("routes.admin_cron_jobs"))
             else:
+                flash('CronJobs not Deleted.')
                 return redirect(url_for("routes.admin_cron_jobs"))
-
         else:
             return redirect(url_for("routes.admin_cron_jobs"))
     else:
