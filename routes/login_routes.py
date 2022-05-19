@@ -66,8 +66,9 @@ def forgot_password():
             o = urlparse(request.base_url)
             mainhost = o.hostname+":"+str(o.port)
             url = 'http://'+mainhost+'/reset?token=' + Token
+            print(url)
             msg = '<p style="text-align: center; "><b>Password Reset</b></p><p style="text-align: center; ">Open This Link to Reset Your Password</p><p style="text-align: center; "><a href="'+url+'" target="_blank"><span style="font-family: &quot;Arial Black&quot;;">Click here</span></a><br></p>'
-            mailSender("Password Reset", userEmail, msg, "HTML")
+            #mailSender("Password Reset", userEmail, msg, "HTML")
             return render_template('authentication/forgot-password.html', reset=True)
     else:
         return render_template('authentication/forgot-password.html', reset=False)
