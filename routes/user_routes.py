@@ -584,6 +584,10 @@ def user_updateEmail():
                 cursor.execute(query)
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
+                    query = "SELECT Mail_Address FROM `mail_accounts` where Mail_Id=" + mailID + " and User_id=" + userID
+                    cursor.execute(query)
+                    mail = cursor.fetchone()
+                    change_mail_password(cursor,mail[0],pass1)
                     msg = {"error": "success", "message": "Mail Account Password Updated."}
                     return render_template('userFiles/Mails/updateEmail.html', mail=mailID, msg=msg)
                 else:

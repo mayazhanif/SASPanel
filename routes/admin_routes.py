@@ -791,6 +791,10 @@ def admin_updateEmail():
                 cursor.execute(query)
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
+                    query = "SELECT Mail_Address FROM `mail_accounts` where Mail_Id=" + mailID + ""
+                    cursor.execute(query)
+                    mail = cursor.fetchone()
+                    change_mail_password(cursor,mail[0],pass1)
                     msg = {"error": "success", "message": "Mail Account Password Updated."}
                     return render_template('adminFiles/Mails/updateEmail.html', mail=mailID, msg=msg)
                 else:

@@ -457,6 +457,18 @@ def add_mail_domain(cursor, domain):
         cursor.execute("USE saspanel;")
         print("Error Adding Record: %s"%(Ex))
 
+def change_mail_password(cursor, Email,Password):
+    try:
+        cursor.execute("USE mail")
+        #cursor.execute("INSERT INTO `domains` (`domain`) VALUES ('"+domain+"');")
+        cursor.execute("UPDATE `users` SET `password` = '"+Password+"' WHERE email = '"+Email+"';")
+        mysqlconnection.commit()
+        print("Mail Password Changed.")
+        cursor.execute("USE saspanel;")
+    except Exception as Ex:
+        cursor.execute("USE saspanel;")
+        print("Error Changing Password: %s"%(Ex))
+
 
 def WriteFile(filename, s_body, mode='w+'):
     try:
