@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from flask import current_app as app
 from datetime import datetime
 from datetime import timedelta
-
+from crontab import CronTab
 
 
 @routes.route('/admin/dashboard')
@@ -984,26 +984,32 @@ def admin_cron_jobs():
             CommandFinal= ""
             unixCommand =""
             CronTime = request.form['CronTime']
-            if CronTime=="oneminute":
-                unixCommand = "* * * * *"
-            elif CronTime=="fiveminute":
-                unixCommand = "*/5 * * * *"
-            elif CronTime=="everyday":
-                unixCommand = "0 0 * * *"
-            elif CronTime=="everymonth":
-                unixCommand = "0 0 1 * *"
-            else:
-                msg={"error":"danger","message":"Cron Job Error."}
-                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
             Command = request.form['Command']
             logFile = request.form['logFile']
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted =0 and User_id='+userID)
             getUsername = cursor.fetchone()[0]
-            logFileLink = "/home/"+getUsername+"/crobjobs/logs/"+logFile
-            CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
-            addCronJob(getUsername, CommandFinal, logFileLink)
-            query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = "+userID
+            logFileLink = "/home/" + getUsername + "/crobjobs/logs/" + logFile
+            # CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
+            CommandFinal = Command + " >> " + logFileLink
+            # addCronJob(getUsername, CommandFinal, logFileLink)
+            query = "UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = " + userID
             cursor.execute(query)
+            my_cron = CronTab(user=getUsername)
+            my_cron.remove_all()
+            job = my_cron.new(command=CommandFinal)
+            if CronTime == "oneminute":
+                job.minute.every(1)
+            elif CronTime == "fiveminute":
+                job.minute.every(5)
+            elif CronTime == "everyday":
+                job.day.every(1)
+            elif CronTime == "everymonth":
+                job.month.every(1)
+            else:
+                msg = {"error": "danger", "message": "Cron Job Error."}
+                return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+            # job.minute.every(1)
+            my_cron.write()
             query = "INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, '"+userID+"', '"+Command+"', '"+logFile+"', '0')"
             #print(query)
             cursor.execute(query)
@@ -1036,7 +1042,9 @@ def admin_deleteJob():
             cursor.execute(query)
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                deleteCronJob(getUsername)
+                my_cron = CronTab(user=getUsername)
+                my_cron.remove_all()
+                #deleteCronJob(getUsername)
                 flash('CronJobs Deleted.')
                 return redirect(url_for("routes.admin_cron_jobs"))
             else:
