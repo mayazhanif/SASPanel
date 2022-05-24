@@ -11,6 +11,9 @@ def login(msg=""):
     mysqlconnection.reconnect()
     if request.method == 'POST' and 'Email' in request.form and 'password' in request.form and 'logintype' in request.form:
         Email = request.form['Email']
+        if(not(validateEmail(Email))):
+            return render_template('authentication/login.html',
+                                   msg={"error": "primary", "message": "Email Invalid."})
         password = request.form['password']
         md5password = hashlib.md5(password.encode()).hexdigest()
         logintype = request.form['logintype']
