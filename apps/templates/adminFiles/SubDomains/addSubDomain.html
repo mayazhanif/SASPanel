@@ -53,7 +53,7 @@
                                                 <label for="suffix" class="col-md-2 col-form-label">Subdomain<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
                                                     <input type="Text" autocomplete="disabled" onkeydown="return /[a-z]/i.test(event.key)" required parsley-type="Text" class="form-control"
-                                                            id="suffix" name="suffix" placeholder="support.domain.com">
+                                                            id="suffix" pattern="[^\s]+" name="suffix" placeholder="support.domain.com">
                                                 </div>
                                             </div>
 

@@ -52,8 +52,8 @@
                                             <div class="form-group row">
                                                 <label for="suffix" class="col-md-2 col-form-label">Email Suffix<span class="text-danger">*</span></label>
                                                 <div class="col-md-7">
-                                                    <input type="Text" autocomplete="disabled" onkeydown="return /[a-z]/i.test(event.key)" required parsley-type="Text" class="form-control"
-                                                            id="suffix" name="suffix" placeholder="support@domain.com">
+                                                    <input type="Text" pattern="[^\s]+" autocomplete="disabled" onkeydown="return /[a-z]/i.test(event.key)" required parsley-type="Text" class="form-control"
+                                                            id="suffix" name="suffix" placeholder="support>
                                                 </div>
                                             </div>
                                             <div class="form-group row">
