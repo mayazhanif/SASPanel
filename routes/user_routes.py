@@ -226,7 +226,7 @@ def user_addDB():
                 return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
             if cursor.rowcount > 0:
                 create_database(cursor,databaseName,DBUserbyID[1])
-                msg = {"error": "success", "message": "Database Added.."}
+                msg = {"error": "success", "message": "Database Added."}
                 return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
             else:
                 msg = {"error": "danger", "message": "Database Adding not Successfull."}
