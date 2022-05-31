@@ -56,6 +56,35 @@
         <script src="/assets/js/app.min.js"></script>
         <script src="/assets/js/pages/bootstrap-select.min.js"></script>
 
+<script type="text/javascript">
+    var $ = jQuery;
+    $('.custom-confirm-link').click(function(e){
+        var link                = $(this);
+        var confirmationmessage = link.data('confirmation');
+        var address             = link.attr('href');
+        e.preventDefault();
+        bootbox.confirm({
+            title   : 'Confirm',
+            message : confirmationmessage,
+            buttons : {
+                confirm : {
+                    label : 'Yes',
+                    className: 'btn-success'
+                },
+                cancel : {
+                    label : 'No',
+                    className : 'btn-danger'
+                }
+            },
+            callback : function (result) {
+                if (result)
+                {
+                    window.location.href = address;
+                }
+            }
+        });
+    });
+</script>
 
     </body>
 </html>
