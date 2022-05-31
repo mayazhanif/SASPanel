@@ -57,7 +57,7 @@
                                                         <td>{{record[8]}}</td>
                                                         <td>{{record[18]}}</td>
                                                         <td><a href="">{{record[3]}}</a></td>
-                                                        <td><a href="{{ url_for('routes.user_deleteEmail', mailID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a> <a href="{{ url_for('routes.user_updateEmail', mailID=record[0]) }}"><button type="button" class="btn btn-warning btn-sm">Change Password</button></a></td>
+                                                        <td><a href="{{ url_for('routes.user_deleteEmail', mailID=record[0]) }}" class="custom-confirm-link" data-confirmation="Are you sure you want to remove this?"><button type="button" class="btn btn-info btn-sm">Delete</button></a> <a href="{{ url_for('routes.user_updateEmail', mailID=record[0]) }}"><button type="button" class="btn btn-warning btn-sm">Change Password</button></a></td>
                                                     </tr>
                                                   {% endfor %}
                                             {% endif %}

@@ -56,7 +56,7 @@
                                                         <td>{{record[7]}}</td>
                                                         <td>{{record[17]}}</td>
                                                         <td><a href="">{{record[3]}}</a></td>
-                                                        <td><a href="{{ url_for('routes.user_deleteSubDomain', SdomainID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Delete</button></a></td>
+                                                        <td><a href="{{ url_for('routes.user_deleteSubDomain', SdomainID=record[0]) }}" class="custom-confirm-link" data-confirmation="Are you sure you want to remove this?"><button type="button" class="btn btn-info btn-sm">Delete</button></a></td>
                                                     </tr>
                                                   {% endfor %}
                                             {% endif %}
