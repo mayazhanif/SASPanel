@@ -58,14 +58,10 @@
 <script type="text/javascript">
     var $ = jQuery;
     $('.custom-confirm-link').click(function(e){
-
-        //  get link and its confirmation message
         var link                = $(this);
         var confirmationmessage = link.data('confirmation');
         var address             = link.attr('href');
-
         e.preventDefault();
-
         bootbox.confirm({
             title   : 'Confirm',
             message : confirmationmessage,
@@ -82,7 +78,6 @@
             callback : function (result) {
                 if (result)
                 {
-                    //  simulate click the link
                     window.location.href = address;
                 }
             }
