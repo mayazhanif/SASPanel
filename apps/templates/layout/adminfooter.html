@@ -27,6 +27,7 @@
         <!-- Plugin js-->
         <script src="/assets/libs/parsleyjs/parsley.min.js"></script>
         <script src="/assets/libs/terminal/jquery.terminal.min.js"></script>
+        <script src="/assets/js/bootbox/bootbox.all.min.js"></script>
 
         <!-- Validation init js-->
         <script src="/assets/js/pages/form-validation.init.js"></script>
@@ -54,6 +55,40 @@
         <script src="/assets/js/app.min.js"></script>
         <script src="/assets/js/pages/bootstrap-select.min.js"></script>
 
+<script type="text/javascript">
+    var $ = jQuery;
+    //  click event listener to links that requires custom confirm
+    $('.custom-confirm-link').click(function(e){
 
+        //  get link and its confirmation message
+        var link                = $(this);
+        var confirmationmessage = link.data('confirmation');
+        var address             = link.attr('href');
+
+        e.preventDefault();
+
+        bootbox.confirm({
+            title   : 'Confirm',
+            message : confirmationmessage,
+            buttons : {
+                confirm : {
+                    label : 'Yes',
+                    className: 'btn-success'
+                },
+                cancel : {
+                    label : 'No',
+                    className : 'btn-danger'
+                }
+            },
+            callback : function (result) {
+                if (result)
+                {
+                    //  simulate click the link
+                    window.location.href = address;
+                }
+            }
+        });
+    });
+</script>
     </body>
 </html>
