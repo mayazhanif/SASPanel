@@ -1054,3 +1054,16 @@ def admin_deleteJob():
             return redirect(url_for("routes.admin_cron_jobs"))
     else:
         return redirect(url_for('routes.login'))
+
+@routes.route('/admin/Notifications/viewnotifications')
+def admin_viewnotifications():
+    mysqlconnection.reconnect()
+    if check_admin_Login():
+        cursor = mysqlconnection.cursor()
+        cursor.execute('SELECT * FROM notifications')
+        results = cursor.fetchall()
+        print(results)
+        msg = ''
+        return render_template('adminFiles/notifications/viewNotifications.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
