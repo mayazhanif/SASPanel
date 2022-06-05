@@ -28,7 +28,7 @@ server {
 	include php.conf;
 	include snippets/phpmyadmin.conf;
 	include snippets/roundcube.conf;
-  include snippets/webftp.conf;
+    include snippets/webftp.conf;
 }
 EOF
 service nginx restart
