@@ -7,9 +7,11 @@ from Database.DbConfig import mysqlconnection,mysql_connect
 
 @routes.route('/test/')
 def hello_world():
-    print(mysqlconnection)
-    mysql_connect()
-    print(mysqlconnection)
+    testString = "hello'\//"
+    print(mysqlconnection.escape(testString))
+    #print(mysqlconnection)
+    #mysql_connect()
+    #print(mysqlconnection)
     return "Sent"
 
 @routes.route('/reboot/')
