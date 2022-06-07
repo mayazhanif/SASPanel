@@ -447,7 +447,7 @@ def admin_addDB():
         if request.method == 'POST' and 'userID' in request.form and 'databaseName' in request.form:
             userID = request.form['userID']
             if(userID==""):
-                msg={"error":"danger", "message": "User not Selected"}
+                msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
             cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id='+userID+';')
             DBUserbyID = cursor.fetchone()
@@ -507,7 +507,7 @@ def admin_deleteDatabase():
                 flash('Database Dropped.')
                 return redirect(url_for("routes.admin_viewDatabases"))
             else:
-                flash('Database not Updated.')
+                flash('Database not Dropped.')
                 return redirect(url_for("routes.admin_viewDatabases"))
 
         else:
