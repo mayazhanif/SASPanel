@@ -55,7 +55,7 @@ def forgot_password():
     if request.method == 'POST' and 'Email' in request.form:
         Email = request.form['Email']
         cursor = mysqlconnection.cursor()
-        cursor.execute("SELECT User_id,User_email FROM users WHERE User_email = '"+Email+"' and Is_Deleted=0")
+        cursor.execute("SELECT User_id,User_email FROM users WHERE User_email = %s and Is_Deleted=0",(Email,))
         result = cursor.fetchone()
         if result == None:
             return render_template('authentication/forgot-password.html', reset=True)
@@ -64,8 +64,8 @@ def forgot_password():
             userEmail = result[1]
             today = date.today()
             Token = secrets.token_urlsafe()
-            query = "UPDATE `users` SET `UserResetToken` = '"+Token+"', Token_Expiry=CURRENT_TIMESTAMP WHERE `users`.`User_id` = "+userID+";"
-            cursor.execute(query)
+            #query = "UPDATE `users` SET `UserResetToken` = '"+Token+"', Token_Expiry=CURRENT_TIMESTAMP WHERE `users`.`User_id` = "+userID+";"
+            cursor.execute("UPDATE `users` SET `UserResetToken` = %s, Token_Expiry=CURRENT_TIMESTAMP WHERE `users`.`User_id` = %s;",(Token,userID))
             o = urlparse(request.base_url)
             mainhost = o.hostname+":"+str(o.port)
             url = 'http://'+mainhost+'/reset?token=' + Token
@@ -82,7 +82,7 @@ def reset_password():
     if request.method == 'GET' and request.args.get('token'):
         cursor = mysqlconnection.cursor()
         token = request.args.get('token')
-        cursor.execute("SELECT Token_Expiry FROM users WHERE UserResetToken = '"+token+"' and Is_Deleted=0")
+        cursor.execute("SELECT Token_Expiry FROM users WHERE UserResetToken = %s and Is_Deleted=0",(token,))
         result = cursor.fetchone()
         if result == None:
             return render_template('authentication/forgot-password.html', reset=False,
@@ -107,8 +107,8 @@ def reset_password():
                            (md5Password, token))
             mysqlconnection.commit()
             if cursor.rowcount > 0:
-                query= "UPDATE `users` SET `UserResetToken` = '' WHERE UserResetToken = '"+token+"';"
-                cursor.execute(query)
+                #query= "UPDATE `users` SET `UserResetToken` = '' WHERE UserResetToken = '"+token+"';"
+                cursor.execute("UPDATE `users` SET `UserResetToken` = '' WHERE UserResetToken =%s",(token,))
                 mysqlconnection.commit()
                 return render_template('authentication/forgot-password.html', reset=False,
                                        msg={"error": "success", "message": "Password Change Successful."})
