@@ -988,6 +988,7 @@ def admin_cron_jobs():
             logFile = request.form['logFile']
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted =0 and User_id=%s',(userID,))
             getUsername = cursor.fetchone()[0]
+            print(getUsername)
             logFileLink = "/home/" + getUsername + "/crobjobs/logs/" + logFile
             # CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
             CommandFinal = Command + " >> " + logFileLink
