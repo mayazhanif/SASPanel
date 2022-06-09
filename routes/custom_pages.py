@@ -3,13 +3,14 @@ from app import app
 from . import routes
 from app import *
 from Database.DbConfig import mysqlconnection,mysql_connect
-import MySQLdb
+#import MySQLdb
 
 @routes.route('/test/')
 def hello_world():
     example = r"""I don't like "special" chars ¯\_(ツ)_/¯"""
-    print(MySQLdb.mysql_real_escape_string(example))
-    return MySQLdb.mysql_real_escape_string(example)
+    #print(MySQLdb.mysql_real_escape_string(example))
+    #return MySQLdb.mysql_real_escape_string(example)
+    return "1"
 
 @routes.route('/reboot/')
 def reboot():
