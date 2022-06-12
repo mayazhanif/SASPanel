@@ -524,7 +524,7 @@ def user_viewEmail():
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1 AND mail_accounts.User_id=%s',(userID))
+        cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1 AND mail_accounts.User_id=%s',(userID,))
         results = cursor.fetchall()
         msg = ''
         return render_template('userFiles/Mails/viewEmail.html', results=results)
