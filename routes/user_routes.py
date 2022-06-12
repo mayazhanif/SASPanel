@@ -29,24 +29,24 @@ def user_profile():
     mysqlconnection.reconnect()
     if check_user_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT packages.*, users.User_Reg_Date FROM packages INNER JOIN users ON packages.Package_Id = users.Package_id WHERE users.Is_Deleted=0 and users.User_id='+str(session["id"]))
+        cursor.execute('SELECT packages.*, users.User_Reg_Date FROM packages INNER JOIN users ON packages.Package_Id = users.Package_id WHERE users.Is_Deleted=0 and users.User_id=%s',(str(session["id"]),))
         getPackage=cursor.fetchone()
         cgiAccess="Disabled"
         if getPackage[6]==1:
             cgiAccess="Enabled"
-        cursor.execute('SELECT * FROM domains where  Is_Deleted=0 and User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM domains where  Is_Deleted=0 and User_id=%s',(str(session["id"]),))
         cursor.fetchall()
         countDomains = str(cursor.rowcount)
-        cursor.execute('SELECT * FROM ftp_accounts where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM ftp_accounts where Is_Active=1 and User_id=%s',(str(session["id"]),))
         cursor.fetchall()
         countFTP = str(cursor.rowcount)
-        cursor.execute('SELECT * FROM mail_accounts where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM mail_accounts where Is_Active=1 and User_id=%s',(str(session["id"]),))
         cursor.fetchall()
         countMails = str(cursor.rowcount)
-        cursor.execute('SELECT * FROM msqldatabases where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM msqldatabases where Is_Active=1 and User_id=%s',(str(session["id"]),))
         cursor.fetchall()
         countDB = str(cursor.rowcount)
-        cursor.execute('SELECT * FROM msqldatabases where Is_Active=1 and User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM msqldatabases where Is_Active=1 and User_id=%s',(str(session["id"]),))
         cursor.fetchall()
         countSubDomain = str(cursor.rowcount)
         profileData = '{"RegDate" : "'+str(getPackage[11])+'", "PackageName" : "'+str(getPackage[1])+'", "FTP" : "'+countFTP+'/'+str(getPackage[3])+'", "Mails" : "'+countMails+'/'+str(getPackage[4])+'", "Domains" : "'+countDomains+'/'+str(getPackage[5])+'", "CGI" : "'+cgiAccess+'", "Mysql" : "'+countDB+'/'+str(getPackage[7])+'", "SubDomains" : "'+countSubDomain+'/'+str(getPackage[8])+'", "Storage" : "'+str(getPackage[9])+'"}'
@@ -96,24 +96,24 @@ def user_addDomain():
         if request.method == 'POST' and 'DomainName' in request.form:
             userID = str(session["id"])
             DomainName = request.form['DomainName']
-            querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
-            cursor.execute(querylimit)
+            #querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
+            cursor.execute("SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
             #cursor.rowcount>
-            queryinUSe ="SELECT * FROM `domains` where User_id="+userID
-            cursor.execute(queryinUSe)
+            #queryinUSe ="SELECT * FROM `domains` where User_id="+userID
+            cursor.execute("SELECT * FROM `domains` where User_id=%s",(userID,))
             cursor.fetchall()
             if cursor.rowcount>=limit:
                 msg = {"error": "danger", "message": "Domains Limit Reached."}
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
-            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
             user = cursor.fetchone()
             getUserName = user[0]
             getEmail = user[1]
-            query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '" + DomainName + "', '"+userID+"', '0', '0');"
+            #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '" + DomainName + "', '"+userID+"', '0', '0');"
             try:
-                cursor.execute(query)
+                cursor.execute("INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, %s, %s, '0', '0');",(DomainName,userID))
                 mysqlconnection.commit()
             except:
                 msg = {"error": "danger", "message": "Domain Already Added."}
@@ -123,8 +123,10 @@ def user_addDomain():
                 add_vhost(getUserName,DomainName)
                 generate_SSL(DomainName,getEmail)
                 ExpiryDate = (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
-                query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
-                cursor.execute(query)
+                privatekey="/etc/letsencrypt/live/"+DomainName+"/privkey.pem"
+                fullchain="/etc/letsencrypt/live/"+DomainName+"/fullchain.pem"
+                #query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
+                cursor.execute("INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, %s, '1');",(DomainID,userID,fullchain,privatekey,ExpiryDate))
                 mysqlconnection.commit()
                 add_mail_domain(cursor,DomainName)
                 msg = {"error": "success", "message": "Domain Added."}
@@ -160,7 +162,7 @@ def user_viewDomains():
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         #cursor.execute('SELECT * FROM `domains` where domains.Is_Deleted=0 and domains.User_id='+str(session["id"]))
-        cursor.execute('SELECT * FROM domains JOIN users ON domains.User_id = users.User_id JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id and domains.User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM domains JOIN users ON domains.User_id = users.User_id JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id and domains.User_id=%s',(str(session["id"]),))
         results = cursor.fetchall()
         return render_template('userFiles/domains/viewDomains.html', results=results)
     else:
@@ -175,10 +177,10 @@ def user_deleteDomain():
             userID = str(session["id"])
             domainID=request.args.get('domainID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT Domain_Name FROM `domains` where Is_Deleted=0 and Domain_Id=' + domainID + ' and domains.User_id='+userID+';')
+            cursor.execute('SELECT Domain_Name FROM `domains` where Is_Deleted=0 and Domain_Id=%s and domains.User_id=%s',(domainID,userID))
             DomainName = cursor.fetchone()[0]
-            query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id="+str(session["id"])
-            cursor.execute(query)
+            #query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(str(session["id"],))
+            cursor.execute("UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(domainID,str(session["id"])))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(DomainName)
@@ -201,8 +203,8 @@ def user_addDB():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
         if request.method == 'POST' and 'databaseName' in request.form:
-            querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
-            cursor.execute(querylimit)
+            #querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%",(userID,)
+            cursor.execute("SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
             #cursor.rowcount>
@@ -213,13 +215,12 @@ def user_addDB():
                 msg = {"error": "danger", "message": "Mysql Databases Limit Reached."}
                 return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
             cursor.execute(
-                'SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id=' + userID + ';')
+                'SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id=%s',(userID,))
             DBUserbyID = cursor.fetchone()
             databaseName = request.form['databaseName']
-            query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '" + databaseName + "', '" + userID + "', '" + str(
-                DBUserbyID[0]) + "', '1');"
+            #query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '" + databaseName + "', '" + userID + "', '" + str(DBUserbyID[0]) + "', '1');"
             try:
-                cursor.execute(query)
+                cursor.execute("INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, %s, %s, %s, '1');",(databaseName,userID,str(DBUserbyID[0])))
                 mysqlconnection.commit()
             except:
                 msg = {"error": "danger", "message": "Database name already in use."}
@@ -245,8 +246,7 @@ def user_viewDatabases():
     if check_user_Login():
         cursor = mysqlconnection.cursor()
         userID = str(session["id"])
-        cursor.execute(
-            'SELECT * FROM mysqldbusers LEFT JOIN msqldatabases ON msqldatabases.DbUser_ID = mysqldbusers.DbUser_ID LEFT JOIN users ON users.User_id = mysqldbusers.User_id WHERE msqldatabases.Is_Active = 1 and mysqldbusers.User_id='+userID)
+        cursor.execute('SELECT * FROM mysqldbusers LEFT JOIN msqldatabases ON msqldatabases.DbUser_ID = mysqldbusers.DbUser_ID LEFT JOIN users ON users.User_id = mysqldbusers.User_id WHERE msqldatabases.Is_Active = 1 and mysqldbusers.User_id=%s',(userID,))
         results = cursor.fetchall()
         msg = ''
         return render_template('userFiles/MysqlDatabase/viewDatabases.html', results=results)
@@ -261,11 +261,11 @@ def user_deleteDatabase():
         if request.method == 'GET' and request.args.get('DbID'):
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID='+DbID+' and msqldatabases.User_id='+userID+';')
+            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID=%s and msqldatabases.User_id=%s',(DbID,userID))
             #print(cursor.fetchone()[0])
             getDBName = cursor.fetchone()[0]
-            query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID+" and msqldatabases.User_id="+userID
-            cursor.execute(query)
+            #query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID+" and msqldatabases.User_id="+userID
+            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s and msqldatabases.User_id=%s",(DbID,userID))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 drop_database(cursor,getDBName)
@@ -291,8 +291,8 @@ def user_updateDBPass():
         userID = str(session["id"])
         if request.method == 'GET' and request.args.get('DbID'):
             DbUser_ID=request.args.get('DbID')
-            query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
-            cursor.execute(query)
+            #query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
+            cursor.execute("SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s and User_id=%s",(DbUser_ID,userID))
             database = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('userFiles/MysqlDatabase/updateDBPass.html', database=database[0])
@@ -300,15 +300,15 @@ def user_updateDBPass():
                 return redirect(url_for("routes.admin_viewDatabases"))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
-            query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
-            cursor.execute(query)
+            #query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
+            cursor.execute("SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s and User_id=%s",(DbUser_ID,userID))
             mysqlUsername = cursor.fetchone()[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
-                query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+" and User_id="+userID
-                cursor.execute(query)
+                #query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+" and User_id="+userID
+                cursor.execute("UPDATE `mysqldbusers` SET `DbPassword` = %s WHERE `mysqldbusers`.`DbUser_ID` = %s and User_id=%s",(EncodedPassword,DbUser_ID,userID))
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
                     changePassword(cursor, mysqlUsername, pass1)
@@ -332,13 +332,13 @@ def user_addAccounts():
         cursor = mysqlconnection.cursor()
         if request.method == 'POST' and 'ftpUsername' in request.form and 'ftpPassword' in request.form:
             userID = str(session["id"])
-            querylimit ="SELECT Limit_FTP FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
-            cursor.execute(querylimit)
+            #querylimit ="SELECT Limit_FTP FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
+            cursor.execute("SELECT Limit_FTP FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
             #cursor.rowcount>
-            queryinUSe ="SELECT * FROM `ftp_accounts` where User_id="+userID
-            cursor.execute(queryinUSe)
+            #queryinUSe ="SELECT * FROM `ftp_accounts` where User_id=%s",(userID,)
+            cursor.execute("SELECT * FROM `ftp_accounts` where User_id=%s",(userID,))
             cursor.fetchall()
             if cursor.rowcount>=limit:
                 msg = {"error": "danger", "message": "FTP Account Limit Reached."}
@@ -347,11 +347,11 @@ def user_addAccounts():
             ftpPassword = request.form['ftpPassword']
             encodedPass = Base64Encode(ftpPassword)
             Directory = "/home/username/public_html"
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
             getUserName = cursor.fetchone()[0]
-            query = "INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, '" + userID + "', '" + Directory + "', '" + ftpUsername + "', '" + encodedPass + "', '1');"
+            #query = "INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, '" + userID + "', '" + Directory + "', '" + ftpUsername + "', '" + encodedPass + "', '1');"
             try:
-                cursor.execute(query)
+                cursor.execute("INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, '1');",(userID,Directory,ftpUsername,encodedPass))
                 mysqlconnection.commit()
             except:
                 msg = {"error": "danger", "message": "FTP Username Already in Use."}
@@ -377,7 +377,7 @@ def user_viewAccounts():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
         cursor.execute(
-            'SELECT * FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id where ftp_accounts.Is_Active=1 and ftp_accounts.User_id='+userID)
+            'SELECT * FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id where ftp_accounts.Is_Active=1 and ftp_accounts.User_id=%s',(userID,))
         results = cursor.fetchall()
         msg = ''
         return render_template('userFiles/ftpAccounts/viewAccounts.html', results=results)
@@ -395,8 +395,8 @@ def user_updateAccountPass():
             AccID=request.args.get('AccID')
 
             cursor = mysqlconnection.cursor()
-            query="SELECT * FROM `ftp_accounts` where Account_Id="+AccID+" and ftp_accounts.User_id = "+userID
-            cursor.execute(query)
+            #query="SELECT * FROM `ftp_accounts` where Account_Id="+AccID+" and ftp_accounts.User_id = "+userID
+            cursor.execute("SELECT * FROM `ftp_accounts` where Account_Id=%s and ftp_accounts.User_id = %s",(AccID,userID))
             account = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('userFiles/ftpAccounts/updateAccountPass.html', account=account[0])
@@ -410,11 +410,11 @@ def user_updateAccountPass():
                 EncodedPassword = Base64Encode(pass1)
                 cursor = mysqlconnection.cursor()
                 cursor.execute(
-                    'SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=' + AccID + 'and ftp_accounts.User_id = '+userID+';')
+                    'SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=%s and ftp_accounts.User_id = %s',(AccID,userID))
                 ftpUsername = cursor.fetchone()[0]
-                query = "UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id = "+userID
-                print(query)
-                cursor.execute(query)
+                #query = "UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id = "+userID
+                #print(query)
+                cursor.execute("UPDATE `ftp_accounts` SET `FTP_Password` = %s WHERE `ftp_accounts`.`Account_Id` = %s and ftp_accounts.User_id = %s",(EncodedPassword,AccID,userID))
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
                     change_ftp_pass(ftpUsername,pass1)
@@ -439,10 +439,10 @@ def user_deleteAccount():
             AccID=request.args.get('AccID')
             userID = str(session["id"])
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`='+AccID+' and ftp_accounts.User_id='+userID+';')
+            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=%s and ftp_accounts.User_id=%s',(AccID,userID))
             ftpUsername = cursor.fetchone()[0]
-            query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id="+userID
-            cursor.execute(query)
+            #query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id="+userID
+            cursor.execute("UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = %s and ftp_accounts.User_id=%s",(AccID,userID))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_ftp(ftpUsername)
@@ -473,16 +473,16 @@ def user_addEmail():
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id='+userID)
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id=%s',(userID,))
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form:
-            querylimit ="SELECT Limit_Mails FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
-            cursor.execute(querylimit)
+            #querylimit ="SELECT Limit_Mails FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
+            cursor.execute("SELECT Limit_Mails FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
             #cursor.rowcount>
-            queryinUSe ="SELECT * FROM `mail_accounts` where User_id="+userID
-            cursor.execute(queryinUSe)
+            #queryinUSe ="SELECT * FROM `mail_accounts` where User_id="+userID
+            cursor.execute("SELECT * FROM `mail_accounts` where User_id=%s",(userID,))
             cursor.fetchall()
             if cursor.rowcount>=limit:
                 msg = {"error": "danger", "message": "Mail Accounts Limit Reached."}
@@ -494,14 +494,14 @@ def user_addEmail():
             suffix = request.form['suffix']
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
-            query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
-            cursor.execute(query)
+            #query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
+            cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s",(domainID,userID))
             rDomain = cursor.fetchone()
             mail_adress = suffix + "@" + rDomain[1]
             userID = str(rDomain[2])
-            query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
+            #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
             try:
-                cursor.execute(query)
+                cursor.execute("INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, '1')",(domainID,userID,mail_adress,encodedPass))
                 mysqlconnection.commit()
             except:
                 msg = {"error": "danger", "message": "Mail Account Already Exists."}
@@ -525,7 +525,7 @@ def user_viewEmail():
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1 AND mail_accounts.User_id='+userID)
+        cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1 AND mail_accounts.User_id=%s',(userID))
         results = cursor.fetchall()
         msg = ''
         return render_template('userFiles/Mails/viewEmail.html', results=results)
@@ -541,8 +541,8 @@ def user_deleteEmail():
             userID = str(session["id"])
             mailID=request.args.get('mailID')
             cursor = mysqlconnection.cursor()
-            query="UPDATE `mail_accounts` SET `Is_Active` = '0' WHERE `mail_accounts`.`Mail_Id` = "+mailID+" and User_id="+userID
-            cursor.execute(query)
+            #query="UPDATE `mail_accounts` SET `Is_Active` = '0' WHERE `mail_accounts`.`Mail_Id` = "+mailID+" and User_id="+userID
+            cursor.execute("UPDATE `mail_accounts` SET `Is_Active` = '0' WHERE `mail_accounts`.`Mail_Id` = %s and User_id=%s",(mailID,userID))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Email Account Deleted.')
@@ -566,8 +566,8 @@ def user_updateEmail():
         if request.method == 'GET' and request.args.get('mailID'):
             mailID=request.args.get('mailID')
             cursor = mysqlconnection.cursor()
-            query="SELECT * FROM `mail_accounts` where Mail_Id="+mailID+" and User_id="+userID
-            cursor.execute(query)
+            #query="SELECT * FROM `mail_accounts` where Mail_Id="+mailID+" and User_id="+userID
+            cursor.execute("SELECT * FROM `mail_accounts` where Mail_Id=%s and User_id=%s",(mailID,userID))
             mail = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('userFiles/Mails/updateEmail.html', mail=mail[0])
@@ -580,12 +580,12 @@ def user_updateEmail():
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
                 cursor = mysqlconnection.cursor()
-                query = "UPDATE `mail_accounts` SET `Mail_Pass` = '"+EncodedPassword+"' WHERE `mail_accounts`.`Mail_Id` = "+mailID+" and User_id="+userID
-                cursor.execute(query)
+                #query = "UPDATE `mail_accounts` SET `Mail_Pass` = '"+EncodedPassword+"' WHERE `mail_accounts`.`Mail_Id` = "+mailID+" and User_id="+userID
+                cursor.execute("UPDATE `mail_accounts` SET `Mail_Pass` = %s WHERE `mail_accounts`.`Mail_Id` = %s and User_id=%s",(EncodedPassword,mailID,userID))
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
-                    query = "SELECT Mail_Address FROM `mail_accounts` where Mail_Id=" + mailID + " and User_id=" + userID
-                    cursor.execute(query)
+                    #query = "SELECT Mail_Address FROM `mail_accounts` where Mail_Id=" + mailID + " and User_id=" + userID
+                    cursor.execute("SELECT Mail_Address FROM `mail_accounts` where Mail_Id=%s and User_id=%s",(mailID,userID))
                     mail = cursor.fetchone()
                     change_mail_password(cursor,mail[0],pass1)
                     msg = {"error": "success", "message": "Mail Account Password Updated."}
@@ -612,14 +612,14 @@ def user_addSubDomain():
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id='+userID)
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id=%s',(userID,))
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form:
-            querylimit ="SELECT Sub_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
-            cursor.execute(querylimit)
+            #querylimit ="SELECT Sub_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
+            cursor.execute("SELECT Sub_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID))
             getUserName = cursor.fetchone()[0]
             #cursor.rowcount>
             queryinUSe ="SELECT * FROM `domains` where User_id="+userID
@@ -633,16 +633,16 @@ def user_addSubDomain():
                 msg={"error":"danger", "message": "Domain not Selected."}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
-            query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
-            cursor.execute(query)
+            #query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
+            cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s",(domainID,userID))
             rDomain = cursor.fetchone()
             SubDomainAdress = suffix + "." + rDomain[1]
             userID = str(rDomain[2])
             #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
-            query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
+            #query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
             #print(query)
             try:
-                cursor.execute(query)
+                cursor.execute("INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, %s, %s, %s, '1')",(domainID,userID,SubDomainAdress))
                 mysqlconnection.commit()
             except:
                 msg = {"error": "danger", "message": "SubDomain Already Exists."}
@@ -666,7 +666,7 @@ def user_viewSubDomains():
     if check_user_Login():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM subdomains LEFT JOIN users ON users.User_id = subdomains.User_id LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id WHERE subdomains.Is_Active = 1 AND subdomains.User_id='+userID)
+        cursor.execute('SELECT * FROM subdomains LEFT JOIN users ON users.User_id = subdomains.User_id LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id WHERE subdomains.Is_Active = 1 AND subdomains.User_id=%s',(userID,))
         results = cursor.fetchall()
         msg = ''
         return render_template('userFiles/SubDomains/viewSubDomains.html', results=results)
@@ -682,10 +682,10 @@ def user_deleteSubDomain():
             userID = str(session["id"])
             SdomainID=request.args.get('SdomainID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=' + SdomainID + ' and subdomains.User_id='+userID+';')
+            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=%s and subdomains.User_id=%s',(SdomainID,userID))
             SubDomainName = cursor.fetchone()[0]
-            query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID+" and User_id="+userID
-            cursor.execute(query)
+            #query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID+" and User_id="+userID
+            cursor.execute("UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID+" and User_id=%s",(userID,))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(SubDomainName)
@@ -707,7 +707,7 @@ def user_error_logs():
         msg = ''
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id='+userID)
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id=%s',(userID,))
         domains = cursor.fetchall()
         return render_template('userFiles/Logs/error_logs.html', domains=domains,msg=msg)
     else:
@@ -722,7 +722,7 @@ def user_error_logs_ajax():
         domainName = request.args.get('domainName')
         Result = {"data":""}
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID)
+        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
         userName = cursor.fetchone()[0]
         #fname = "C:\\Users\\mayaz\\Desktop\\testfile.txt"
         fname = "/home/"+userName+"/logs/"+domainName+"-error.log"
@@ -745,7 +745,7 @@ def user_access_logs():
         msg = ''
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id='+userID)
+        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id=%s',(userID,))
         domains = cursor.fetchall()
         return render_template('userFiles/Logs/access_logs.html', domains=domains, msg=msg)
     else:
@@ -760,7 +760,7 @@ def user_access_logs_ajax():
         domainName = request.args.get('domainName')
         Result = {"data":""}
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID)
+        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
         userName = cursor.fetchone()[0]
         fname = "/home/"+userName+"/logs/"+domainName+"-access.log"
         data = readLines(fname,100)
@@ -783,7 +783,7 @@ def user_cron_jobs():
         msg = ''
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.User_id='+userID+' ORDER BY `cronjobs`.`Job_ID` ASC LIMIT 1;')
+        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.User_id=%s ORDER BY `cronjobs`.`Job_ID` ASC LIMIT 1;',(userID,))
         cronjobs = cursor.fetchall()
         if request.method == 'POST' and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
             CommandFinal= ""
@@ -791,14 +791,14 @@ def user_cron_jobs():
             CronTime = request.form['CronTime']
             Command = request.form['Command']
             logFile = request.form['logFile']
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted =0 and User_id='+userID)
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted =0 and User_id=%s',(userID,))
             getUsername = cursor.fetchone()[0]
             logFileLink = "/home/"+getUsername+"/crobjobs/logs/"+logFile
             #CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
             CommandFinal = Command+ " >> "+logFileLink
             #addCronJob(getUsername, CommandFinal, logFileLink)
-            query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = "+userID
-            cursor.execute(query)
+            #query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = "+userID
+            cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = %s",(userID,))
             my_cron = CronTab(user=getUsername)
             my_cron.remove_all()
             job = my_cron.new(command=CommandFinal)
@@ -815,13 +815,12 @@ def user_cron_jobs():
                 return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
             #job.minute.every(1)
             my_cron.write()
-            query = "INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, '"+userID+"', '"+Command+"', '"+logFile+"', '0')"
+            #query = "INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, '"+userID+"', '"+Command+"', '"+logFile+"', '0')"
             #print(query)
-            cursor.execute(query)
+            cursor.execute("INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, %s, %s, %s, '0')",(userID,Command,logFile))
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                cursor.execute(
-                    'SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.User_id=' + userID + ' ORDER BY `cronjobs`.`Job_ID` ASC LIMIT 1;')
+                cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.User_id=%s ORDER BY `cronjobs`.`Job_ID` ASC LIMIT 1;',(userID,))
                 cronjobs = cursor.fetchall()
                 msg = {"error": "success", "message": "Cron Job Added."}
                 return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
@@ -842,10 +841,10 @@ def user_deleteJob():
         if request.method == 'GET' and request.args.get('JobID'):
             userID = str(session["id"])
             JobID=request.args.get('JobID')
-            cursor.execute('SELECT servUser FROM `users` INNER JOIN cronjobs ON  users.User_id=cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.Job_ID='+JobID+' and cronjobs.User_id='+userID)
+            cursor.execute('SELECT servUser FROM `users` INNER JOIN cronjobs ON  users.User_id=cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.Job_ID=%s and cronjobs.User_id=%s',(JobID,userID))
             getUsername = cursor.fetchone()[0]
-            query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID+" and User_id="+userID
-            cursor.execute(query)
+            #query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID+" and User_id="+userID
+            cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = %s and User_id=%s",(JobID,userID))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 #deleteCronJob(getUsername)

@@ -31,6 +31,7 @@ server {
     include snippets/webftp.conf;
 }
 EOF
+sed -i 's/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/' /etc/nginx/nginx.conf
 service nginx restart
 cat > /etc/vsftpd.conf <<EOF
 listen=YES
