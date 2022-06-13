@@ -14,7 +14,7 @@
                                 <nav aria-label="breadcrumb" class="float-right mt-1">
                                     <ol class="breadcrumb">
                                         <li class="breadcrumb-item"><a href="{{ url_for("routes.user_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.user_viewDomains") }}">Notification</a></li>
+                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.user_viewNotifications") }}">Notification</a></li>
                                         <li class="breadcrumb-item active" aria-current="page">Notification List</li>
                                     </ol>
                                 </nav>
@@ -53,7 +53,6 @@
                                             <tbody>
                                             {% if results %}
                                                   {% for record in results %}
-                                                      {{ record }}
                                                     <tr>
                                                         <td>{{ record[0] }}</td>
                                                         <td>{{ record[2] }}</td>

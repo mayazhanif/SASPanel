@@ -168,7 +168,7 @@ def user_viewDomains():
         return redirect(url_for('routes.login'))
 
 
-@routes.route('/user/Packages/deleteDomain', methods =['GET', 'POST'])
+@routes.route('/user/domains/deleteDomain', methods =['GET', 'POST'])
 def user_deleteDomain():
     mysqlconnection.reconnect()
     if check_user_Login():

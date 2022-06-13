@@ -286,6 +286,20 @@
 
                             <li>
                                 <a href="javascript: void(0);">
+                                    <i data-feather="globe"></i>
+                                    <span> Notifications </span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+
+                                <ul class="nav-second-level" aria-expanded="false">
+                                     <li>
+                                        <a href="{{ url_for("routes.user_viewNotifications") }}">View Notifications</a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a href="javascript: void(0);">
                                     <i class="uil-database-alt"></i>
                                     <span> MySQL Databases </span>
                                     <span class="menu-arrow"></span>

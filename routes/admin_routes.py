@@ -415,7 +415,7 @@ def admin_updateDomains():
     else:
         return redirect(url_for('routes.login'))
 
-@routes.route('/admin/Packages/deleteDomain', methods =['GET', 'POST'])
+@routes.route('/admin/domain/deleteDomain', methods =['GET', 'POST'])
 def admin_deleteDomain():
     mysqlconnection.reconnect()
     if check_admin_Login():
