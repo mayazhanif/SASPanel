@@ -11,7 +11,6 @@ from datetime import datetime
 from datetime import timedelta
 from crontab import CronTab
 
-
 @routes.route('/admin/dashboard')
 def admin_dashboard():
     if check_admin_Login():
@@ -262,7 +261,7 @@ def admin_updatePackage():
         if request.method == 'GET' and request.args.get('packageID'):
             packageID=request.args.get('packageID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT * FROM `packages` where Package_Id='+packageID)
+            cursor.execute('SELECT * FROM `packages` where Package_Id=%s',(packageID,))
             package = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('adminFiles/Packages/updatePackage.html', package=package)
@@ -347,8 +346,10 @@ def admin_addDomain():
                 add_vhost(getUserName,DomainName)
                 generate_SSL(DomainName,getEmail)
                 ExpiryDate = (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
-                query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
-                cursor.execute(query)
+                privkey ="/etc/letsencrypt/live/"+DomainName+"/privkey.pem"
+                fullchain="/etc/letsencrypt/live/"+DomainName+"/fullchain.pem"
+                #query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
+                cursor.execute("INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, %s, '1');",(DomainID,userID,fullchain,privkey,ExpiryDate))
                 mysqlconnection.commit()
                 add_mail_domain(cursor,DomainName)
                 msg={"error":"success","message":"Domain Added."}
@@ -449,15 +450,15 @@ def admin_addDB():
             if(userID==""):
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
-            cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id='+userID+';')
+            cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id= %s;',(userID,))
             DBUserbyID = cursor.fetchone()
 
             #print(DBUserbyID[0])
             databaseName = request.form['databaseName']
-            query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '"+databaseName+"', '"+userID+"', '"+str(DBUserbyID[0])+"', '1');"
+            #query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '"+databaseName+"', '"+userID+"', '"+str(DBUserbyID[0])+"', '1');"
             #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '1', '0', '0');"
             try:
-                cursor.execute(query)
+                cursor.execute("INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, %s, %s, %s, '1');",(databaseName,userID,str(DBUserbyID[0])))
                 mysqlconnection.commit()
             except:
                 msg={"error":"danger","message":"Database name already in use."}
@@ -495,12 +496,12 @@ def admin_deleteDatabase():
         if request.method == 'GET' and request.args.get('DbID'):
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID='+DbID+';')
+            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID=%s',(DbID,))
             #print(cursor.fetchone()[0])
             getDBName = cursor.fetchone()[0]
             #print(getDBName)
-            query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID
-            cursor.execute(query)
+            #query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID
+            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s",(DbID,))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 drop_database(cursor,getDBName)
@@ -525,8 +526,8 @@ def admin_updateDBPass():
         msg=''
         if request.method == 'GET' and request.args.get('DbID'):
             DbUser_ID=request.args.get('DbID')
-            query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
-            cursor.execute(query)
+            #query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
+            cursor.execute("SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s",(DbUser_ID))
             database = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=database[0])
@@ -534,15 +535,15 @@ def admin_updateDBPass():
                 return redirect(url_for("routes.admin_viewDatabases"))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
-            query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
-            cursor.execute(query)
+            #query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
+            cursor.execute("SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s",(DbUser_ID,))
             mysqlUsername = cursor.fetchone()[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
-                query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+""
-                cursor.execute(query)
+                #query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+""
+                cursor.execute("UPDATE `mysqldbusers` SET `DbPassword` =%s WHERE `mysqldbusers`.`DbUser_ID` = %s",(EncodedPassword,DbUser_ID))
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
                     changePassword(cursor,mysqlUsername,pass1)
@@ -572,7 +573,7 @@ def admin_addAccounts():
             if(userID==""):
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id='+userID+';')
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
             getUserName = cursor.fetchone()[0]
             ftpUsername = request.form['ftpUsername']
             ftpPassword = request.form['ftpPassword']
