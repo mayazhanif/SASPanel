@@ -859,3 +859,16 @@ def user_deleteJob():
             return redirect(url_for("routes.user_cron_jobs"))
     else:
         return redirect(url_for('routes.login'))
+
+@routes.route('/user/notifcations/viewNotifications')
+def user_viewNotifications():
+    mysqlconnection.reconnect()
+    if check_user_Login():
+        cursor = mysqlconnection.cursor()
+        #cursor.execute('SELECT * FROM `domains` where domains.Is_Deleted=0 and domains.User_id='+str(session["id"]))
+        cursor.execute('SELECT * FROM `notifications` where Is_Active=1 and User_id=%s',(str(session["id"]),))
+        results = cursor.fetchall()
+        return render_template('userFiles/notifications/viewNotifications.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
+
