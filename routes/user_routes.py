@@ -882,7 +882,7 @@ def user_deleteNotifications():
             cursor = mysqlconnection.cursor()
             #query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(str(session["id"],))
             #cursor.execute("UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(domainID,str(session["id"])))
-            cursor.execute("UPDATE `notifications` SET `Is_Active` = '1' WHERE `notifications`.`Notification_ID` = %s and User_id=%s",(NotificationID,userID))
+            cursor.execute("UPDATE `notifications` SET `Is_Active` = '0' WHERE `notifications`.`Notification_ID` = %s and User_id=%s",(NotificationID,userID))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Notification Deleted.')
