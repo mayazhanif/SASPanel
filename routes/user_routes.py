@@ -872,3 +872,26 @@ def user_viewNotifications():
     else:
         return redirect(url_for('routes.login'))
 
+@routes.route('/user/notifications/deleteNotifications', methods =['GET', 'POST'])
+def user_deleteNotifications():
+    mysqlconnection.reconnect()
+    if check_user_Login():
+        if request.method == 'GET' and request.args.get('NotificationID'):
+            userID = str(session["id"])
+            NotificationID=request.args.get('NotificationID')
+            cursor = mysqlconnection.cursor()
+            #query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(str(session["id"],))
+            #cursor.execute("UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(domainID,str(session["id"])))
+            cursor.execute("UPDATE `notifications` SET `Is_Active` = '1' WHERE `notifications`.`Notification_ID` = %s and User_id=%s",(NotificationID,userID))
+            mysqlconnection.commit()
+            if cursor.rowcount>0:
+                flash('Notification Deleted.')
+                return redirect(url_for("routes.user_viewNotifications"))
+            else:
+                flash('Notification not Deleted.')
+                return redirect(url_for("routes.user_viewNotifications"))
+
+        else:
+            return redirect(url_for("routes.user_viewNotifications"))
+    else:
+        return redirect(url_for('routes.login'))
