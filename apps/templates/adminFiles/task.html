@@ -21,14 +21,6 @@
                                 <h4 class="mb-1 mt-0"> Domains List</h4>
                             </div>
                         </div>
-                        {% for message in get_flashed_messages() %}
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                        {% endfor %}
                         <div class="row">
                             <div class="col-12">
                                 <div class="card">
@@ -37,13 +29,11 @@
                                         <p class="sub-header">
                                             Use this to View, Delete, and Suspend/Unsuspend Domain List.
                                         </p>
-                            <a href="{{ url_for('routes.admin_renewSSL') }}"><button type="button" class="btn btn-danger btn-block">Renew All SSL Certificates</button></a>
-                                        <br>
                                         <table id="basic-datatable" class="table nowrap">
                                             <thead>
                                                 <tr>
-                                                    <th>User's Name</th>
-                                                    <th>User's Email</th>
+                                                    <th>Mail ID</th>
+                                                    <th>Mail Adress</th>
                                                 </tr>
                                             </thead>
 
@@ -70,8 +60,6 @@
                                         <p class="sub-header">
                                             Use this to View, Delete, and Suspend/Unsuspend Domain List.
                                         </p>
-                            <a href="{{ url_for('routes.admin_renewSSL') }}"><button type="button" class="btn btn-danger btn-block">Renew All SSL Certificates</button></a>
-                                        <br>
                                         <table id="basic-datatable" class="table nowrap">
                                             <thead>
                                                 <tr>
@@ -88,7 +76,7 @@
                                                     <tr>
                                                         <td>{{ftp[0]}}</td>
                                                         <td>{{ftp[3]}}</td>
-                                                        <td>{{ftp[3]}}</td>
+                                                        <td>{{ftp[2]}}</td>
 
                                                     </tr>
                                                   {% endfor %}
@@ -106,28 +94,21 @@
                                         <p class="sub-header">
                                             Use this to View, Delete, and Suspend/Unsuspend Domain List.
                                         </p>
-                            <a href="{{ url_for('routes.admin_renewSSL') }}"><button type="button" class="btn btn-danger btn-block">Renew All SSL Certificates</button></a>
-                                        <br>
                                         <table id="basic-datatable" class="table nowrap">
                                             <thead>
                                                 <tr>
-                                                    <th>User's Name</th>
-                                                    <th>User's Email</th>
+                                                    <th>Domain ID</th>
                                                     <th>Domain Name</th>
-                                                    <th>Domain Directory</th>
-                                                    <th>SSL Cerificate</th>
-                                                    <th>SSL Expiry </th>
-                                                    <th>Manage</th>
                                                 </tr>
                                             </thead>
 
 
                                             <tbody>
-                                            {% if mails %}
-                                                  {% for mail in mails %}
+                                            {% if domains %}
+                                                  {% for domain in domains %}
                                                     <tr>
-                                                        <td>{{mail[0]}}</td>
-                                                        <td>{{mail[3]}}</td>
+                                                        <td>{{domain[0]}}</td>
+                                                        <td>{{domain[1]}}</td>
                                                     </tr>
                                                   {% endfor %}
                                             {% endif %}
