@@ -1058,3 +1058,4 @@ def admin_deleteJob():
         return redirect(url_for('routes.login'))
 
 
+#Test message
