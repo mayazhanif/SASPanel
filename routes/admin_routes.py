@@ -1058,4 +1058,14 @@ def admin_deleteJob():
         return redirect(url_for('routes.login'))
 
 
-#SAMAR
+@routes.route('/admin/data/view')
+def admin_viewdata():
+    if check_admin_Login():
+        mysqlconnection.reconnect()
+        cursor = mysqlconnection.cursor()
+        #cursor.close()
+        #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        results = cursor.fetchall()
+        return render_template('adminFiles/task/viewUser.html', results=results)
+    else:
+        return redirect(url_for('routes.login'))
