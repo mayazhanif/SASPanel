@@ -1083,6 +1083,6 @@ def admin_viewdata():
         countSubDomain = str(cursor.rowcount)
         profileData = '{"FTP" : "'+countFTP+'", "Mails" : "'+countMails+'", "Domains" : "'+countDomains+'", "Mysql" : "'+countDB+'", "SubDomains" : "'+countSubDomain+'"}'
         profileData = json.loads(profileData)
-        return render_template('adminFiles/task/viewUser.html', mails=mails,ftps=ftps,domains=domains, profileData=profileData)
+        return render_template('adminFiles/task.html', mails=mails,ftps=ftps,domains=domains, profileData=profileData)
     else:
         return redirect(url_for('routes.login'))
