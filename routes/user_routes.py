@@ -618,7 +618,7 @@ def user_addSubDomain():
             cursor.execute("SELECT Sub_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID))
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
             getUserName = cursor.fetchone()[0]
             #cursor.rowcount>
             queryinUSe ="SELECT * FROM `domains` where User_id="+userID
