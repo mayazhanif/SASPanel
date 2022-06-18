@@ -1056,5 +1056,3 @@ def admin_deleteJob():
             return redirect(url_for("routes.admin_cron_jobs"))
     else:
         return redirect(url_for('routes.login'))
-
-
