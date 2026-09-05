@@ -1,10 +1,11 @@
 import base64
-from flask import render_template, request,redirect, url_for, flash
-from Database.DbConfig import mysqlconnection,mysql_connect
+from flask import render_template, request, redirect, url_for, flash
+from Database.DbConfig import mysqlconnection, mysql_connect
 import hashlib
 import json
 from . import routes
 from functions import *
+from routes.security import require_admin, log_security_event
 from urllib.parse import urlparse
 from flask import current_app as app
 from datetime import datetime
@@ -61,44 +62,44 @@ def admin_profile():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('select * from users where Is_Deleted=0 and Admin_id='+str(session["id"]))
+        # FIXED: parameterized queries (was raw string concatenation)
+        cursor.execute('SELECT * FROM users WHERE Is_Deleted=0 AND Admin_id=%s', (session['id'],))
         cursor.fetchall()
-        totalUsers=str(cursor.rowcount)
-        cursor.execute('select Reg_Date from administrator where Admin_id='+str(session["id"]))
-        details=cursor.fetchone()
-        regDate=str(details[0])
-        cursor.execute('SELECT * FROM `packages` where Is_Active=1 and Admin_id='+str(session["id"]))
+        totalUsers = str(cursor.rowcount)
+        cursor.execute('SELECT Reg_Date FROM administrator WHERE Admin_id=%s', (session['id'],))
+        details = cursor.fetchone()
+        regDate = str(details[0]) if details else ''
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s', (session['id'],))
         cursor.fetchall()
-        totalPackages=str(cursor.rowcount)
+        totalPackages = str(cursor.rowcount)
 
         if request.method == 'POST' and 'Name' in request.form:
             Name = request.form['Name']
-            #cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
-            #print("UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id'])")
-            cursor.execute('UPDATE `administrator` SET `Admin_Name` = %s WHERE Admin_id = %s;', (Name,session['id']))
+            cursor.execute('UPDATE `administrator` SET `Admin_Name` = %s WHERE Admin_id = %s;', (Name, session['id']))
             mysqlconnection.commit()
-            if cursor.rowcount>0:
-                session["Name"]=Name;
-                return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, msg={"error":"success","message":"Name Updated Successfully."})
+            if cursor.rowcount > 0:
+                session['Name'] = Name
+                return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages, msg={'error': 'success', 'message': 'Name Updated Successfully.'})
             else:
-                return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, msg={"error":"primary","message":"Name not Updated."})
+                return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages, msg={'error': 'primary', 'message': 'Name not Updated.'})
         elif request.method == 'POST' and 'pass1' in request.form and 'pass2' in request.form:
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
-            if pass1==pass2:
+            if pass1 == pass2:
                 cursor = mysqlconnection.cursor()
-                md5Password = md5encode(pass1)
-                cursor.execute('UPDATE `administrator` SET `Admin_Password` = %s WHERE Admin_id = %s;', (md5Password,session['id']))
+                # FIXED: use bcrypt instead of MD5
+                securePassword = hash_password(pass1)
+                cursor.execute('UPDATE `administrator` SET `Admin_Password` = %s WHERE Admin_id = %s;', (securePassword, session['id']))
                 mysqlconnection.commit()
-                if cursor.rowcount>0:
-                    return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, passmsg={"error":"success","message":"Password Updated Successfully."})
+                if cursor.rowcount > 0:
+                    return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages, passmsg={'error': 'success', 'message': 'Password Updated Successfully.'})
                 else:
-                    return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages, passmsg={"error":"primary","message":"Password not Updated."})
+                    return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages, passmsg={'error': 'primary', 'message': 'Password not Updated.'})
             else:
-                return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages,
-                                       passmsg={"error": "danger", "message": "Password and Confirm Password Mismatch."})
+                return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages,
+                                       passmsg={'error': 'danger', 'message': 'Password and Confirm Password Mismatch.'})
         else:
-            return render_template('adminFiles/profile.html',users=totalUsers,regDate=regDate,totalPackages=totalPackages)
+            return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages)
     else:
         return redirect(url_for('routes.login'))
 
@@ -636,12 +637,12 @@ def admin_updateAccountPass():
             pass2 = request.form['pass2']
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
-                #query = "UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` = "+AccID+""
-                cursor.execute("UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` =%s", (AccID,))
+                # FIXED: fully parameterized — EncodedPassword no longer concatenated
+                cursor.execute('UPDATE `ftp_accounts` SET `FTP_Password` = %s WHERE `ftp_accounts`.`Account_Id` = %s', (EncodedPassword, AccID))
                 mysqlconnection.commit()
-                if cursor.rowcount>0:
-                    change_ftp_pass(ftpUsername,pass1)
-                    msg = {"error": "success", "message": "FTP Account Password Updated."}
+                if cursor.rowcount > 0:
+                    change_ftp_pass(ftpUsername, pass1)
+                    msg = {'error': 'success', 'message': 'FTP Account Password Updated.'}
                     return render_template('adminFiles/ftpAccounts/updateAccountPass.html', account=AccID, msg=msg)
                 else:
                     msg = {"error": "danger", "message": "Password not Updated"}

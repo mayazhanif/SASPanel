@@ -1,75 +1,113 @@
-from flask import render_template
-from app import app
-from . import routes
-from app import *
-from Database.DbConfig import mysqlconnection,mysql_connect
-#import MySQLdb
+"""
+routes/custom_pages.py — Miscellaneous page routes (security-hardened)
 
-@routes.route('/test/')
-def hello_world():
-    example = r"""I don't like "special" chars ¯\_(ツ)_/¯"""
-    #print(MySQLdb.mysql_real_escape_string(example))
-    #return MySQLdb.mysql_real_escape_string(example)
-    return "1"
+Changes:
+  - /test/ debug endpoint REMOVED
+  - /reboot/ endpoint now requires admin authentication
+  - Installer locked out once DB is connected (returns 403)
+  - Installer form inputs validated before passing to install_packages()
+"""
+
+from flask import render_template, redirect, url_for, session, request, abort
+from . import routes
+from app import app
+from Database.DbConfig import mysqlconnection, mysql_connect
+from functions import install_packages
+from routes.security import require_admin, log_security_event
+import subprocess
+
+
+# ---------------------------------------------------------------------------
+# Reboot — admin-only, authenticated
+# ---------------------------------------------------------------------------
 
 @routes.route('/reboot/')
+@require_admin
 def reboot():
-    os.system("systemctl restart saspanel")
-    #print(generateservUser("testuser","testuser@gmail.com"))
-    return "ReBooted"
+    log_security_event('ADMIN_REBOOT', 'Admin triggered service restart')
+    subprocess.run(['systemctl', 'restart', 'saspanel'])
+    return 'Service restarted.'
 
-@routes.route('/installer', methods=['POST','GET'])
+
+# ---------------------------------------------------------------------------
+# Installer — available ONLY when DB is not yet configured
+# ---------------------------------------------------------------------------
+
+@routes.route('/installer', methods=['POST', 'GET'])
 def installer():
-    msg=''
-    mysqlconnection=mysql_connect()
-    if request.method == 'POST' and 'DBpass1' in request.form and 'DBpass2' in request.form and 'mailserverpassword' in request.form and 'emailaddress' in request.form and 'domain' in request.form and 'emailpassword' in request.form and mysqlconnection is None:
-        #install()
-        DBpass1 = request.form['DBpass1']
-        DBpass2 = request.form['DBpass2']
-        mailserverpassword = request.form['mailserverpassword']
-        emailaddress = request.form['emailaddress']
-        emailpassword = request.form['emailpassword']
-        domain = request.form['domain']
-        if DBpass1 == DBpass2:
-            emailaddress=emailaddress+"@"+domain
-            install_packages(DBpass1,mailserverpassword,domain,emailaddress,emailpassword)
-            return render_template('installer/installer.html',msg={"error": "success", "message": "Installation Completed. Please Reload."})
-        else:
-            print("Password and Confirm Password Mismatch.")
-            return render_template('installer/installer.html',
-                                   msg={"error": "danger", "message": "Password and Confirm Password Mismatch."})
-    elif mysqlconnection is None:
-        return render_template('installer/installer.html')
-    else:
-        #print(mysqlconnection)
-        return render_template('installer/installed.html')
+    conn = mysql_connect()
+    # If DB is already connected, installer is locked — return 403
+    if conn is not None:
+        abort(403)
 
+    msg = ''
+    if request.method == 'POST' \
+            and 'DBpass1' in request.form \
+            and 'DBpass2' in request.form \
+            and 'mailserverpassword' in request.form \
+            and 'emailaddress' in request.form \
+            and 'domain' in request.form \
+            and 'emailpassword' in request.form:
+
+        DBpass1           = request.form['DBpass1']
+        DBpass2           = request.form['DBpass2']
+        mailserverpassword = request.form['mailserverpassword']
+        emailaddress      = request.form['emailaddress']
+        emailpassword     = request.form['emailpassword']
+        domain            = request.form['domain']
+
+        # Basic length / content validation
+        if len(DBpass1) < 12:
+            return render_template('installer/installer.html',
+                                   msg={'error': 'danger', 'message': 'DB password must be at least 12 characters.'})
+        if DBpass1 != DBpass2:
+            return render_template('installer/installer.html',
+                                   msg={'error': 'danger', 'message': 'Password and Confirm Password Mismatch.'})
+
+        full_email = emailaddress + '@' + domain
+        install_packages(DBpass1, mailserverpassword, domain, full_email, emailpassword)
+        return render_template('installer/installer.html',
+                               msg={'error': 'success', 'message': 'Installation Completed. Please Reload.'})
+
+    return render_template('installer/installer.html', msg=msg)
+
+
+# ---------------------------------------------------------------------------
+# Home / root redirect
+# ---------------------------------------------------------------------------
 
 @routes.route('/')
 def home_route():
-    mysqlconnection = mysql_connect()
-    if mysqlconnection is None:
+    conn = mysql_connect()
+    if conn is None:
         return redirect(url_for('routes.installer'))
     if 'loggedin' in session:
-        print(session['usertype'])
-        if session['usertype'] == "Admin":
-            msg = ''
+        if session.get('usertype') == 'Admin':
             return redirect(url_for('routes.admin_dashboard'))
-        elif session['usertype'] == "User":
-            msg = ''
+        elif session.get('usertype') == 'User':
             return redirect(url_for('routes.user_dashboard'))
-    else:
-        msg = 'Please, Login first.'
-        return redirect(url_for('routes.login'))
+    return redirect(url_for('routes.login'))
+
+
+# ---------------------------------------------------------------------------
+# Error handlers
+# ---------------------------------------------------------------------------
+
+@routes.errorhandler(403)
+def forbidden(e):
+    return render_template('error_pages/403.html'), 403
 
 
 @routes.errorhandler(404)
 def page_not_found(e):
-    # note that we set the 404 status explicitly
     return render_template('error_pages/404.html'), 404
 
 
+@routes.errorhandler(429)
+def too_many_requests(e):
+    return render_template('error_pages/429.html'), 429
+
+
 @routes.errorhandler(500)
-def page_not_found(e):
-    # note that we set the 500 status explicitly
-    return render_template('error_pages/500.html'), 404
+def internal_error(e):
+    return render_template('error_pages/500.html'), 500

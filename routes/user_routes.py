@@ -1,9 +1,11 @@
 import json
-from flask import render_template, session, request, redirect, url_for
+from flask import render_template, session, request, redirect, url_for, flash
 from . import routes
 from app import *
 import functions
+from functions import hash_password
 from Database.DbConfig import mysqlconnection
+from routes.security import require_user, log_security_event
 import functions
 from urllib.parse import urlparse
 from flask import current_app as app
@@ -65,13 +67,11 @@ def user_profile():
         elif request.method == 'POST' and 'pass1' in request.form and 'pass2' in request.form:
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
-            if pass1==pass2:
+            if pass1 == pass2:
                 cursor = mysqlconnection.cursor()
-                md5Password = md5encode(pass1)
-                #query = 'UPDATE `users` SET `User_Password` = %s WHERE User_id = %s;', (Name,session['id'])
-                #cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
-                #print("UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id'])")
-                cursor.execute('UPDATE `users` SET `User_Password` = %s WHERE User_id = %s;', (md5Password,session['id']))
+                # FIXED: bcrypt instead of MD5
+                securePassword = hash_password(pass1)
+                cursor.execute('UPDATE `users` SET `User_Password` = %s WHERE User_id = %s;', (securePassword, session['id']))
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
                     return render_template('userFiles/profile.html', profileData=profileData, passmsg={"error":"success","message":"Password Updated Successfully."})
@@ -176,18 +176,24 @@ def user_deleteDomain():
             userID = str(session["id"])
             domainID=request.args.get('domainID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT Domain_Name FROM `domains` where Is_Deleted=0 and Domain_Id=%s and domains.User_id=%s',(domainID,userID))
-            DomainName = cursor.fetchone()[0]
-            #query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(str(session["id"],))
-            cursor.execute("UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID+" and domains.User_id=%",(domainID,str(session["id"])))
+            cursor.execute('SELECT Domain_Name FROM `domains` WHERE Is_Deleted=0 AND Domain_Id=%s AND User_id=%s',
+                           (domainID, userID))
+            row = cursor.fetchone()
+            if row is None:
+                flash('Domain not found or access denied.')
+                return redirect(url_for('routes.user_viewDomains'))
+            DomainName = row[0]
+            # FIXED: fully parameterized, correct ownership check
+            cursor.execute('UPDATE `domains` SET `Is_Deleted` = %s WHERE `Domain_Id` = %s AND User_id = %s',
+                           ('1', domainID, userID))
             mysqlconnection.commit()
-            if cursor.rowcount>0:
+            if cursor.rowcount > 0:
                 remove_vhost(DomainName)
                 flash('Domain Deleted.')
-                return redirect(url_for("routes.user_viewDomains"))
+                return redirect(url_for('routes.user_viewDomains'))
             else:
                 flash('Domain not Deleted.')
-                return redirect(url_for("routes.user_viewDomains"))
+                return redirect(url_for('routes.user_viewDomains'))
 
         else:
             return redirect(url_for("routes.user_viewDomains"))
@@ -206,11 +212,10 @@ def user_addDB():
             cursor.execute("SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
-            #cursor.rowcount>
-            queryinUSe ="SELECT * FROM `domains` where User_id="+userID
-            cursor.execute(queryinUSe)
-            cursor.fetchall()
-            if cursor.rowcount>=limit:
+            # FIXED: parameterized query (was raw string concatenation)
+            cursor.execute('SELECT COUNT(*) FROM `domains` WHERE User_id=%s', (userID,))
+            in_use = cursor.fetchone()[0]
+            if in_use >= limit:
                 msg = {"error": "danger", "message": "Mysql Databases Limit Reached."}
                 return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
             cursor.execute(

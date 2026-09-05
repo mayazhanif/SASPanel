@@ -95,6 +95,11 @@ ENV/
 env.bak/
 venv.bak/
 
+# SASPanel — sensitive config and credentials (NEVER commit these)
+Database/config.ini
+logs/
+*.log
+
 # Spyder project settings
 .spyderproject
 .spyproject
