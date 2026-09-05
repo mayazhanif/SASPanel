@@ -1,12 +1,32 @@
 [Unit]
-Description=SASPanel - Web Hosting Control Panel
-After=network.target
+Description=SASPanel — Web Hosting Control Panel
+Documentation=https://github.com/mayazhanif/SASPanel
+After=network.target mysql.service
+Requires=mysql.service
 
 [Service]
+Type=simple
 User=root
+Group=root
 WorkingDirectory=/home/SASPanel
-ExecStart=python3 app.py
+EnvironmentFile=/home/SASPanel/.env
+ExecStart=/home/SASPanel/venv/bin/gunicorn \
+    --workers 4 \
+    --bind 0.0.0.0:5000 \
+    --timeout 120 \
+    --access-logfile /home/SASPanel/logs/access.log \
+    --error-logfile /home/SASPanel/logs/error.log \
+    app:app
+ExecReload=/bin/kill -s HUP $MAINPID
 Restart=always
+RestartSec=5
+StandardOutput=append:/home/SASPanel/logs/service.log
+StandardError=append:/home/SASPanel/logs/service.log
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/home/SASPanel/logs /home /tmp /var/run /etc/nginx /etc/vsftpd.chroot_list
 
 [Install]
 WantedBy=multi-user.target
