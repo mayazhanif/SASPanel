@@ -788,8 +788,12 @@ def admin_updateEmail():
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
                 cursor = mysqlconnection.cursor()
-                #query = "UPDATE `mail_accounts` SET `Mail_Pass` = '"+EncodedPassword+"' WHERE `mail_accounts`.`Mail_Id` = "+mailID+""
-                cursor.execute("UPDATE `mail_accounts` SET `Mail_Pass` = '"+EncodedPassword+"' WHERE `mail_accounts`.`Mail_Id` =%s",(mailID,))
+                # FIXED: was "... SET `Mail_Pass` = '"+EncodedPassword+"' ..." — SQL injection
+                cursor.execute(
+                    "UPDATE `mail_accounts` SET `Mail_Pass` = %s WHERE `mail_accounts`.`Mail_Id` = %s",
+                    (EncodedPassword, mailID)
+                )
+
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
                     #query = "SELECT Mail_Address FROM `mail_accounts` where Mail_Id=" + mailID + ""
