@@ -5,7 +5,11 @@ from app import *
 import functions
 from functions import hash_password
 from Database.DbConfig import mysqlconnection
-from routes.security import require_user, log_security_event
+from routes.security import (
+    require_user, log_security_event,
+    sanitize_shell_arg, sanitize_cron_command,
+    sanitize_log_filename, safe_log_path, sanitize_log_content,
+)
 import functions
 from urllib.parse import urlparse
 from flask import current_app as app
@@ -623,24 +627,27 @@ def user_addSubDomain():
             cursor.execute("SELECT Sub_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
             getUserName = cursor.fetchone()[0]
-            #cursor.rowcount>
-            queryinUSe ="SELECT * FROM `domains` where User_id="+userID
-            cursor.execute(queryinUSe)
-            cursor.fetchall()
-            if cursor.rowcount>=limit:
+            # FIXED VULN-03: parameterized query (was raw string concat)
+            cursor.execute('SELECT COUNT(*) FROM `subdomains` WHERE User_id=%s AND Is_Active=1', (userID,))
+            in_use = cursor.fetchone()[0]
+            if in_use >= limit:
                 msg = {"error": "danger", "message": "Subdomains Limit Reached."}
                 return render_template('userFiles/SubDomains/addSubDomain.html', msg=msg)
             domainID = request.form['domainID']
             if(domainID==""):
                 msg={"error":"danger", "message": "Domain not Selected."}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
-            suffix = request.form['suffix']
-            #query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
-            cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s",(domainID,userID))
+            # FIXED VULN-11: validate suffix to prevent XSS + vhost injection
+            try:
+                suffix = sanitize_shell_arg(suffix, 'suffix')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid subdomain prefix. Use only letters, digits, and hyphens.'}
+                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s", (domainID, userID))
             rDomain = cursor.fetchone()
-            SubDomainAdress = suffix + "." + rDomain[1]
+            SubDomainAdress = suffix + '.' + rDomain[1]
             userID = str(rDomain[2])
             #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
             #query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
@@ -686,10 +693,10 @@ def user_deleteSubDomain():
             userID = str(session["id"])
             SdomainID=request.args.get('SdomainID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=%s and subdomains.User_id=%s',(SdomainID,userID))
+            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=%s and subdomains.User_id=%s', (SdomainID, userID))
             SubDomainName = cursor.fetchone()[0]
-            #query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID+" and User_id="+userID
-            cursor.execute("UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID+" and User_id=%s",(userID,))
+            # FIXED VULN-04: fully parameterized (was partially concatenated)
+            cursor.execute("UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = %s AND User_id=%s", (SdomainID, userID))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(SubDomainName)
@@ -721,21 +728,35 @@ def user_error_logs():
 def user_error_logs_ajax():
     mysqlconnection.reconnect()
     if check_user_Login():
-        msg = ''
-        userID = str(session["id"])
+        userID = str(session['id'])
         domainName = request.args.get('domainName')
-        Result = {"data":""}
+        Result = {'data': ''}
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
+        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
         userName = cursor.fetchone()[0]
-        #fname = "C:\\Users\\mayaz\\Desktop\\testfile.txt"
-        fname = "/home/"+userName+"/logs/"+domainName+"-error.log"
-        data = readLines(fname,100)
-        Result["data"]=data;
+        # FIXED VULN-02: validate domainName to prevent path traversal / LFI
+        try:
+            safe_domain = sanitize_log_filename(domainName)
+            safe_user = sanitize_shell_arg(userName, 'username')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid domain name.'}), status=400, mimetype='application/json')
+        # Verify the domain actually belongs to this user (IDOR prevention)
+        cursor.execute('SELECT Domain_Name FROM `domains` WHERE Domain_Name=%s AND User_id=%s AND Is_Deleted=0', (safe_domain, userID))
+        if cursor.fetchone() is None:
+            log_security_event('IDOR_LOG_ACCESS', f'domain={safe_domain!r} user={userID}')
+            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
+        base_dir = f'/home/{safe_user}/logs'
+        try:
+            fname = safe_log_path(base_dir, safe_domain, '-error.log')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+        raw = readLines(fname, 100)
+        # FIXED VULN-13: HTML-escape to prevent second-order XSS
+        Result['data'] = sanitize_log_content(raw)
         response = app.response_class(
             response=json.dumps(Result),
-                status=200,
-                mimetype='application/json'
+            status=200,
+            mimetype='application/json'
         )
         return response
     else:
@@ -759,20 +780,33 @@ def user_access_logs():
 def user_access_logs_ajax():
     mysqlconnection.reconnect()
     if check_user_Login():
-        msg = ''
-        userID = str(session["id"])
+        userID = str(session['id'])
         domainName = request.args.get('domainName')
-        Result = {"data":""}
+        Result = {'data': ''}
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
+        cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
         userName = cursor.fetchone()[0]
-        fname = "/home/"+userName+"/logs/"+domainName+"-access.log"
-        data = readLines(fname,100)
-        Result["data"]=data;
+        # FIXED VULN-02: validate domainName + ownership check
+        try:
+            safe_domain = sanitize_log_filename(domainName)
+            safe_user = sanitize_shell_arg(userName, 'username')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid domain name.'}), status=400, mimetype='application/json')
+        cursor.execute('SELECT Domain_Name FROM `domains` WHERE Domain_Name=%s AND User_id=%s AND Is_Deleted=0', (safe_domain, userID))
+        if cursor.fetchone() is None:
+            log_security_event('IDOR_LOG_ACCESS', f'domain={safe_domain!r} user={userID}')
+            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
+        base_dir = f'/home/{safe_user}/logs'
+        try:
+            fname = safe_log_path(base_dir, safe_domain, '-access.log')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+        raw = readLines(fname, 100)
+        Result['data'] = sanitize_log_content(raw)
         response = app.response_class(
             response=json.dumps(Result),
-                status=200,
-                mimetype='application/json'
+            status=200,
+            mimetype='application/json'
         )
         return response
     else:
@@ -795,14 +829,28 @@ def user_cron_jobs():
             CronTime = request.form['CronTime']
             Command = request.form['Command']
             logFile = request.form['logFile']
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted =0 and User_id=%s',(userID,))
+            # FIXED VULN-01: block shell metacharacters in cron command
+            try:
+                Command = sanitize_cron_command(Command)
+            except ValueError as e:
+                msg = {'error': 'danger', 'message': str(e)}
+                return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+            # FIXED VULN-10: prevent path traversal via logFile parameter
+            try:
+                logFile = sanitize_shell_arg(logFile, 'logfile')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid log filename. Use only letters, digits, dots, underscores, hyphens.'}
+                return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
             getUsername = cursor.fetchone()[0]
-            logFileLink = "/home/"+getUsername+"/crobjobs/logs/"+logFile
-            #CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
-            CommandFinal = Command+ " >> "+logFileLink
-            #addCronJob(getUsername, CommandFinal, logFileLink)
-            #query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = "+userID
-            cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = %s",(userID,))
+            base_logs = f'/home/{getUsername}/crobjobs/logs'
+            try:
+                logFileLink = safe_log_path(base_logs, logFile)
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid log file path.'}
+                return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+            CommandFinal = Command + ' >> ' + logFileLink
+            cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = %s", (userID,))
             my_cron = CronTab(user=getUsername)
             my_cron.remove_all()
             job = my_cron.new(command=CommandFinal)

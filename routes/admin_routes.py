@@ -5,7 +5,11 @@ import hashlib
 import json
 from . import routes
 from functions import *
-from routes.security import require_admin, log_security_event
+from routes.security import (
+    require_admin, log_security_event,
+    sanitize_shell_arg, sanitize_cron_command,
+    sanitize_log_filename, safe_log_path, sanitize_log_content,
+)
 from urllib.parse import urlparse
 from flask import current_app as app
 from datetime import datetime
@@ -116,14 +120,13 @@ def admin_addUser():
             User_email = request.form['Email']
             User_Password = request.form['pass1']
             Confirm_Password = request.form['pass2']
-            if User_Password== Confirm_Password:
-                md5Password = hashlib.md5(User_Password.encode()).hexdigest()
+            if User_Password == Confirm_Password:
+                # FIXED: bcrypt instead of MD5 (VULN-addUser)
+                securePassword = hash_password(User_Password)
                 packageID = request.form['packageID']
-                servUser = generateservUser(User_Name,User_email)
+                servUser = generateservUser(User_Name, User_email)
                 cursor = mysqlconnection.cursor()
-                # query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
-                #query = "INSERT INTO `users` (`User_id`, `servUser`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, '"+servUser+"', '" + User_email + "', '" + md5Password + "', '" + User_Name + "', '', CURRENT_TIMESTAMP, '" + Admin_id + "', '" + packageID + "', '0', CURRENT_TIMESTAMP);"
-                cursor.execute("INSERT INTO `users` (`User_id`, `servUser`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, %s, %s, %s, %s, '', CURRENT_TIMESTAMP, %s, %s, '0', CURRENT_TIMESTAMP);",(servUser,User_email,md5Password,User_Name,Admin_id,packageID))
+                cursor.execute("INSERT INTO `users` (`User_id`, `servUser`, `User_email`, `User_Password`, `User_Name`, `UserResetToken`, `Token_Expiry`, `Admin_id`, `Package_id`, `Is_Deleted`, `User_Reg_Date`) VALUES (NULL, %s, %s, %s, %s, '', CURRENT_TIMESTAMP, %s, %s, '0', CURRENT_TIMESTAMP);", (servUser, User_email, securePassword, User_Name, Admin_id, packageID))
                 userID = str(cursor.lastrowid)
                 mysqlconnection.commit()
                 if cursor.rowcount > 0:
@@ -186,14 +189,10 @@ def admin_updateUser():
             Name = request.form['Name']
             Email = request.form['Email']
             password = request.form['password']
-            md5Password = hashlib.md5(password.encode()).hexdigest()
-
-            #Package_Name = request.form['packagename']
+            # FIXED: bcrypt instead of MD5 (VULN-updateUser)
+            securePassword = hash_password(password)
             cursor = mysqlconnection.cursor()
-            #query = "UPDATE `users` SET `Package_Id` = '"+packageID+"', `User_email` = '"+Email+"',`User_Password` = '"+md5Password+"', `User_Name` = '"+Name+"' WHERE `users`.`User_id` = "+userID+""
-            #print(query)
-            #query = "UPDATE `packages` SET  `Name` = '"+Package_Name+"', `Limit_FTP` = '"+Limit_FTP+"', `Limit_Mails` = '"+Limit_Mails+"', `Limit_Domains` = '"+Limit_Domains+"', `CGI_ACCESS` = '"+CGI_ACCESS+"', `Limit_DB` = '"+Limit_DB+"', `Sub_Domains` = '"+Sub_Domains+"', `Storage_Limit` = '"+Storage_Limit+"' WHERE `packages`.`Package_Id` = "+packageID+""
-            cursor.execute("UPDATE `users` SET `Package_Id` = %s, `User_email` = %s,`User_Password` = %s, `User_Name` = %s WHERE `users`.`User_id` = %s",(packageID,Email,md5Password,Name,userID))
+            cursor.execute("UPDATE `users` SET `Package_Id` = %s, `User_email` = %s, `User_Password` = %s, `User_Name` = %s WHERE `users`.`User_id` = %s AND Admin_id = %s", (packageID, Email, securePassword, Name, userID, session['id']))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('User Updated.')
@@ -829,10 +828,15 @@ def admin_addSubDomain():
             cursor.execute('SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id where domains.Is_Deleted=0 and Domain_Id=%s',(domainID,))
             getUserName = cursor.fetchone()[0]
             suffix = request.form['suffix']
-            #query= "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id="+domainID+""
-            cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s",(domainID,))
+            # FIXED VULN-11: validate suffix to prevent XSS + vhost injection
+            try:
+                suffix = sanitize_shell_arg(suffix, 'suffix')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid subdomain prefix. Use only letters, digits, and hyphens.'}
+                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s", (domainID,))
             rDomain = cursor.fetchone()
-            SubDomainAdress= suffix+"."+rDomain[1]
+            SubDomainAdress = suffix + '.' + rDomain[1]
             userID= str(rDomain[2])
             #query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
             try:
@@ -910,22 +914,41 @@ def admin_error_logs():
 def admin_error_logs_ajax():
     mysqlconnection.reconnect()
     if check_admin_Login():
-        msg = ''
-        #userID = str(session["id"])
+        adminID = str(session['id'])
         domainID = request.args.get('domainID')
-        Result = {"data":""}
+        Result = {'data': ''}
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT servUser,Domain_Name FROM `domains` Inner Join users ON domains.User_id = users.User_id where domains.Is_Deleted=0 and domains.Domain_Id=%s',(domainID,))
+        # FIXED VULN-06: added Admin_id ownership check to prevent IDOR
+        # FIXED VULN-02: domain resolved from DB, never from user input
+        cursor.execute(
+            'SELECT servUser, Domain_Name FROM `domains` '
+            'INNER JOIN users ON domains.User_id = users.User_id '
+            'WHERE domains.Is_Deleted=0 AND domains.Domain_Id=%s AND users.Admin_id=%s',
+            (domainID, adminID)
+        )
         domainData = cursor.fetchone()
+        if domainData is None:
+            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
         userName = domainData[0]
         Domain = domainData[1]
-        fname = "/home/"+userName+"/logs/"+Domain+"-error.log"
-        data = readLines(fname,100)
-        Result["data"]=data;
+        # FIXED VULN-02: validate domain from DB before building path
+        try:
+            safe_domain = sanitize_log_filename(Domain)
+            safe_user = sanitize_shell_arg(userName, 'username')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+        base_dir = f'/home/{safe_user}/logs'
+        try:
+            fname = safe_log_path(base_dir, safe_domain, '-error.log')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+        raw = readLines(fname, 100)
+        # FIXED VULN-13: HTML-escape log content to prevent second-order XSS
+        Result['data'] = sanitize_log_content(raw)
         response = app.response_class(
             response=json.dumps(Result),
-                status=200,
-                mimetype='application/json'
+            status=200,
+            mimetype='application/json'
         )
         return response
     else:
@@ -948,24 +971,38 @@ def admin_access_logs():
 def admin_access_logs_ajax():
     mysqlconnection.reconnect()
     if check_admin_Login():
-        msg = ''
-        #userID = str(session["id"])
+        adminID = str(session['id'])
         domainID = request.args.get('domainID')
-        #print(domainID)
-        Result = {"data":""}
+        Result = {'data': ''}
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT servUser,Domain_Name FROM `domains` Inner Join users ON domains.User_id = users.User_id where domains.Is_Deleted=0 and domains.Domain_Id=%s',(domainID,))
+        # FIXED VULN-06 + VULN-02: ownership check + safe path construction
+        cursor.execute(
+            'SELECT servUser, Domain_Name FROM `domains` '
+            'INNER JOIN users ON domains.User_id = users.User_id '
+            'WHERE domains.Is_Deleted=0 AND domains.Domain_Id=%s AND users.Admin_id=%s',
+            (domainID, adminID)
+        )
         domainData = cursor.fetchone()
+        if domainData is None:
+            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
         userName = domainData[0]
         Domain = domainData[1]
-        fname = "/home/"+userName+"/logs/"+Domain+"-access.log"
-        print(fname)
-        data = readLines(fname,100)
-        Result["data"]=data;
+        try:
+            safe_domain = sanitize_log_filename(Domain)
+            safe_user = sanitize_shell_arg(userName, 'username')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+        base_dir = f'/home/{safe_user}/logs'
+        try:
+            fname = safe_log_path(base_dir, safe_domain, '-access.log')
+        except ValueError:
+            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+        raw = readLines(fname, 100)
+        Result['data'] = sanitize_log_content(raw)
         response = app.response_class(
             response=json.dumps(Result),
-                status=200,
-                mimetype='application/json'
+            status=200,
+            mimetype='application/json'
         )
         return response
     else:
@@ -983,19 +1020,30 @@ def admin_cron_jobs():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
             userID = request.form['userID']
-            CommandFinal= ""
-            unixCommand =""
             CronTime = request.form['CronTime']
             Command = request.form['Command']
             logFile = request.form['logFile']
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted =0 and User_id=%s',(userID,))
+            # FIXED VULN-01: sanitize cron command — block shell metacharacters
+            try:
+                Command = sanitize_cron_command(Command)
+            except ValueError as e:
+                msg = {'error': 'danger', 'message': str(e)}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+            # FIXED VULN-10: sanitize logFile — prevent path traversal
+            try:
+                logFile = sanitize_shell_arg(logFile, 'logfile')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid log filename. Use only letters, digits, dots, underscores, hyphens.'}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
             getUsername = cursor.fetchone()[0]
-            print(getUsername)
-            logFileLink = "/home/" + getUsername + "/crobjobs/logs/" + logFile
-            # CommandFinal = unixCommand+" "+ Command+ " >> "+logFileLink
-            CommandFinal = Command + " >> " + logFileLink
-            # addCronJob(getUsername, CommandFinal, logFileLink)
-            #query = "UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = " + userID
+            base_logs = f'/home/{getUsername}/crobjobs/logs'
+            try:
+                logFileLink = safe_log_path(base_logs, logFile)
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid log file path.'}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+            CommandFinal = Command + ' >> ' + logFileLink
             cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`User_id` = %s", (userID,))
             my_cron = CronTab(user=getUsername)
             my_cron.remove_all()
@@ -1035,7 +1083,8 @@ def admin_cron_jobs():
 @routes.route('/admin/CronJobs/deleteJob', methods =['GET', 'POST'])
 def admin_deleteJob():
     mysqlconnection.reconnect()
-    if check_user_Login():
+    # FIXED VULN-05: was check_user_Login() — any user could delete admin cron jobs
+    if check_admin_Login():
         cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('JobID'):
             JobID=request.args.get('JobID')
