@@ -79,6 +79,9 @@ def admin_profile():
 
         if request.method == 'POST' and 'Name' in request.form:
             Name = request.form['Name']
+            # FIX R6-01: cap Name length to prevent DoS / DB truncation
+            if not Name or len(Name) > 128:
+                return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages, msg={'error': 'danger', 'message': 'Name must be 1-128 characters.'})
             cursor.execute('UPDATE `administrator` SET `Admin_Name` = %s WHERE Admin_id = %s;', (Name, session['id']))
             mysqlconnection.commit()
             if cursor.rowcount > 0:
@@ -120,6 +123,14 @@ def admin_addUser():
             User_email = request.form['Email']
             User_Password = request.form['pass1']
             Confirm_Password = request.form['pass2']
+            # FIX R6-02: validate email format + cap name length before INSERT
+            from functions import validateEmail
+            if not validateEmail(User_email):
+                return render_template('adminFiles/users/addUser.html', results=results,
+                                       msg={'error': 'danger', 'message': 'Invalid email address.'})
+            if not User_Name or len(User_Name) > 128:
+                return render_template('adminFiles/users/addUser.html', results=results,
+                                       msg={'error': 'danger', 'message': 'Name must be 1-128 characters.'})
             if User_Password == Confirm_Password:
                 # FIXED: bcrypt instead of MD5 (VULN-addUser)
                 securePassword = hash_password(User_Password)
@@ -189,6 +200,14 @@ def admin_updateUser():
             Name = request.form['Name']
             Email = request.form['Email']
             password = request.form['password']
+            # FIX R6-03: validate email + cap name length on update
+            from functions import validateEmail
+            if not validateEmail(Email):
+                flash('Invalid email address.')
+                return redirect(request.referrer)
+            if not Name or len(Name) > 128:
+                flash('Name must be 1-128 characters.')
+                return redirect(request.referrer)
             # FIXED: bcrypt instead of MD5 (VULN-updateUser)
             securePassword = hash_password(password)
             cursor = mysqlconnection.cursor()
@@ -766,8 +785,13 @@ def admin_deleteEmail():
         if request.method == 'GET' and request.args.get('mailID'):
             mailID=request.args.get('mailID')
             cursor = mysqlconnection.cursor()
-            #query="UPDATE `mail_accounts` SET `Is_Active` = '0' WHERE `mail_accounts`.`Mail_Id` = "+mailID
-            cursor.execute("UPDATE `mail_accounts` SET `Is_Active` = '0' WHERE `mail_accounts`.`Mail_Id` =%s",(mailID,))
+            # FIX R6-04: add Admin_id ownership check to prevent cross-admin mail account deletion
+            cursor.execute(
+                "UPDATE `mail_accounts` SET `Is_Active` = '0' "
+                "WHERE `mail_accounts`.`Mail_Id` =%s "
+                "AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (mailID, str(session['id']))
+            )
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Email Account Deleted.')

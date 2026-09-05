@@ -330,7 +330,7 @@ def user_updateDBPass():
                 msg = {"error": "danger", "message": "Password and confirm password does not match."}
                 return render_template('userFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
         else:
-            return redirect(url_for("routes.admin_viewDatabases"))
+            return redirect(url_for("routes.user_viewDatabases"))
     else:
         return redirect(url_for('routes.login'))
 
@@ -354,6 +354,13 @@ def user_addAccounts():
                 return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
             ftpUsername = request.form['ftpUsername']
             ftpPassword = request.form['ftpPassword']
+            # FIX R6-05: validate ftpUsername — it becomes a Linux OS username
+            # Unvalidated username could inject special chars into useradd
+            try:
+                ftpUsername = sanitize_shell_arg(ftpUsername, 'username')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid FTP username. Use only lowercase letters, digits, hyphens, underscores.'}
+                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
             encodedPass = Base64Encode(ftpPassword)
             Directory = "/home/username/public_html"
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
@@ -420,7 +427,12 @@ def user_updateAccountPass():
                 cursor = mysqlconnection.cursor()
                 cursor.execute(
                     'SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=%s and ftp_accounts.User_id = %s',(AccID,userID))
-                ftpUsername = cursor.fetchone()[0]
+                row = cursor.fetchone()
+                # FIX R6-06: null-pointer crash if AccID doesn't belong to this user
+                if row is None:
+                    msg = {'error': 'danger', 'message': 'FTP Account not found or access denied.'}
+                    return render_template('userFiles/ftpAccounts/updateAccountPass.html', account=AccID, msg=msg)
+                ftpUsername = row[0]
                 #query = "UPDATE `ftp_accounts` SET `FTP_Password` = '"+EncodedPassword+"' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id = "+userID
                 #print(query)
                 cursor.execute("UPDATE `ftp_accounts` SET `FTP_Password` = %s WHERE `ftp_accounts`.`Account_Id` = %s and ftp_accounts.User_id = %s",(EncodedPassword,AccID,userID))
@@ -449,7 +461,12 @@ def user_deleteAccount():
             userID = str(session["id"])
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=%s and ftp_accounts.User_id=%s',(AccID,userID))
-            ftpUsername = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            # FIX R6-07: null-pointer crash + silent failure if account doesn't belong to user
+            if row is None:
+                flash('FTP Account not found or access denied.')
+                return redirect(url_for('routes.user_viewAccounts'))
+            ftpUsername = row[0]
             #query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID+" and ftp_accounts.User_id="+userID
             cursor.execute("UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = %s and ftp_accounts.User_id=%s",(AccID,userID))
             mysqlconnection.commit()

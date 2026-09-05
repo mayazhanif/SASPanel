@@ -206,8 +206,8 @@ chgrp postfix /etc/postfix/mysql-virtual_*.cf
 groupadd -g 5000 vmail || true
 useradd -g vmail -u 5000 vmail -d /home/vmail -m || true
 
-postconf -e 'mydomain = saspanel.org'
-postconf -e 'myhostname = mail.saspanel.org'
+postconf -e "mydomain = ${DOMAIN}"
+postconf -e "myhostname = mail.${DOMAIN}"
 postconf -e 'mydestination = localhost'
 postconf -e 'mynetworks = 127.0.0.0/8'
 postconf -e 'inet_interfaces = all'
@@ -282,7 +282,7 @@ userdb {
 protocol lda {
   auth_socket_path = /var/run/dovecot/auth-master
   log_path = /home/vmail/dovecot-deliver.log
-  postmaster_address = postmaster@saspanel.org
+  postmaster_address = postmaster@${DOMAIN}
 }
 protocol pop3 {
   pop3_uidl_format = %08Xu%08Xv
