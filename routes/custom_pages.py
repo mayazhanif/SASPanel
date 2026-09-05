@@ -64,6 +64,18 @@ def installer():
             return render_template('installer/installer.html',
                                    msg={'error': 'danger', 'message': 'Password and Confirm Password Mismatch.'})
 
+        # FIX NEW-04: validate domain and email before passing to install_packages()
+        # These values are passed into shell scripts — must be whitelisted
+        import re
+        _DOMAIN_RE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9.\-]{1,251}[a-zA-Z0-9]$')
+        _EMAIL_RE  = re.compile(r'^[A-Za-z0-9._%+\-]{1,64}$')  # local-part only (before @)
+        if not _DOMAIN_RE.match(domain):
+            return render_template('installer/installer.html',
+                                   msg={'error': 'danger', 'message': 'Invalid domain name.'})
+        if not _EMAIL_RE.match(emailaddress):
+            return render_template('installer/installer.html',
+                                   msg={'error': 'danger', 'message': 'Invalid email address prefix.'})
+
         full_email = emailaddress + '@' + domain
         install_packages(DBpass1, mailserverpassword, domain, full_email, emailpassword)
         return render_template('installer/installer.html',

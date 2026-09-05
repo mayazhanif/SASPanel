@@ -282,8 +282,8 @@ def admin_updatePackage():
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
             cursor = mysqlconnection.cursor()
-            #query = "UPDATE `packages` SET  `Package_Name` = '"+Package_Name+"', `Limit_FTP` = '"+Limit_FTP+"', `Limit_Mails` = '"+Limit_Mails+"', `Limit_Domains` = '"+Limit_Domains+"', `CGI_ACCESS` = '"+CGI_ACCESS+"', `Limit_DB` = '"+Limit_DB+"', `Sub_Domains` = '"+Sub_Domains+"', `Storage_Limit` = '"+Storage_Limit+"' WHERE `packages`.`Package_Id` = "+packageID+""
-            cursor.execute("UPDATE `packages` SET  `Package_Name` = %s, `Limit_FTP` = %s, `Limit_Mails` = %s, `Limit_Domains` = %s, `CGI_ACCESS` = %s, `Limit_DB` = %s, `Sub_Domains` = %s, `Storage_Limit` = %s WHERE `packages`.`Package_Id` = %s",(Package_Name,Limit_FTP,Limit_Mails,Limit_Domains,CGI_ACCESS,Limit_DB,Sub_Domains,Storage_Limit,packageID))
+            # FIX IDOR-P2: include Admin_id in UPDATE to prevent cross-admin package modification
+            cursor.execute("UPDATE `packages` SET  `Package_Name` = %s, `Limit_FTP` = %s, `Limit_Mails` = %s, `Limit_Domains` = %s, `CGI_ACCESS` = %s, `Limit_DB` = %s, `Sub_Domains` = %s, `Storage_Limit` = %s WHERE `packages`.`Package_Id` = %s AND `Admin_id` = %s",(Package_Name,Limit_FTP,Limit_Mails,Limit_Domains,CGI_ACCESS,Limit_DB,Sub_Domains,Storage_Limit,packageID,Admin_id))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Hosting Package Updated.')
@@ -304,8 +304,8 @@ def admin_deletePackage():
         if request.method == 'GET' and request.args.get('packageID'):
             packageID=request.args.get('packageID')
             cursor = mysqlconnection.cursor()
-            #query="UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` ="+packageID
-            cursor.execute("UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` =%s",(packageID,))
+            # FIX IDOR-P1: only delete packages belonging to this admin
+            cursor.execute("UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` =%s AND `Admin_id`=%s",(packageID, str(session['id'])))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Hosting Package Deleted.')
@@ -497,11 +497,13 @@ def admin_deleteDatabase():
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID=%s',(DbID,))
-            #print(cursor.fetchone()[0])
-            getDBName = cursor.fetchone()[0]
-            #print(getDBName)
-            #query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID
-            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s",(DbID,))
+            getDBName = cursor.fetchone()
+            if getDBName is None:
+                flash('Database not found or access denied.')
+                return redirect(url_for("routes.admin_viewDatabases"))
+            getDBName = getDBName[0]
+            # FIX IDOR-D1: verify the DB belongs to a user owned by this admin
+            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",(DbID, str(session['id'])))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 drop_database(cursor,getDBName)
@@ -526,8 +528,8 @@ def admin_updateDBPass():
         msg=''
         if request.method == 'GET' and request.args.get('DbID'):
             DbUser_ID=request.args.get('DbID')
-            #query="SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
-            cursor.execute("SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s",(DbUser_ID))
+            # FIX: single-element tuple bug — (DbUser_ID) is not a tuple, must be (DbUser_ID,)
+            cursor.execute("SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s",(DbUser_ID,))
             database = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=database[0])
@@ -630,8 +632,13 @@ def admin_updateAccountPass():
                 return redirect(url_for("routes.admin_viewAccounts"))
         elif request.method == 'POST' and 'AccID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             AccID = request.form['AccID']
-            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=%s', (AccID,))
-            ftpUsername = cursor.fetchone()[0]
+            # FIX IDOR-F1: verify FTP account belongs to a user under this admin
+            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id WHERE Is_Active=1 AND `ftp_accounts`.`Account_Id`=%s AND users.Admin_id=%s', (AccID, str(session['id'])))
+            row = cursor.fetchone()
+            if row is None:
+                flash('FTP Account not found or access denied.')
+                return redirect(url_for('routes.admin_viewAccounts'))
+            ftpUsername = row[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
@@ -704,11 +711,20 @@ def admin_addEmail():
                 msg={"error":"danger", "message": "Domain not Selected."}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
+            # FIX NEW-03: validate suffix to prevent injection into mail address and downstream XSS
+            try:
+                suffix = sanitize_shell_arg(suffix, 'suffix')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid email prefix. Use only letters, digits, and hyphens.'}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
             #query= "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id="+domainID+""
             cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s",(domainID,))
             rDomain = cursor.fetchone()
+            if rDomain is None:
+                msg = {'error': 'danger', 'message': 'Domain not found.'}
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             mail_adress= suffix+"@"+rDomain[1]
             userID= str(rDomain[2])
             #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+mail_adress+"', '"+encodedPass+"', '1')"

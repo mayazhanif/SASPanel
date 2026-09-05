@@ -59,8 +59,9 @@ def user_profile():
 
         if request.method == 'POST' and 'Name' in request.form:
             Name = request.form['Name']
-            #cursor.execute('SELECT * FROM users WHERE User_email = %s AND User_Password = %s', (Email, md5password))
-            #print("UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id'])")
+            # FIX: cap length to prevent oversized input from crashing DB or causing DoS
+            if not Name or len(Name) > 128:
+                return render_template('userFiles/profile.html', profileData=profileData, msg={"error": "danger", "message": "Name must be between 1 and 128 characters."})
             cursor.execute('UPDATE `users` SET `User_Name` = %s WHERE User_id = %s;', (Name,session['id']))
             mysqlconnection.commit()
             if cursor.rowcount>0:
@@ -500,11 +501,21 @@ def user_addEmail():
                 msg={"error":"danger", "message": "Domain not Selected."}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
+            # FIX NEW-01: validate suffix before building email address — prevents stored XSS and
+            # injection into the mail DB via specially crafted local-part (e.g. suffix="admin'--")
+            try:
+                suffix = sanitize_shell_arg(suffix, 'suffix')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid email prefix. Use only letters, digits, and hyphens.'}
+                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
             #query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
             cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s",(domainID,userID))
             rDomain = cursor.fetchone()
+            if rDomain is None:
+                msg = {'error': 'danger', 'message': 'Domain not found or access denied.'}
+                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
             mail_adress = suffix + "@" + rDomain[1]
             userID = str(rDomain[2])
             #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
@@ -639,7 +650,9 @@ def user_addSubDomain():
             if(domainID==""):
                 msg={"error":"danger", "message": "Domain not Selected."}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
-            # FIXED VULN-11: validate suffix to prevent XSS + vhost injection
+            # FIX NEW-02: read suffix from form FIRST, then validate
+            # (was NameError: suffix referenced before assignment)
+            suffix = request.form['suffix']
             try:
                 suffix = sanitize_shell_arg(suffix, 'suffix')
             except ValueError:
