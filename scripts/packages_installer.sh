@@ -225,41 +225,50 @@ ls -l /etc/ssl/certs/ssl-cert-snakeoil.pem /etc/ssl/private/ssl-cert-snakeoil.ke
 # ---------------------------------------------------------------------------
 # Postfix config (using env-validated DOMAIN)
 # ---------------------------------------------------------------------------
-cat > /etc/postfix/mysql-virtual_domains.cf <<EOF
-user = mail_admin
-password = ${MAIL_PASS}
-dbname = mail
-query = SELECT domain AS virtual_domain FROM domains WHERE domain='%s'
-hosts = 127.0.0.1
-EOF
-chmod o= /etc/postfix/mysql-virtual_domains.cf
+# FIX R19-04: write Postfix connector configs via Python to avoid ${MAIL_PASS} heredoc injection
+# if MAIL_PASS contains \n or special chars it corrupts the .cf files
+python3 - <<PYEOF
+import os
+mail_pass = open('${MAIL_PASS_FILE}').read().strip()
 
-cat > /etc/postfix/mysql-virtual_forwardings.cf <<EOF
-user = mail_admin
-password = ${MAIL_PASS}
-dbname = mail
-query = SELECT destination FROM forwardings WHERE source='%s'
-hosts = 127.0.0.1
-EOF
-chmod o= /etc/postfix/mysql-virtual_forwardings.cf
+configs = {
+    '/etc/postfix/mysql-virtual_domains.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT domain AS virtual_domain FROM domains WHERE domain='%s'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+    '/etc/postfix/mysql-virtual_forwardings.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT destination FROM forwardings WHERE source='%s'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+    '/etc/postfix/mysql-virtual_mailboxes.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT CONCAT(SUBSTRING_INDEX(email,'@',-1),'/',SUBSTRING_INDEX(email,'@',1),'/') FROM users WHERE email='%u'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+    '/etc/postfix/mysql-virtual_email2email.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT email FROM users WHERE email='%u'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+}
 
-cat > /etc/postfix/mysql-virtual_mailboxes.cf <<EOF
-user = mail_admin
-password = ${MAIL_PASS}
-dbname = mail
-query = SELECT CONCAT(SUBSTRING_INDEX(email,'@',-1),'/',SUBSTRING_INDEX(email,'@',1),'/') FROM users WHERE email='%u'
-hosts = 127.0.0.1
-EOF
-chmod o= /etc/postfix/mysql-virtual_mailboxes.cf
-
-cat > /etc/postfix/mysql-virtual_email2email.cf <<EOF
-user = mail_admin
-password = ${MAIL_PASS}
-dbname = mail
-query = SELECT email FROM users WHERE email='%u'
-hosts = 127.0.0.1
-EOF
-chmod o= /etc/postfix/mysql-virtual_email2email.cf
+for path, template in configs.items():
+    content = template.format(pw=mail_pass)
+    with open(path, 'w') as f:
+        f.write(content)
+    os.chmod(path, 0o640)
+    print(f'Written: {path}')
+PYEOF
 chgrp postfix /etc/postfix/mysql-virtual_*.cf
 
 groupadd -g 5000 vmail || true

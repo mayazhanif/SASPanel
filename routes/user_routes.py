@@ -80,6 +80,11 @@ def user_profile():
         elif request.method == 'POST' and 'pass1' in request.form and 'pass2' in request.form:
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
+            # FIX R18-03: enforce password length before bcrypt (prevents DoS via huge input;
+            # bcrypt silently truncates at 72 bytes — enforce a sensible cap)
+            if len(pass1) < 8 or len(pass1) > 128:
+                return render_template('userFiles/profile.html', profileData=profileData,
+                                       passmsg={"error": "danger", "message": "Password must be between 8 and 128 characters."})
             if pass1 == pass2:
                 cursor = mysqlconnection.cursor()
                 # FIXED: bcrypt instead of MD5
@@ -236,8 +241,8 @@ def user_addDB():
             cursor.execute("SELECT Limit_DB FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
-            # FIXED: parameterized query (was raw string concatenation)
-            cursor.execute('SELECT COUNT(*) FROM `domains` WHERE User_id=%s', (userID,))
+            # FIX R18-02: was querying `domains` table (wrong!) — should be `msqldatabases`
+            cursor.execute('SELECT COUNT(*) FROM `msqldatabases` WHERE User_id=%s AND Is_Active=1', (userID,))
             in_use = cursor.fetchone()[0]
             if in_use >= limit:
                 msg = {"error": "danger", "message": "Mysql Databases Limit Reached."}
@@ -641,7 +646,8 @@ def user_updateEmail():
             cursor.execute("SELECT * FROM `mail_accounts` where Mail_Id=%s and User_id=%s",(mailID,userID))
             mail = cursor.fetchone()
             if cursor.rowcount>0:
-                return render_template('userFiles/Mails/updateEmail.html', mail=mail[0])
+                # FIX R18-01: mail[0] is the full row tuple — pass mail[0][0] (the Mail_Id) to template
+                return render_template('userFiles/Mails/updateEmail.html', mail=mail[0][0])
             else:
                 return redirect(url_for("routes.user_viewEmail"))
         elif request.method == 'POST' and 'mailID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
@@ -813,7 +819,11 @@ def user_error_logs_ajax():
         Result = {'data': ''}
         cursor = mysqlconnection.cursor()
         cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
-        userName = cursor.fetchone()[0]
+        # FIX R19-05: null guard — fetchone()[0] crashes if user deleted mid-session
+        _serv = cursor.fetchone()
+        if _serv is None:
+            return app.response_class(response=json.dumps({'data': 'User account error.'}), status=403, mimetype='application/json')
+        userName = _serv[0]
         # FIXED VULN-02: validate domainName to prevent path traversal / LFI
         try:
             safe_domain = sanitize_log_filename(domainName)
@@ -865,7 +875,11 @@ def user_access_logs_ajax():
         Result = {'data': ''}
         cursor = mysqlconnection.cursor()
         cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
-        userName = cursor.fetchone()[0]
+        # FIX R19-05: null guard — fetchone()[0] crashes if user deleted mid-session
+        _serv = cursor.fetchone()
+        if _serv is None:
+            return app.response_class(response=json.dumps({'data': 'User account error.'}), status=403, mimetype='application/json')
+        userName = _serv[0]
         # FIXED VULN-02: validate domainName + ownership check
         try:
             safe_domain = sanitize_log_filename(domainName)

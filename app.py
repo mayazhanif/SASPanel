@@ -124,10 +124,11 @@ def add_security_headers(response):
     response.headers['X-XSS-Protection']       = '1; mode=block'
     response.headers['Referrer-Policy']        = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy']     = 'geolocation=(), microphone=(), camera=()'
-    # Content Security Policy — tighten further for your specific JS/CSS sources
+    # Content Security Policy — 'unsafe-inline' removed from script-src (R18-06)
+    # If inline <script> blocks are needed, migrate them to external files or use nonces.
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
         "img-src 'self' data:; "

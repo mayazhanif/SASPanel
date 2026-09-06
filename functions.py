@@ -430,7 +430,10 @@ def validateEmail(email: str) -> bool:
 
 def mailSender(title, receipt, body, type='PLAIN'):
     mail = Mail(app)
-    msg  = Message(title, sender='support@saspanel.com', recipients=[receipt])
+    # FIX R18-04: use the configured MAIL_USERNAME as sender; not a hardcoded domain
+    # Fallback to a generic noreply if not configured so email is not rejected as forgery.
+    sender = app.config.get('MAIL_USERNAME') or 'noreply@saspanel.local'
+    msg  = Message(title, sender=sender, recipients=[receipt])
     if type == 'PLAIN':
         msg.body = body
     else:
@@ -708,6 +711,13 @@ def listToString(s):
 # ---------------------------------------------------------------------------
 
 def install_packages(root_password, mail_password, domain, emailaddress, emailpassword):
+    # FIX R18-05: cap all passwords passed to chpasswd / bcrypt at 128 chars.
+    # chpasswd line format is "user:pass\n"; with long username, a 512-byte line limit applies.
+    # bcrypt also silently truncates input at 72 bytes — enforcing a cap avoids silent failures.
+    _MAX_PASS = 128
+    root_password  = root_password[:_MAX_PASS]
+    mail_password  = mail_password[:_MAX_PASS]
+    emailpassword  = emailpassword[:_MAX_PASS]
     import subprocess as sp
     sp.run(['apt-get', '-y', 'update'])
     sp.run(['apt-get', '-y', 'upgrade'])

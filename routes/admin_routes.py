@@ -98,6 +98,11 @@ def admin_profile():
         elif request.method == 'POST' and 'pass1' in request.form and 'pass2' in request.form:
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
+            # FIX R18-03: enforce password length before bcrypt (prevents DoS via huge input
+            # and ensures a minimum password strength; bcrypt silently truncates at 72 bytes)
+            if len(pass1) < 8 or len(pass1) > 128:
+                return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages,
+                                       passmsg={'error': 'danger', 'message': 'Password must be between 8 and 128 characters.'})
             if pass1 == pass2:
                 cursor = mysqlconnection.cursor()
                 # FIXED: use bcrypt instead of MD5
@@ -139,6 +144,10 @@ def admin_addUser():
                 return render_template('adminFiles/users/addUser.html', results=results,
                                        msg={'error': 'danger', 'message': 'Name must be 1-128 characters.'})
             if User_Password == Confirm_Password:
+                # FIX R19-01: enforce password length before bcrypt to prevent DoS
+                if len(User_Password) < 8 or len(User_Password) > 128:
+                    return render_template('adminFiles/users/addUser.html', results=results,
+                                           msg={'error': 'danger', 'message': 'Password must be between 8 and 128 characters.'})
                 # FIXED: bcrypt instead of MD5 (VULN-addUser)
                 securePassword = hash_password(User_Password)
                 packageID = request.form['packageID']
@@ -219,6 +228,10 @@ def admin_updateUser():
                 return redirect(request.referrer)
             if not Name or len(Name) > 128:
                 flash('Name must be 1-128 characters.')
+                return redirect(request.referrer)
+            # FIX R19-02: enforce password length before bcrypt to prevent DoS
+            if len(password) < 8 or len(password) > 128:
+                flash('Password must be between 8 and 128 characters.')
                 return redirect(request.referrer)
             # FIXED: bcrypt instead of MD5 (VULN-updateUser)
             securePassword = hash_password(password)
@@ -575,7 +588,12 @@ def admin_deleteDatabase():
         if request.method == 'GET' and request.args.get('DbID'):
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID=%s',(DbID,))
+            # FIX R19-06: scope SELECT to this admin's DBs to prevent info-leak via timing
+            cursor.execute(
+                'SELECT DbName FROM `msqldatabases` '
+                'WHERE DB_ID=%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+                (DbID, str(session['id']))
+            )
             getDBName = cursor.fetchone()
             if getDBName is None:
                 flash('Database not found or access denied.')

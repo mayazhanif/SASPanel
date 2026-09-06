@@ -208,6 +208,10 @@ def reset_password():
         if pass1 != pass2:
             return render_template('authentication/forgot-password.html', reset=False,
                                    msg={'error': 'danger', 'message': 'Passwords do not match.'})
+        # FIX R19-03: enforce password length before bcrypt to prevent DoS
+        if len(pass1) < 8 or len(pass1) > 128:
+            return render_template('authentication/forgot-password.html', reset=False,
+                                   msg={'error': 'danger', 'message': 'Password must be between 8 and 128 characters.'})
         from functions import hash_password
         new_hash = hash_password(pass1)
         cursor   = mysqlconnection.cursor()

@@ -244,23 +244,30 @@ section "Installing MySQL"
 
 apt-get install -y mysql-server
 
-# Secure MySQL — set root password, remove anonymous users, disable remote root
-mysql -u root <<MYSQLEOF
--- Root password
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${DB_ROOT_PASS}';
--- Remove anonymous users
-DELETE FROM mysql.user WHERE User='';
--- Disable remote root login
-DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
--- Remove test database
-DROP DATABASE IF EXISTS test;
-DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
--- Create saspanel database and admin user
-CREATE DATABASE IF NOT EXISTS saspanel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'saspanel_user'@'localhost' IDENTIFIED BY '${DB_ROOT_PASS}';
-GRANT ALL PRIVILEGES ON saspanel.* TO 'saspanel_user'@'localhost';
-FLUSH PRIVILEGES;
-MYSQLEOF
+# FIX R17-04: ${DB_ROOT_PASS} interpolated directly into SQL heredoc — injection risk
+# if password contains quotes, dashes or percent. Use Python helper instead.
+DB_ROOT_PASS_FILE=$(mktemp); chmod 600 "${DB_ROOT_PASS_FILE}"
+trap 'rm -f "${DB_ROOT_PASS_FILE}"' EXIT
+printf '%s' "${DB_ROOT_PASS}" > "${DB_ROOT_PASS_FILE}"
+
+python3 - <<PYEOF
+import subprocess, os, tempfile
+def sq(s): return s.replace("'", "''")
+rp = sq(open('${DB_ROOT_PASS_FILE}').read().strip())
+with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+    f.write("ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{rp}';\n".format(rp=rp))
+    f.write("DELETE FROM mysql.user WHERE User='';\n")
+    f.write("DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');\n")
+    f.write("DROP DATABASE IF EXISTS test;\n")
+    f.write("DELETE FROM mysql.db WHERE Db='test' OR Db='test\\\\_%';\n")
+    f.write("CREATE DATABASE IF NOT EXISTS saspanel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
+    f.write("CREATE USER IF NOT EXISTS 'saspanel_user'@'localhost' IDENTIFIED BY '{rp}';\n".format(rp=rp))
+    f.write("GRANT ALL PRIVILEGES ON saspanel.* TO 'saspanel_user'@'localhost';\n")
+    f.write("FLUSH PRIVILEGES;\n")
+    fname = f.name
+subprocess.run(['mysql', '-u', 'root'], stdin=open(fname))
+os.unlink(fname)
+PYEOF
 
 # Import SASPanel schema
 if [[ -f "${SCRIPTS_DIR}/database.sql" ]]; then
@@ -335,24 +342,56 @@ apt-get install -y \
     dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd dovecot-mysql \
     ssl-cert
 
-# Mail database
-mysql -u root -p"${DB_ROOT_PASS}" <<MAILDBEOF
+# FIX R17-04b: mail DB passwords in heredoc — use MYSQL_PWD env var (no password in SQL body)
+MYSQL_PWD="${DB_ROOT_PASS}" mysql -u root <<MAILDBEOF
 CREATE DATABASE IF NOT EXISTS mail CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'mail_admin'@'localhost' IDENTIFIED BY '${DB_MAIL_PASS}';
+CREATE USER IF NOT EXISTS 'mail_admin'@'localhost' IDENTIFIED BY '';
 GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'localhost';
 FLUSH PRIVILEGES;
 MAILDBEOF
+
+DB_MAIL_PASS_FILE=$(mktemp); chmod 600 "${DB_MAIL_PASS_FILE}"
+trap 'rm -f "${DB_MAIL_PASS_FILE}"' EXIT
+printf '%s' "${DB_MAIL_PASS}" > "${DB_MAIL_PASS_FILE}"
+python3 - <<PYEOF
+import subprocess, os, tempfile
+def sq(s): return s.replace("'", "''")
+mp = sq(open('${DB_MAIL_PASS_FILE}').read().strip())
+with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+    f.write("ALTER USER 'mail_admin'@'localhost' IDENTIFIED BY '{mp}';\nFLUSH PRIVILEGES;\n".format(mp=mp))
+    fname = f.name
+env = os.environ.copy()
+env['MYSQL_PWD'] = os.environ.get('DB_ROOT_PASS', open('${DB_ROOT_PASS_FILE}').read().strip())
+subprocess.run(['mysql', '-u', 'root'], stdin=open(fname), env=env)
+os.unlink(fname)
+PYEOF
 
 if [[ -f "${SCRIPTS_DIR}/mail.sql" ]]; then
     mysql -u root -p"${DB_ROOT_PASS}" mail < "${SCRIPTS_DIR}/mail.sql"
     success "Mail schema imported."
 fi
 
-# Seed first domain and admin mail account
-mysql -u root -p"${DB_ROOT_PASS}" mail <<MAILSEEDEOF
-INSERT IGNORE INTO domains (domain) VALUES ('${DOMAIN}');
-INSERT IGNORE INTO users (email, password) VALUES ('${MAIL_ADMIN_EMAIL}', '${MAIL_ADMIN_PASS}');
-MAILSEEDEOF
+# FIX R17-04c: MAIL_ADMIN_EMAIL and MAIL_ADMIN_PASS in SQL heredoc — use Python helper
+MAIL_ADMIN_PASS_FILE=$(mktemp); MAIL_ADMIN_EMAIL_FILE=$(mktemp)
+chmod 600 "${MAIL_ADMIN_PASS_FILE}" "${MAIL_ADMIN_EMAIL_FILE}"
+trap 'rm -f "${MAIL_ADMIN_PASS_FILE}" "${MAIL_ADMIN_EMAIL_FILE}"' EXIT
+printf '%s' "${MAIL_ADMIN_EMAIL}" > "${MAIL_ADMIN_EMAIL_FILE}"
+printf '%s' "${MAIL_ADMIN_PASS}"  > "${MAIL_ADMIN_PASS_FILE}"
+python3 - <<PYEOF
+import subprocess, os, tempfile
+def sq(s): return s.replace("'", "''")
+email = sq(open('${MAIL_ADMIN_EMAIL_FILE}').read().strip())
+passw = sq(open('${MAIL_ADMIN_PASS_FILE}').read().strip())
+dom   = sq('${DOMAIN}')
+with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+    f.write("INSERT IGNORE INTO domains (domain) VALUES ('{d}');\n".format(d=dom))
+    f.write("INSERT IGNORE INTO users (email, password) VALUES ('{e}', '{p}');\n".format(e=email, p=passw))
+    fname = f.name
+env = os.environ.copy()
+env['MYSQL_PWD'] = os.environ.get('DB_ROOT_PASS', '')
+subprocess.run(['mysql', '-u', 'root', 'mail'], stdin=open(fname), env=env)
+os.unlink(fname)
+PYEOF
 
 # Virtual mail user
 groupadd -g 5000 vmail 2>/dev/null || true
@@ -360,40 +399,50 @@ useradd -g vmail -u 5000 vmail -d /home/vmail -m 2>/dev/null || true
 make-ssl-cert generate-default-snakeoil --force-overwrite
 usermod --append --groups ssl-cert postfix 2>/dev/null || true
 
-# Postfix MySQL connector files (passwords from variables, not shell args)
-chmod o= /etc/postfix/
-cat > /etc/postfix/mysql-virtual_domains.cf <<EOF
-user = mail_admin
-password = ${DB_MAIL_PASS}
-dbname = mail
-query = SELECT domain AS virtual_domain FROM domains WHERE domain='%s'
-hosts = 127.0.0.1
-EOF
+# FIX R20-01: write Postfix connector configs via Python — avoids ${DB_MAIL_PASS} heredoc
+# interpolation breaking if password contains \n, #, or other special chars
+python3 - <<PYEOF
+import os
+mail_pass = open('${DB_MAIL_PASS_FILE}').read().strip()
 
-cat > /etc/postfix/mysql-virtual_forwardings.cf <<EOF
-user = mail_admin
-password = ${DB_MAIL_PASS}
-dbname = mail
-query = SELECT destination FROM forwardings WHERE source='%s'
-hosts = 127.0.0.1
-EOF
+configs = {
+    '/etc/postfix/mysql-virtual_domains.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT domain AS virtual_domain FROM domains WHERE domain='%s'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+    '/etc/postfix/mysql-virtual_forwardings.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT destination FROM forwardings WHERE source='%s'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+    '/etc/postfix/mysql-virtual_mailboxes.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT CONCAT(SUBSTRING_INDEX(email,'@',-1),'/',SUBSTRING_INDEX(email,'@',1),'/') FROM users WHERE email='%s'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+    '/etc/postfix/mysql-virtual_email2email.cf': (
+        'user = mail_admin\n'
+        'password = {pw}\n'
+        'dbname = mail\n'
+        "query = SELECT email FROM users WHERE email='%s'\n"
+        'hosts = 127.0.0.1\n'
+    ),
+}
 
-cat > /etc/postfix/mysql-virtual_mailboxes.cf <<EOF
-user = mail_admin
-password = ${DB_MAIL_PASS}
-dbname = mail
-query = SELECT CONCAT(SUBSTRING_INDEX(email,'@',-1),'/',SUBSTRING_INDEX(email,'@',1),'/') FROM users WHERE email='%s'
-hosts = 127.0.0.1
-EOF
-
-cat > /etc/postfix/mysql-virtual_email2email.cf <<EOF
-user = mail_admin
-password = ${DB_MAIL_PASS}
-dbname = mail
-query = SELECT email FROM users WHERE email='%s'
-hosts = 127.0.0.1
-EOF
-
+for path, template in configs.items():
+    content = template.format(pw=mail_pass)
+    with open(path, 'w') as f:
+        f.write(content)
+    os.chmod(path, 0o640)
+    print(f'Written: {path}')
+PYEOF
 chmod o= /etc/postfix/mysql-virtual_*.cf
 chgrp postfix /etc/postfix/mysql-virtual_*.cf
 
@@ -474,13 +523,21 @@ DOVEEOF
 # Replace placeholder with real domain
 sed -i "s/PLACEHOLDER_DOMAIN/${DOMAIN}/" /etc/dovecot/dovecot.conf
 
-cat > /etc/dovecot/dovecot-sql.conf <<EOF
-driver = mysql
-connect = host=127.0.0.1 dbname=mail user=mail_admin password=${DB_MAIL_PASS}
-default_pass_scheme = PLAIN
-password_query = SELECT email as user, password FROM users WHERE email='%u';
-EOF
-chmod 600 /etc/dovecot/dovecot-sql.conf
+# FIX R20-04: write dovecot-sql.conf via Python — avoids ${DB_MAIL_PASS_CONF}
+# interpolation. If password contains '#', Dovecot treats the rest as a comment.
+python3 - <<PYEOF
+mail_pass = open('${DB_MAIL_PASS_FILE}').read().strip()
+content = (
+    'driver = mysql\n'
+    'connect = host=127.0.0.1 dbname=mail user=mail_admin password={pw}\n'
+    'default_pass_scheme = PLAIN\n'
+    "password_query = SELECT email as user, password FROM users WHERE email='%u';\n"
+).format(pw=mail_pass)
+with open('/etc/dovecot/dovecot-sql.conf', 'w') as f:
+    f.write(content)
+import os; os.chmod('/etc/dovecot/dovecot-sql.conf', 0o600)
+print('dovecot-sql.conf written safely.')
+PYEOF
 
 systemctl enable postfix dovecot
 systemctl restart postfix dovecot
@@ -523,18 +580,49 @@ if [[ ! -d roundcube ]]; then
 fi
 chown -R www-data:www-data /usr/share/roundcube
 
-mysql -u root -p"${DB_ROOT_PASS}" <<RCEOF
-CREATE DATABASE IF NOT EXISTS roundcubedb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'roundcube'@'localhost' IDENTIFIED BY '${ROUNDCUBE_PASS}';
-GRANT ALL PRIVILEGES ON roundcubedb.* TO 'roundcube'@'localhost';
-FLUSH PRIVILEGES;
-RCEOF
+# FIX R20-02: ROUNDCUBE_PASS in SQL heredoc breaks on single-quote. Use Python helper.
+RC_PASS_SETUP_FILE=$(mktemp); chmod 600 "${RC_PASS_SETUP_FILE}"
+trap 'rm -f "${RC_PASS_SETUP_FILE}"' EXIT
+printf '%s' "${ROUNDCUBE_PASS}" > "${RC_PASS_SETUP_FILE}"
+python3 - <<PYEOF
+import subprocess, os, tempfile
+def sq(s): return s.replace("'", "''")
+rc_pass = sq(open('${RC_PASS_SETUP_FILE}').read().strip())
+with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+    f.write("CREATE DATABASE IF NOT EXISTS roundcubedb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n")
+    f.write("CREATE USER IF NOT EXISTS 'roundcube'@'localhost' IDENTIFIED BY '{pw}';\n".format(pw=rc_pass))
+    f.write("GRANT ALL PRIVILEGES ON roundcubedb.* TO 'roundcube'@'localhost';\n")
+    f.write("FLUSH PRIVILEGES;\n")
+    fname = f.name
+env = os.environ.copy()
+env['MYSQL_PWD'] = open('${DB_ROOT_PASS_FILE}').read().strip()
+subprocess.run(['mysql', '-u', 'root'], stdin=open(fname), env=env)
+os.unlink(fname)
+print('Roundcube DB user created safely.')
+PYEOF
 
 mysql -u root -p"${DB_ROOT_PASS}" roundcubedb < /usr/share/roundcube/SQL/mysql.initial.sql 2>/dev/null || true
 
-cp /usr/share/roundcube/config/config.inc.php.sample /usr/share/roundcube/config/config.inc.php
-DESKEY=$(xxd -l 12 -c 12 -p < /dev/urandom)
-sed -i "s|^\(\$config\['db_dsnw'\] =\).*$|\1 'mysqli://roundcube:${ROUNDCUBE_PASS}@localhost/roundcubedb';|" /usr/share/roundcube/config/config.inc.php
+# FIX R17-05: ${ROUNDCUBE_PASS} interpolated into sed — breaks if password contains
+# sed metacharacters (|, /, &, #). Use Python re.sub for safe replacement.
+RC_PASS_FILE2=$(mktemp); chmod 600 "${RC_PASS_FILE2}"
+trap 'rm -f "${RC_PASS_FILE2}"' EXIT
+printf '%s' "${ROUNDCUBE_PASS}" > "${RC_PASS_FILE2}"
+python3 - <<PYEOF
+import re
+rc_pass = open('${RC_PASS_FILE2}').read().strip()
+conf_path = '/usr/share/roundcube/config/config.inc.php'
+with open(conf_path) as f:
+    content = f.read()
+content = re.sub(
+    r"^\s*\\\$config\['db_dsnw'\]\s*=.*$",
+    "$config['db_dsnw'] = 'mysqli://roundcube:" + rc_pass.replace('\\', '\\\\').replace("'", "\\'") + "@localhost/roundcubedb';",
+    content, flags=re.MULTILINE
+)
+with open(conf_path, 'w') as f:
+    f.write(content)
+print('Roundcube DSN written safely.')
+PYEOF
 sed -i "s|^\(\$config\['smtp_server'\] =\).*$|\1 'localhost';|"  /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\$config\['smtp_port'\] =\).*$|\1 25;|"             /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 '${DESKEY}';|"      /usr/share/roundcube/config/config.inc.php
@@ -614,20 +702,31 @@ if [[ -f "${SASPANEL_DIR}/requirements.txt" ]]; then
     success "Python dependencies installed."
 fi
 
-# Write config.ini from generated credentials
-cat > "${SASPANEL_DIR}/Database/config.ini" <<EOF
-[config]
-host = localhost
-user = root
-password = ${DB_ROOT_PASS}
-database = saspanel
+# FIX R20-03: write config.ini via Python configparser — avoids raw heredoc interpolation.
+# configparser treats '#', ';', '[' etc. specially. Python's write() escapes them correctly.
+python3 - <<PYEOF
+import configparser, os
+db_pass   = open('${DB_ROOT_PASS_FILE}').read().strip()
+mail_pass = open('${MAIL_ADMIN_PASS_FILE}').read().strip()
+mail_email = open('${MAIL_ADMIN_EMAIL_FILE}').read().strip()
 
-[mail]
-server = localhost
-email = ${MAIL_ADMIN_EMAIL}
-password = ${MAIL_ADMIN_PASS}
-EOF
-chmod 600 "${SASPANEL_DIR}/Database/config.ini"
+cfg = configparser.RawConfigParser()
+cfg.add_section('config')
+cfg.set('config', 'host',     'localhost')
+cfg.set('config', 'user',     'root')
+cfg.set('config', 'password', db_pass)
+cfg.set('config', 'database', 'saspanel')
+cfg.add_section('mail')
+cfg.set('mail', 'server',   'localhost')
+cfg.set('mail', 'email',    mail_email)
+cfg.set('mail', 'password', mail_pass)
+
+conf_path = '${SASPANEL_DIR}/Database/config.ini'
+with open(conf_path, 'w') as f:
+    cfg.write(f)
+os.chmod(conf_path, 0o600)
+print('config.ini written safely via Python configparser.')
+PYEOF
 success "Database/config.ini written (chmod 600)."
 
 # Write .env with SECRET_KEY
