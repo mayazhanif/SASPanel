@@ -10,7 +10,7 @@ Changes:
 
 from flask import render_template, redirect, url_for, session, request, abort
 from . import routes
-from app import app
+
 from Database.DbConfig import mysqlconnection, mysql_connect
 from functions import install_packages
 from routes.security import require_admin, log_security_event
@@ -33,11 +33,29 @@ def reboot():
 # Installer — available ONLY when DB is not yet configured
 # ---------------------------------------------------------------------------
 
+def _admin_exists():
+    """Return True if at least one administrator account exists in the DB."""
+    try:
+        conn = mysql_connect()
+        if conn is None:
+            return False
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM `administrator`')
+        row = cursor.fetchone()
+        cursor.close()
+        return row is not None and row[0] > 0
+    except Exception:
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Installer — available ONLY when no admin account exists yet
+# ---------------------------------------------------------------------------
+
 @routes.route('/installer', methods=['POST', 'GET'])
 def installer():
-    conn = mysql_connect()
-    # If DB is already connected, installer is locked — return 403
-    if conn is not None:
+    # Lock installer once an admin account exists — prevents re-installation
+    if _admin_exists():
         abort(403)
 
     msg = ''
@@ -102,8 +120,8 @@ def installer():
 
 @routes.route('/')
 def home_route():
-    conn = mysql_connect()
-    if conn is None:
+    # Redirect to installer if no admin account exists yet
+    if not _admin_exists():
         return redirect(url_for('routes.installer'))
     if 'loggedin' in session:
         if session.get('usertype') == 'Admin':
