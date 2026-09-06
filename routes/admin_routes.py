@@ -345,6 +345,8 @@ def admin_addDomain():
         cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'DomainName' in request.form:
+            userID = request.form['userID']
+            if userID == '':
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             # FIX R9-03: IDOR — verify userID belongs to this admin before adding domain
@@ -587,9 +589,18 @@ def admin_updateDBPass():
                 return redirect(url_for('routes.admin_viewDatabases'))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
-            #query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
-            cursor.execute("SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s",(DbUser_ID,))
-            mysqlUsername = cursor.fetchone()[0]
+            # FIX R11-02: IDOR — POST branch never validated Admin_id ownership; also add null guard
+            cursor.execute(
+                "SELECT DbUsername FROM `mysqldbusers` "
+                "WHERE `mysqldbusers`.`DbUser_ID` =%s "
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (DbUser_ID, str(session['id']))
+            )
+            row = cursor.fetchone()
+            if row is None:
+                flash('Database not found or access denied.')
+                return redirect(url_for('routes.admin_viewDatabases'))
+            mysqlUsername = row[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
@@ -685,10 +696,15 @@ def admin_updateAccountPass():
         cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('AccID'):
             AccID=request.args.get('AccID')
-            #query="SELECT * FROM `ftp_accounts` where Account_Id="+AccID
-            cursor.execute("SELECT * FROM `ftp_accounts` where Account_Id=%s", (AccID,))
+            # FIX R11-03: IDOR — no Admin_id ownership check on GET update form
+            cursor.execute(
+                "SELECT * FROM `ftp_accounts` "
+                "INNER JOIN users ON ftp_accounts.User_id = users.User_id "
+                "WHERE ftp_accounts.Account_Id=%s AND users.Admin_id=%s",
+                (AccID, str(session['id']))
+            )
             account = cursor.fetchone()
-            if cursor.rowcount>0:
+            if account is not None:
                 return render_template('adminFiles/ftpAccounts/updateAccountPass.html', account=account[0])
             else:
                 return redirect(url_for("routes.admin_viewAccounts"))
@@ -732,9 +748,15 @@ def admin_deleteAccount():
         if request.method == 'GET' and request.args.get('AccID'):
             AccID=request.args.get('AccID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=%s',(AccID,))
+            # FIX R11-04: IDOR — no Admin_id ownership check; any admin could delete any FTP account
+            cursor.execute(
+                'SELECT FTP_Username FROM `ftp_accounts` '
+                'INNER JOIN users ON ftp_accounts.User_id = users.User_id '
+                'WHERE ftp_accounts.Is_Active=1 AND ftp_accounts.Account_Id=%s AND users.Admin_id=%s',
+                (AccID, str(session['id']))
+            )
             row = cursor.fetchone()
-            # FIX R7-02: null-pointer crash if AccID not found + no Admin_id ownership was checked
+            # FIX R7-02: null-pointer crash if AccID not found
             if row is None:
                 flash('FTP Account not found or access denied.')
                 return redirect(url_for('routes.admin_viewAccounts'))
@@ -1138,9 +1160,15 @@ def admin_cron_jobs():
     if check_admin_Login():
         msg = ''
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0;')
+        # FIX R11-05: show only cron jobs belonging to this admin's users
+        cursor.execute(
+            'SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id '
+            'WHERE cronjobs.Is_Deleted=0 AND users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         cronjobs = cursor.fetchall()
-        cursor.execute('SELECT User_id,User_email FROM `users` where Is_Deleted=0;')
+        # FIX R11-06: show only this admin's own users in dropdown
+        cursor.execute('SELECT User_id,User_email FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
             userID = request.form['userID']
@@ -1188,7 +1216,8 @@ def admin_cron_jobs():
                 job.month.every(1)
             else:
                 msg = {"error": "danger", "message": "Cron Job Error."}
-                return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+                # FIX R11-07: was rendering userFiles template inside admin route
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
             # job.minute.every(1)
             my_cron.write()
             #query = "INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, '"+userID+"', '"+Command+"', '"+logFile+"', '0')"

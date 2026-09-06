@@ -686,9 +686,9 @@ def user_addSubDomain():
             domainID = request.form['domainID']
             if(domainID==""):
                 msg={"error":"danger", "message": "Domain not Selected."}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                # FIX R11-08: was rendering adminFiles/Mails template (wrong context for user)
+                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             # FIX NEW-02: read suffix from form FIRST, then validate
-            # (was NameError: suffix referenced before assignment)
             suffix = request.form['suffix']
             try:
                 suffix = sanitize_shell_arg(suffix, 'suffix')
@@ -697,6 +697,10 @@ def user_addSubDomain():
                 return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s", (domainID, userID))
             rDomain = cursor.fetchone()
+            # FIX R11-09: NullPointer — no null check before rDomain[1] if domain doesn't belong to this user
+            if rDomain is None:
+                msg = {'error': 'danger', 'message': 'Domain not found or access denied.'}
+                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             SubDomainAdress = suffix + '.' + rDomain[1]
             userID = str(rDomain[2])
             #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
