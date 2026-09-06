@@ -348,6 +348,10 @@ def user_updateDBPass():
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
+                # FIX R21-05: cap DB password length before encoding/MySQL ALTER USER
+                if len(pass1) < 1 or len(pass1) > 128:
+                    msg = {'error': 'danger', 'message': 'Password must be between 1 and 128 characters.'}
+                    return render_template('userFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
                 EncodedPassword = Base64Encode(pass1)
                 #query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+" and User_id="+userID
                 cursor.execute("UPDATE `mysqldbusers` SET `DbPassword` = %s WHERE `mysqldbusers`.`DbUser_ID` = %s and User_id=%s",(EncodedPassword,DbUser_ID,userID))

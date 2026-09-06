@@ -653,6 +653,10 @@ def admin_updateDBPass():
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
+                # FIX R21-04: cap DB password length before encoding/MySQL ALTER USER
+                if len(pass1) < 1 or len(pass1) > 128:
+                    msg = {'error': 'danger', 'message': 'Password must be between 1 and 128 characters.'}
+                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
                 EncodedPassword = Base64Encode(pass1)
                 #query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+""
                 cursor.execute("UPDATE `mysqldbusers` SET `DbPassword` =%s WHERE `mysqldbusers`.`DbUser_ID` = %s",(EncodedPassword,DbUser_ID))
@@ -989,8 +993,12 @@ def admin_updateEmail():
 
                 mysqlconnection.commit()
                 if cursor.rowcount>0:
-                    #query = "SELECT Mail_Address FROM `mail_accounts` where Mail_Id=" + mailID + ""
-                    cursor.execute("SELECT Mail_Address FROM `mail_accounts` where Mail_Id=%s",(mailID,))
+                    # FIX R21-02: re-scope Mail_Address SELECT to this admin's accounts (TOCTOU)
+                    cursor.execute(
+                        "SELECT Mail_Address FROM `mail_accounts` "
+                        "WHERE Mail_Id=%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                        (mailID, str(session['id']))
+                    )
                     mail = cursor.fetchone()
                     change_mail_password(cursor,mail[0],pass1)
                     msg = {"error": "success", "message": "Mail Account Password Updated."}
@@ -1295,7 +1303,12 @@ def admin_cron_jobs():
                 msg = {'error': 'danger', 'message': 'Invalid log filename. Use only letters, digits, dots, underscores, hyphens.'}
                 return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
-            getUsername = cursor.fetchone()[0]
+            # FIX R21-01: null guard — fetchone()[0] crashes if user deleted between ownership check and here
+            _serv = cursor.fetchone()
+            if _serv is None:
+                msg = {'error': 'danger', 'message': 'User not found.'}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
+            getUsername = _serv[0]
             base_logs = f'/home/{getUsername}/crobjobs/logs'
             try:
                 logFileLink = safe_log_path(base_logs, logFile)
