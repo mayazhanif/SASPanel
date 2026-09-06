@@ -314,9 +314,48 @@ else
     warn "scripts/database.sql not found — import manually after install."
 fi
 
+# ── Create initial admin account ──────────────────────────────────────────────
+section "Creating admin account"
+
+PANEL_ADMIN_PASS=$(gen_pass 20)
+PANEL_ADMIN_NAME="Administrator"
+PANEL_ADMIN_USER="admin"
+
+# Inject password via env — never passes it on the command line or process list
+export _ADMIN_PASS="${PANEL_ADMIN_PASS}"
+PANEL_ADMIN_HASH=$(${SASPANEL_DIR}/venv/bin/python3 -c "
+import os
+from werkzeug.security import generate_password_hash
+print(generate_password_hash(os.environ['_ADMIN_PASS']))
+")
+unset _ADMIN_PASS
+
+mysql -u root -p"${DB_ROOT_PASS}" saspanel <<SQLEOF
+INSERT INTO \`administrator\`
+    (\`Admin_Name\`, \`Admin_Username\`, \`Admin_Password\`, \`Admin_Email\`, \`Is_Active\`, \`Admin_type\`)
+VALUES
+    ('${PANEL_ADMIN_NAME}', '${PANEL_ADMIN_USER}', '${PANEL_ADMIN_HASH}', '${ADMIN_EMAIL}', 1, 'Admin');
+SQLEOF
+
+success "Admin account created (email: ${ADMIN_EMAIL})."
+
+# Append panel admin credentials to the shared credentials file
+cat >> "${CRED_FILE}" <<EOF
+
+[Panel Admin Login]
+Login URL         = http://${SERVER_IP}:5000/login/
+Email             = ${ADMIN_EMAIL}
+Username          = ${PANEL_ADMIN_USER}
+Password          = ${PANEL_ADMIN_PASS}
+Login Type        = Admin
+EOF
+success "Panel admin credentials appended to ${CRED_FILE}."
+
+
 systemctl enable mysql
 systemctl restart mysql
 success "MySQL installed and secured."
+
 
 # =============================================================================
 # 8. INSTALL CERTBOT

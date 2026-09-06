@@ -49,69 +49,25 @@ def _admin_exists():
 
 
 # ---------------------------------------------------------------------------
-# Installer — available ONLY when no admin account exists yet
+# Installer — DISABLED. Admin account is created by install.sh at setup time.
 # ---------------------------------------------------------------------------
 
 @routes.route('/installer', methods=['POST', 'GET'])
 def installer():
-    # Lock installer once an admin account exists — prevents re-installation
-    if _admin_exists():
-        abort(403)
-
-    msg = ''
-    if request.method == 'POST' \
-            and 'DBpass1' in request.form \
-            and 'DBpass2' in request.form \
-            and 'mailserverpassword' in request.form \
-            and 'emailaddress' in request.form \
-            and 'domain' in request.form \
-            and 'emailpassword' in request.form:
-
-        DBpass1           = request.form['DBpass1']
-        DBpass2           = request.form['DBpass2']
-        mailserverpassword = request.form['mailserverpassword']
-        emailaddress      = request.form['emailaddress']
-        emailpassword     = request.form['emailpassword']
-        domain            = request.form['domain']
-
-        # Basic length / content validation
-        if len(DBpass1) < 12:
-            return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'DB password must be at least 12 characters.'})
-        # FIX R23-04: cap max length to prevent DoS via huge password input
-        if len(DBpass1) > 128:
-            return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'DB password must be 128 characters or fewer.'})
-        if DBpass1 != DBpass2:
-            return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'Password and Confirm Password Mismatch.'})
-        # FIX R23-05: validate length of all other password fields before install
-        if not (1 <= len(mailserverpassword) <= 128):
-            return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'Mail server password must be 1-128 characters.'})
-        if not (1 <= len(emailpassword) <= 128):
-            return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'Email password must be 1-128 characters.'})
-
-        # FIX R12-06: validate full email address properly before passing to install_packages()
-        # emailaddress here is the local-part only (before @); domain comes from the domain field
-        import re
-        _DOMAIN_RE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9.\-]{1,251}[a-zA-Z0-9]$')
-        # local-part: start/end with alphanumeric; allow dots, +, -, _ in the middle; max 64 chars
-        _LOCALPART_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9.+_-]{0,62}[A-Za-z0-9]$|^[A-Za-z0-9]{1}$')
-        if not _DOMAIN_RE.match(domain):
-            return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'Invalid domain name.'})
-        if not _LOCALPART_RE.match(emailaddress):
-            return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'Invalid email address prefix. Use only letters, digits, dots, hyphens, and underscores.'})
-
-        full_email = emailaddress + '@' + domain
-        install_packages(DBpass1, mailserverpassword, domain, full_email, emailpassword)
-        return render_template('installer/installer.html',
-                               msg={'error': 'success', 'message': 'Installation Completed. Please Reload.'})
-
-    return render_template('installer/installer.html', msg=msg)
+    """The web installer has been removed.
+    Admin accounts are created by install.sh during installation.
+    If you need to reset/create an admin account, run:
+        python manage.py create_admin
+    or insert directly into the administrator table.
+    """
+    from flask import Response
+    return Response(
+        '<h1>410 — Installer Removed</h1>'
+        '<p>The web installer is no longer available. '
+        'Admin accounts are created by <code>install.sh</code> during setup.</p>',
+        status=410,
+        mimetype='text/html'
+    )
 
 
 # ---------------------------------------------------------------------------
