@@ -384,7 +384,8 @@ with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
     f.write("ALTER USER 'mail_admin'@'localhost' IDENTIFIED BY '{mp}';\nFLUSH PRIVILEGES;\n".format(mp=mp))
     fname = f.name
 env = os.environ.copy()
-env['MYSQL_PWD'] = os.environ.get('DB_ROOT_PASS', open('${DB_ROOT_PASS_FILE}').read().strip())
+# BUG FIX: DB_ROOT_PASS is a bash variable, not an env var — read from temp file
+env['MYSQL_PWD'] = open('${DB_ROOT_PASS_FILE}').read().strip()
 subprocess.run(['mysql', '-u', 'root'], stdin=open(fname), env=env)
 os.unlink(fname)
 PYEOF
@@ -411,7 +412,9 @@ with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
     f.write("INSERT IGNORE INTO users (email, password) VALUES ('{e}', '{p}');\n".format(e=email, p=passw))
     fname = f.name
 env = os.environ.copy()
-env['MYSQL_PWD'] = os.environ.get('DB_ROOT_PASS', '')
+# BUG FIX: DB_ROOT_PASS is a bash variable, not an env var — empty fallback caused
+# 'Access denied (using password: NO)'. Read from the temp file instead.
+env['MYSQL_PWD'] = open('${DB_ROOT_PASS_FILE}').read().strip()
 subprocess.run(['mysql', '-u', 'root', 'mail'], stdin=open(fname), env=env)
 os.unlink(fname)
 PYEOF
