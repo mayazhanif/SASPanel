@@ -54,7 +54,9 @@ logger = logging.getLogger('saspanel.ftp')
 
 # ── Database helpers ─────────────────────────────────────────────────────────
 def _get_db_config() -> dict:
-    cfg = configparser.ConfigParser()
+    # RawConfigParser — avoids %(key)s interpolation which crashes on passwords
+    # containing literal '%' (e.g. hrwLzcU8CT*KW%ui0eVfPI9q).
+    cfg = configparser.RawConfigParser()
     cfg.read(os.path.join(BASE_DIR, 'Database', 'config.ini'))
     s = cfg['config']   # section is [config], not [database]
     return {
