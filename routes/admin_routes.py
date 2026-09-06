@@ -777,8 +777,14 @@ def admin_viewAccounts():
             (str(session['id']),)
         )
         results = cursor.fetchall()
+        # Also fetch users list for the 'Add FTP Account' form dropdown
+        cursor.execute(
+            'SELECT User_id, User_Name, User_email FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;',
+            (str(session['id']),)
+        )
+        users = cursor.fetchall()
         msg = ''
-        return render_template('adminFiles/ftpAccounts/viewAccounts.html', results=results)
+        return render_template('adminFiles/ftpAccounts/viewAccounts.html', results=results, users=users)
     else:
         return redirect(url_for('routes.login'))
 
@@ -957,8 +963,14 @@ def admin_viewEmail():
             (str(session['id']),)
         )
         results = cursor.fetchall()
+        # Also fetch users list for the 'Add Mail Account' form dropdown
+        cursor.execute(
+            'SELECT User_id, User_Name, User_email FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;',
+            (str(session['id']),)
+        )
+        users = cursor.fetchall()
         msg = ''
-        return render_template('adminFiles/Mails/viewEmail.html', results=results)
+        return render_template('adminFiles/Mails/viewEmail.html', results=results, users=users)
     else:
         return redirect(url_for('routes.login'))
 

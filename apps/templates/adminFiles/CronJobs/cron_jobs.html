@@ -82,7 +82,7 @@
            class="sp-btn sp-btn-ghost" style="padding:5px 10px;font-size:12px;">CronTab Guru ↗</a>
       </div>
       <div class="sp-card-body">
-        <form method="POST" action="{{ url_for('routes.admin_cronJobs') }}">
+        <form method="POST" action="{{ url_for('routes.admin_cron_jobs') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
           <div class="sp-form-group">
