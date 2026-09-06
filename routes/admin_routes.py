@@ -258,24 +258,40 @@ def admin_addPackage():
         if request.method == 'POST' and 'packagename' in request.form and 'domains' in request.form and 'dbs' in request.form and 'subdomains' in request.form and 'ftps' in request.form and 'mails' in request.form and 'storage' in request.form:
             Package_Name = request.form['packagename']
             Admin_id = str(session['id'])
-            Limit_Domains = request.form['domains']
-            Limit_DB = request.form['dbs']
-            Limit_FTP = request.form['ftps']
-            Limit_Mails = request.form['mails']
-            Sub_Domains = request.form['subdomains']
-            Storage_Limit = request.form['storage']
-            #CGI_ACCESS = request.form.getlist('cgiAccess')
-            #print(CGI_ACCESS)
+            # FIX R22-03: validate all limit fields are non-negative integers
+            # Non-integer values cause a MySQL type error visible to the user;
+            # negative values allow bypassing resource limits.
+            def _to_nonneg_int(val, label, max_val=9999):
+                try:
+                    v = int(val)
+                except (ValueError, TypeError):
+                    raise ValueError(f'{label} must be a whole number.')
+                if v < 0:
+                    raise ValueError(f'{label} must be 0 or greater.')
+                if v > max_val:
+                    raise ValueError(f'{label} must be {max_val} or less.')
+                return v
+            try:
+                Limit_Domains  = _to_nonneg_int(request.form['domains'],    'Domain limit')
+                Limit_DB       = _to_nonneg_int(request.form['dbs'],        'DB limit')
+                Limit_FTP      = _to_nonneg_int(request.form['ftps'],       'FTP limit')
+                Limit_Mails    = _to_nonneg_int(request.form['mails'],      'Mail limit')
+                Sub_Domains    = _to_nonneg_int(request.form['subdomains'], 'Subdomain limit')
+                Storage_Limit  = _to_nonneg_int(request.form['storage'],    'Storage limit', max_val=999999)
+            except ValueError as e:
+                return render_template('adminFiles/Packages/addPackage.html',
+                                       msg={'error': 'danger', 'message': str(e)})
+            if not Package_Name or len(Package_Name) > 128:
+                return render_template('adminFiles/Packages/addPackage.html',
+                                       msg={'error': 'danger', 'message': 'Package name must be 1-128 characters.'})
             CGI_ACCESS='0'
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
-            #print(CGI_ACCESS)
             cursor = mysqlconnection.cursor()
-            #query = "INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, '"+Package_Name+"', '"+Admin_id+"', '"+Limit_FTP+"', '"+Limit_Mails+"', '"+Limit_Domains+"', '"+CGI_ACCESS+"', '"+Limit_DB+"', '"+Sub_Domains+"', '"+Storage_Limit+"');"
-            cursor.execute("INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s, %s);",(Package_Name,Admin_id,Limit_FTP,Limit_Mails,Limit_Domains,CGI_ACCESS,Limit_DB,Sub_Domains,Storage_Limit))
+            cursor.execute("INSERT INTO `packages` (`Package_Id`, `Package_Name`, `Admin_id`, `Limit_FTP`, `Limit_Mails`, `Limit_Domains`, `CGI_ACCESS`, `Limit_DB`, `Sub_Domains`, `Storage_Limit`) VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+                           (Package_Name, Admin_id, Limit_FTP, Limit_Mails, Limit_Domains, CGI_ACCESS, Limit_DB, Sub_Domains, Storage_Limit))
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                #session["Name"]=Package_Name;
                 return render_template('adminFiles/Packages/addPackage.html', msg={"error":"success","message":"Package Added."})
             else:
                 return render_template('adminFiles/Packages/addPackage.html', msg={"error":"primary","message":"Fill all fields Correctly."})
@@ -317,18 +333,37 @@ def admin_updatePackage():
             packageID = request.form['packageID']
             Package_Name = request.form['packagename']
             Admin_id = str(session['id'])
-            Limit_Domains = request.form['domains']
-            Limit_DB = request.form['dbs']
-            Limit_FTP = request.form['ftps']
-            Limit_Mails = request.form['mails']
-            Sub_Domains = request.form['subdomains']
-            Storage_Limit = request.form['storage']
+            # FIX R22-04: validate all limit fields are non-negative integers
+            def _to_nonneg_int(val, label, max_val=9999):
+                try:
+                    v = int(val)
+                except (ValueError, TypeError):
+                    raise ValueError(f'{label} must be a whole number.')
+                if v < 0:
+                    raise ValueError(f'{label} must be 0 or greater.')
+                if v > max_val:
+                    raise ValueError(f'{label} must be {max_val} or less.')
+                return v
+            try:
+                Limit_Domains  = _to_nonneg_int(request.form['domains'],    'Domain limit')
+                Limit_DB       = _to_nonneg_int(request.form['dbs'],        'DB limit')
+                Limit_FTP      = _to_nonneg_int(request.form['ftps'],       'FTP limit')
+                Limit_Mails    = _to_nonneg_int(request.form['mails'],      'Mail limit')
+                Sub_Domains    = _to_nonneg_int(request.form['subdomains'], 'Subdomain limit')
+                Storage_Limit  = _to_nonneg_int(request.form['storage'],    'Storage limit', max_val=999999)
+            except ValueError as e:
+                flash(str(e))
+                return redirect(request.referrer)
+            if not Package_Name or len(Package_Name) > 128:
+                flash('Package name must be 1-128 characters.')
+                return redirect(request.referrer)
             CGI_ACCESS='0'
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
             cursor = mysqlconnection.cursor()
             # FIX IDOR-P2: include Admin_id in UPDATE to prevent cross-admin package modification
-            cursor.execute("UPDATE `packages` SET  `Package_Name` = %s, `Limit_FTP` = %s, `Limit_Mails` = %s, `Limit_Domains` = %s, `CGI_ACCESS` = %s, `Limit_DB` = %s, `Sub_Domains` = %s, `Storage_Limit` = %s WHERE `packages`.`Package_Id` = %s AND `Admin_id` = %s",(Package_Name,Limit_FTP,Limit_Mails,Limit_Domains,CGI_ACCESS,Limit_DB,Sub_Domains,Storage_Limit,packageID,Admin_id))
+            cursor.execute("UPDATE `packages` SET `Package_Name` = %s, `Limit_FTP` = %s, `Limit_Mails` = %s, `Limit_Domains` = %s, `CGI_ACCESS` = %s, `Limit_DB` = %s, `Sub_Domains` = %s, `Storage_Limit` = %s WHERE `packages`.`Package_Id` = %s AND `Admin_id` = %s",
+                           (Package_Name, Limit_FTP, Limit_Mails, Limit_Domains, CGI_ACCESS, Limit_DB, Sub_Domains, Storage_Limit, packageID, Admin_id))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Hosting Package Updated.')

@@ -650,8 +650,9 @@ def user_updateEmail():
             cursor.execute("SELECT * FROM `mail_accounts` where Mail_Id=%s and User_id=%s",(mailID,userID))
             mail = cursor.fetchone()
             if cursor.rowcount>0:
-                # FIX R18-01: mail[0] is the full row tuple — pass mail[0][0] (the Mail_Id) to template
-                return render_template('userFiles/Mails/updateEmail.html', mail=mail[0][0])
+                # FIX R22-01: mail[0][0] was double-indexing — fetchone() returns a tuple,
+                # so mail[0] is the Mail_Id, NOT mail[0][0] (which is the first char of the id)
+                return render_template('userFiles/Mails/updateEmail.html', mail=mail[0])
             else:
                 return redirect(url_for("routes.user_viewEmail"))
         elif request.method == 'POST' and 'mailID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
@@ -659,6 +660,10 @@ def user_updateEmail():
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
+                # FIX R22-02: cap mail password length before encoding
+                if len(pass1) < 1 or len(pass1) > 128:
+                    msg = {'error': 'danger', 'message': 'Password must be between 1 and 128 characters.'}
+                    return render_template('userFiles/Mails/updateEmail.html', mail=mailID, msg=msg)
                 EncodedPassword = Base64Encode(pass1)
                 cursor = mysqlconnection.cursor()
                 #query = "UPDATE `mail_accounts` SET `Mail_Pass` = '"+EncodedPassword+"' WHERE `mail_accounts`.`Mail_Id` = "+mailID+" and User_id="+userID
