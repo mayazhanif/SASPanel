@@ -51,9 +51,9 @@
               {% for record in results %}
                 <tr>
                   <td>
-                    <span style="color:var(--accent-h);font-weight:500;">{{ record[3] }}@{{ record[18] }}</span>
+                    <span style="color:var(--accent-h);font-weight:500;">{{ record[3] }}</span>
                   </td>
-                  <td class="muted">{{ record[18] }}</td>
+                  <td class="muted">{{ record[18] if record[18] else '—' }}</td>
                   <td>
                     <div class="sp-flex sp-gap-8">
                       <a href="{{ url_for('routes.user_updateEmail', mailID=record[0]) }}"

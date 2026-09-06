@@ -57,9 +57,9 @@
                 <tr>
                   <td class="sp-fw-600">{{ record[10] if record[10] else '—' }}</td>
                   <td>
-                    <span style="color:var(--accent-h);font-weight:500;">{{ record[1] }}@{{ record[15] if record[15] else record[4] }}</span>
+                    <span style="color:var(--accent-h);font-weight:500;">{{ record[3] }}</span>
                   </td>
-                  <td class="muted">{{ record[15] if record[15] else record[4] }}</td>
+                  <td class="muted">{{ record[18] if record[18] else '—' }}</td>
                   <td>
                     <a href="http://{{ mainhost }}/roundcube" target="_blank" rel="noopener noreferrer"
                        class="sp-btn sp-btn-ghost" style="padding:5px 10px;font-size:12px;">Roundcube ↗</a>
@@ -72,7 +72,7 @@
                       </a>
                       <a href="{{ url_for('routes.admin_deleteEmail', mailID=record[0]) }}"
                          class="sp-btn-icon delete" title="Delete mailbox" aria-label="Delete email account"
-                         onclick="return confirm('Delete email account {{ record[1] }}?')">
+                         onclick="return confirm('Delete email account {{ record[3] }}?')">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                       </a>
                     </div>
