@@ -249,15 +249,29 @@ for PKG in php-imagick php-imap php-json \
         || warn "  Optional package not available (skipping): $PKG"
 done
 
-# Find the PHP-FPM sock and update the nginx conf if needed
+# Find the PHP-FPM sock and derive the exact versioned service name
+# systemctl does NOT support globs — we must use the exact unit name (e.g. php8.3-fpm)
 PHP_FPM_SOCK=$(find /var/run/php/ -name "php*-fpm.sock" 2>/dev/null | head -1)
 if [[ -n "$PHP_FPM_SOCK" ]]; then
     sed -i "s|unix:/var/run/php/php-fpm.sock|unix:${PHP_FPM_SOCK}|g" /etc/nginx/php.conf
     info "PHP-FPM socket: ${PHP_FPM_SOCK}"
+    # Extract version: /var/run/php/php8.3-fpm.sock -> php8.3-fpm
+    PHP_FPM_SVC=$(basename "${PHP_FPM_SOCK}" .sock)
+    info "PHP-FPM service: ${PHP_FPM_SVC}"
+    systemctl enable "${PHP_FPM_SVC}"
+    systemctl restart "${PHP_FPM_SVC}"
+else
+    # Fallback: try to find and enable any php*-fpm service that actually exists
+    PHP_FPM_SVC=$(systemctl list-unit-files 'php*-fpm.service' --no-legend 2>/dev/null \
+                  | awk '{print $1}' | head -1)
+    if [[ -n "$PHP_FPM_SVC" ]]; then
+        info "PHP-FPM service (fallback): ${PHP_FPM_SVC}"
+        systemctl enable "${PHP_FPM_SVC}"
+        systemctl restart "${PHP_FPM_SVC}"
+    else
+        warn "Could not find a PHP-FPM service to enable — start it manually."
+    fi
 fi
-
-systemctl enable php*-fpm || true
-systemctl restart php*-fpm || true
 success "PHP installed."
 
 # =============================================================================
@@ -638,24 +652,69 @@ mysql -u root -p"${DB_ROOT_PASS}" roundcubedb < /usr/share/roundcube/SQL/mysql.i
 RC_PASS_FILE2=$(mktemp); chmod 600 "${RC_PASS_FILE2}"
 trap 'rm -f "${RC_PASS_FILE2}"' EXIT
 printf '%s' "${ROUNDCUBE_PASS}" > "${RC_PASS_FILE2}"
-python3 - <<PYEOF
-import re
-rc_pass = open('${RC_PASS_FILE2}').read().strip()
+
+# BUG FIX: Pass the password file path as a command-line arg (sys.argv[1]) so
+# we can use a *quoted* heredoc <<'PYEOF'. Quoted heredocs prevent bash from
+# expanding $config (a PHP variable in the Python string) as a shell variable,
+# which caused "config: unbound variable" with set -u.
+python3 /dev/stdin "${RC_PASS_FILE2}" <<'PYEOF'
+import re, sys
+rc_pass = open(sys.argv[1]).read().strip()
 conf_path = '/usr/share/roundcube/config/config.inc.php'
-with open(conf_path) as f:
-    content = f.read()
+try:
+    with open(conf_path) as f:
+        content = f.read()
+except FileNotFoundError:
+    # config.inc.php may not exist yet — copy from sample
+    import shutil
+    sample = conf_path.replace('config.inc.php', 'config.inc.php.sample')
+    shutil.copy(sample, conf_path)
+    with open(conf_path) as f:
+        content = f.read()
+
+# Set DB DSN
 content = re.sub(
     r"^\s*\\\$config\['db_dsnw'\]\s*=.*$",
-    "$config['db_dsnw'] = 'mysqli://roundcube:" + rc_pass.replace('\\', '\\\\').replace("'", "\\'") + "@localhost/roundcubedb';",
+    "$config['db_dsnw'] = 'mysqli://roundcube:"
+        + rc_pass.replace('\\', '\\\\').replace("'", "\\'")
+        + "@localhost/roundcubedb';",
+    content, flags=re.MULTILINE
+)
+# Set SMTP server
+content = re.sub(
+    r"^\s*\\\$config\['smtp_server'\]\s*=.*$",
+    "$config['smtp_server'] = 'localhost';",
+    content, flags=re.MULTILINE
+)
+# Set SMTP port
+content = re.sub(
+    r"^\s*\\\$config\['smtp_port'\]\s*=.*$",
+    "$config['smtp_port'] = 25;",
     content, flags=re.MULTILINE
 )
 with open(conf_path, 'w') as f:
     f.write(content)
-print('Roundcube DSN written safely.')
+print('Roundcube config written safely.')
 PYEOF
-sed -i "s|^\(\$config\['smtp_server'\] =\).*$|\1 'localhost';|"  /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\$config\['smtp_port'\] =\).*$|\1 25;|"             /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\$config\['des_key'\] =\).*$|\1 '${DESKEY}';|"      /usr/share/roundcube/config/config.inc.php
+
+# DESKEY requires bash variable expansion, so use a targeted sed with escaped $
+DESKEY_ESC="${DESKEY}"
+python3 /dev/stdin "${DESKEY_ESC}" <<'PYEOF'
+import re, sys
+deskey = sys.argv[1]
+conf_path = '/usr/share/roundcube/config/config.inc.php'
+with open(conf_path) as f:
+    content = f.read()
+content = re.sub(
+    r"^\s*\\\$config\['des_key'\]\s*=.*$",
+    "$config['des_key'] = '" + deskey.replace('\\', '\\\\').replace("'", "\\'") + "';",
+    content, flags=re.MULTILINE
+)
+with open(conf_path, 'w') as f:
+    f.write(content)
+print('Roundcube DES key written.')
+PYEOF
+
 rm -rf /usr/share/roundcube/installer
 
 cat > /etc/nginx/snippets/roundcube.conf <<'EOF'
