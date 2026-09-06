@@ -1,15 +1,15 @@
-<div align="center">
+﻿<div align="center">
 
 <img src="https://img.shields.io/badge/SASPanel-Web%20Hosting%20Control%20Panel-6C63FF?style=for-the-badge&logo=server&logoColor=white"/>
 
 # SASPanel
 
-**A powerful, open-source web hosting control panel built with Python & Flask.**  
-Manage domains, databases, FTP accounts, email, SSL certificates and server resources — all from a clean web UI.
+**A powerful, open-source web hosting control panel built with Python & Flask.**
+Manage domains, databases, FTP accounts, email, SSL certificates and server resources — all from a clean, modern web UI.
 
 [![License](https://img.shields.io/github/license/mayazhanif/SASPanel?style=flat-square)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python)](https://python.org)
-[![Flask](https://img.shields.io/badge/Flask-2.0-black?style=flat-square&logo=flask)](https://flask.palletsprojects.com/)
+[![Python](https://img.shields.io/badge/Python-3.12%2B-blue?style=flat-square&logo=python)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)](https://flask.palletsprojects.com/)
 [![Security](https://img.shields.io/badge/Security-Hardened-green?style=flat-square&logo=shield)](SECURITY.md)
 
 </div>
@@ -26,7 +26,6 @@ Manage domains, databases, FTP accounts, email, SSL certificates and server reso
 - [Running the Panel](#-running-the-panel)
 - [Security](#-security)
 - [Project Structure](#-project-structure)
-- [Screenshots](#-screenshots)
 - [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
 - [License](#-license)
@@ -37,17 +36,19 @@ Manage domains, databases, FTP accounts, email, SSL certificates and server reso
 
 | Feature | Description |
 |---------|-------------|
-| 👤 **User Management** | Create, update, suspend, and delete hosting users with package limits |
-| 📦 **Hosting Packages** | Define resource limits (domains, FTP, mail, databases, storage) |
-| 🌐 **Domain Management** | Add domains, auto-configure Nginx vhosts, suspend/unsuspend |
-| 🔒 **SSL Certificates** | Let's Encrypt integration — auto-issue and renew |
-| 🗄️ **MySQL Databases** | Create/delete databases, change passwords, per-user isolation |
-| 📁 **FTP Accounts** | Create FTP users, change passwords, delete accounts |
-| 📧 **Email Accounts** | Virtual mail via Postfix + Dovecot, Roundcube webmail |
-| ⏰ **Cron Jobs** | Schedule cron jobs per user |
-| 📊 **Server Monitoring** | Real-time CPU, RAM, load average, uptime display |
-| 🔑 **Admin & User Portals** | Separate dashboards for administrators and end users |
-| 🛡️ **Security Hardened** | CSRF protection, rate limiting, bcrypt passwords, security headers |
+| 👤 **User Management** | Create, update, suspend, and delete hosting users with package-based resource limits |
+| 📦 **Hosting Packages** | Define per-user limits: domains, FTP accounts, mail accounts, databases, storage |
+| 🌐 **Domain Management** | Add domains, auto-configure Nginx vhosts, suspend/unsuspend, optional auto-create FTP & mail |
+| 🔒 **SSL Certificates** | Let's Encrypt integration — auto-issue on domain add, bulk renewal |
+| 🗄️ **MySQL Databases** | Create/delete databases and users, update passwords, per-user isolation |
+| 📁 **FTP Accounts** | Create FTP users via vsFTPd, change passwords, delete accounts |
+| 📧 **Email Accounts** | Virtual mailboxes via Postfix + Dovecot, Roundcube webmail link |
+| 🌿 **Subdomains** | Create and delete subdomains with automatic Nginx vhost configuration |
+| ⏰ **Cron Jobs** | Schedule and manage cron jobs per user |
+| 📊 **Server Monitoring** | Real-time CPU, RAM, load average, disk usage, uptime |
+| 🔑 **Admin & User Portals** | Fully separate dashboards — admins manage users, users manage their own resources |
+| 🛡️ **Security Hardened** | CSRF protection, rate limiting, secure password hashing, Content Security Policy, audit logs |
+| 🔄 **AJAX Dynamic UI** | Domain dropdowns filter dynamically by selected user without page reload |
 
 ---
 
@@ -55,13 +56,15 @@ Manage domains, databases, FTP accounts, email, SSL certificates and server reso
 
 | Component | Version |
 |-----------|---------|
-| **OS** | Ubuntu 20.04 LTS or 22.04 LTS |
-| **Python** | 3.8+ |
+| **OS** | Ubuntu 22.04 LTS (recommended) or 20.04 LTS |
+| **Python** | 3.12+ |
 | **MySQL** | 8.0+ |
 | **Nginx** | 1.18+ |
+| **vsFTPd** | Any recent version |
+| **Postfix + Dovecot** | Any recent version |
 | **Root Access** | Required for installation |
 
-> ⚠️ **VPS / Dedicated server recommended.** Shared hosting will not work.
+> ⚠️ **VPS or dedicated server required.** Shared hosting will not work. Minimum 1 GB RAM recommended.
 
 ---
 
@@ -84,7 +87,7 @@ sudo bash install.sh
 
 The script will ask you **two questions only**:
 
-1. Your panel domain (e.g. `panel.yourdomain.com`) — must already point to the server IP
+1. Your panel domain (e.g. `panel.yourdomain.com`) — must already point to the server IP via DNS
 2. Your admin email address (used for Let's Encrypt SSL notifications)
 
 **Everything else is fully automated:**
@@ -100,7 +103,7 @@ Email:  admin@yourdomain.com
 ══ Saving credentials to /root/saspanel_credentials.txt ══
 [OK]    Credentials saved (chmod 600)
 
-══ Installing Nginx ... MySQL ... PHP ... Postfix ... Dovecot ... ══
+══ Installing Nginx ... MySQL ... Postfix ... Dovecot ... vsFTPd ══
 ...
 
 ══ Installation Complete! 🎉 ══
@@ -131,8 +134,6 @@ Navigate to `http://YOUR_SERVER_IP:5000` and log in with your admin credentials.
 ---
 
 ## 🔧 Manual Install
-
-If you prefer to install step by step:
 
 ### 1. Install system dependencies
 
@@ -166,89 +167,89 @@ pip install gunicorn
 ### 4. Configure the database
 
 ```bash
-# Set a strong MySQL root password
 sudo mysql -u root
 ```
 
 ```sql
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'YOUR_STRONG_PASSWORD';
 CREATE DATABASE saspanel CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE mail     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 FLUSH PRIVILEGES;
 EXIT;
 ```
 
 ```bash
-# Import the SASPanel schema
 mysql -u root -p saspanel < scripts/database.sql
+mysql -u root -p mail     < scripts/mail.sql
 ```
 
-### 5. Write the configuration file
+### 5. Set environment variables
 
 ```bash
-cp scripts/sample.config.ini Database/config.ini
-nano Database/config.ini
-```
-
-Fill in your real values:
-
-```ini
-[config]
-host = localhost
-user = root
-password = YOUR_MYSQL_ROOT_PASSWORD
-database = saspanel
-
-[mail]
-server = localhost
-email = admin@yourdomain.com
-password = YOUR_MAIL_PASSWORD
-```
-
-```bash
-chmod 600 Database/config.ini
-```
-
-### 6. Set the `SECRET_KEY` environment variable
-
-```bash
-# Generate a strong key
-python3 -c "import secrets; print(secrets.token_hex(32))"
-
-# Create the .env file
-cat > .env <<EOF
-SECRET_KEY=PASTE_GENERATED_KEY_HERE
-FLASK_ENV=production
-FLASK_DEBUG=0
-SESSION_COOKIE_SECURE=true
-EOF
-
+cp .env.example .env
+nano .env
 chmod 600 .env
 ```
 
-### 7. Install and start the systemd service
+### 6. Configure the database connection
 
 ```bash
-# Copy the service file
-sudo cp scripts/saspanel.service /etc/systemd/system/saspanel.service
+cp Database/sample.config.ini Database/config.ini
+nano Database/config.ini
+chmod 600 Database/config.ini
+```
 
-# Enable and start
+### 7. Create the admin account
+
+```bash
+source venv/bin/activate
+python3 -c "
+from werkzeug.security import generate_password_hash
+import mysql.connector, configparser
+cfg = configparser.ConfigParser()
+cfg.read('Database/config.ini')
+db = mysql.connector.connect(
+    host=cfg['config']['host'], user=cfg['config']['user'],
+    password=cfg['config']['password'], database=cfg['config']['database']
+)
+cur = db.cursor()
+cur.execute(
+    'INSERT INTO administrator (Admin_Name, Admin_Email, Admin_Password) VALUES (%s,%s,%s)',
+    ('Admin', 'admin@yourdomain.com', generate_password_hash('YOUR_ADMIN_PASSWORD'))
+)
+db.commit()
+print('Admin created.')
+"
+```
+
+### 8. Install and start the systemd service
+
+```bash
+sudo cp scripts/saspanel.service /etc/systemd/system/saspanel.service
 sudo systemctl daemon-reload
 sudo systemctl enable saspanel
 sudo systemctl start saspanel
 ```
 
-### 8. Configure Nginx, Postfix, Dovecot
+### 9. Configure Nginx reverse proxy (optional but recommended)
 
-Refer to the scripts in `scripts/` for configuration templates:
+```nginx
+server {
+    listen 80;
+    server_name panel.yourdomain.com;
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/installer.sh` | Nginx + VSFTPD base config |
-| `scripts/packages_installer.sh` | Postfix + Dovecot + Roundcube + WebFTP |
-| `scripts/mysql_admin.sh` | MySQL root password + schema import |
-| `scripts/add_vhost.sh` | Add a new Nginx virtual host |
-| `scripts/ssl_certificate_generate.sh` | Issue a Let's Encrypt certificate |
-| `scripts/add_cron_job.sh` | Add a user cron job |
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+```bash
+sudo certbot --nginx -d panel.yourdomain.com
+```
 
 ---
 
@@ -260,33 +261,33 @@ Refer to the scripts in `scripts/` for configuration templates:
 |----------|-------------|---------|
 | `SECRET_KEY` | Flask session signing key — **required, no default** | — |
 | `FLASK_ENV` | `production` or `development` | `production` |
-| `FLASK_DEBUG` | `0` = off, `1` = on (never enable in production) | `0` |
-| `SESSION_COOKIE_SECURE` | `true` = only send cookie over HTTPS | `false` |
+| `FLASK_DEBUG` | `0` = off, `1` = on **(never enable in production)** | `0` |
+| `SERVER_NAME` | Trusted panel hostname — prevents Host header injection in password reset links | — |
 | `MAIL_SERVER` | SMTP server hostname | `localhost` |
 | `MAIL_PORT` | SMTP port | `587` |
 | `MAIL_USERNAME` | SMTP login username | — |
 | `MAIL_PASSWORD` | SMTP login password | — |
 | `MAIL_USE_TLS` | `true` / `false` | `true` |
-
-Copy `.env.example` to get started:
+| `LOGIN_RATE_LIMIT` | Max login attempts before 429 | `10 per minute` |
+| `SESSION_COOKIE_SECURE` | `true` = HTTPS-only cookies | `false` |
 
 ```bash
 cp .env.example .env
-nano .env
+chmod 600 .env
 ```
 
 ### Database Config (`Database/config.ini`)
 
 ```ini
 [config]
-host = localhost
-user = root
+host     = localhost
+user     = root
 password = YOUR_STRONG_DB_PASSWORD
 database = saspanel
 
 [mail]
-server = localhost
-email = support@yourdomain.com
+server   = localhost
+email    = support@yourdomain.com
 password = YOUR_MAIL_PASSWORD
 ```
 
@@ -299,20 +300,14 @@ password = YOUR_MAIL_PASSWORD
 ### Via systemd (Production — recommended)
 
 ```bash
-# Start
 sudo systemctl start saspanel
-
-# Stop
 sudo systemctl stop saspanel
-
-# Restart
 sudo systemctl restart saspanel
-
-# View status
 sudo systemctl status saspanel
 
-# View live logs
+# Live logs
 tail -f /home/SASPanel/logs/error.log
+tail -f /home/SASPanel/logs/audit.log
 ```
 
 ### Via Gunicorn directly
@@ -332,42 +327,37 @@ export FLASK_DEBUG=1
 python3 app.py
 ```
 
-> ⚠️ Never use `FLASK_DEBUG=1` in production. It exposes an interactive debugger.
+> ⚠️ Never use `FLASK_DEBUG=1` in production — it exposes an interactive debugger.
 
 ---
 
 ## 🛡️ Security
 
-SASPanel has been fully security-hardened. Key protections include:
-
 | Protection | Implementation |
-|-----------|---------------|
-| **CSRF Protection** | Flask-WTF `CSRFProtect` on all forms |
-| **Rate Limiting** | Flask-Limiter — 10 login attempts/minute/IP |
-| **Password Hashing** | PBKDF2-SHA256 via Werkzeug (bcrypt-compatible) |
-| **Legacy MD5 Migration** | MD5 passwords auto-upgraded to bcrypt on next login |
-| **Secret Key** | Loaded from env var only — app refuses to start without it |
-| **Security Headers** | `X-Frame-Options`, `X-Content-Type-Options`, `CSP`, `X-XSS-Protection`, `Referrer-Policy` |
+|-----------|----------------|
+| **CSRF Protection** | Flask-WTF `CSRFProtect` on every POST form and AJAX request |
+| **Rate Limiting** | Flask-Limiter — configurable per-IP login throttle (default: 10/min) |
+| **Password Hashing** | PBKDF2-SHA256 via Werkzeug; legacy MD5 passwords auto-upgraded on next login |
+| **Secret Key Enforcement** | App refuses to start if `SECRET_KEY` is missing or set to a default value |
+| **Security Headers** | `X-Frame-Options`, `X-Content-Type-Options`, strict `Content-Security-Policy`, `Referrer-Policy` |
+| **CSP Nonces** | Inline scripts require `nonce="{{ csp_nonce }}"` — enforced on every page |
 | **Session Security** | `HttpOnly`, `SameSite=Lax`, optional `Secure` flag |
-| **SQL Injection** | All queries use parameterized `%s` placeholders |
-| **OS Command Injection** | All shell calls use `subprocess.run(list)` with input validation |
+| **SQL Injection** | 100% parameterized queries — no string concatenation |
+| **OS Command Injection** | All shell calls use `subprocess.run(list)` with strict regex input validation |
+| **IDOR Protection** | Every resource fetch scoped to the logged-in admin/user's own records |
 | **Audit Logging** | Security events logged to `logs/audit.log` |
-| **Installer Lockout** | `/installer` returns 403 once database is configured |
-| **Endpoint Protection** | `/reboot/` requires admin session |
+| **Installer Lockout** | `/installer` returns 403 once the database is configured |
 | **Input Validation** | Usernames, domains, DB names validated via strict regex whitelist |
-
-### Reporting a Vulnerability
-
-See [SECURITY.md](SECURITY.md) for our responsible disclosure process.
 
 ### Post-Install Hardening Checklist
 
 - [ ] Delete `/root/saspanel_credentials.txt` after saving passwords
-- [ ] `chmod 600 Database/config.ini`
-- [ ] `chmod 600 .env`
-- [ ] Enable HTTPS on port 5000 (place Nginx reverse proxy in front)
-- [ ] Set `SESSION_COOKIE_SECURE=true` in `.env` once HTTPS is active
-- [ ] Rotate the database password if it was ever committed to git
+- [ ] `chmod 600 Database/config.ini && chmod 600 .env`
+- [ ] Put Nginx in front of port 5000 and issue SSL
+- [ ] Set `SESSION_COOKIE_SECURE=true` once HTTPS is active
+- [ ] Set `SERVER_NAME` to your panel domain
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ---
 
@@ -375,60 +365,52 @@ See [SECURITY.md](SECURITY.md) for our responsible disclosure process.
 
 ```
 SASPanel/
-├── app.py                    # Flask application factory
-├── functions.py              # Core utility functions
-├── install.sh                # Automated one-command installer
-├── requirements.txt          # Python dependencies
-├── .env.example              # Environment variable template
+├── app.py                      # Flask application factory, CSP middleware, blueprint registration
+├── functions.py                # Core helpers: FTP, mail, vhost, SSL, DB, password utils
+├── install.sh                  # Automated one-command installer
+├── requirements.txt            # Python dependencies
+├── .env.example                # Environment variable template
 │
 ├── routes/
-│   ├── __init__.py           # Blueprint registration
-│   ├── admin_routes.py       # Admin panel routes
-│   ├── user_routes.py        # User panel routes
-│   ├── login_routes.py       # Authentication routes
-│   ├── custom_pages.py       # Misc / installer routes
-│   ├── ajax_routes.py        # Server monitoring API
-│   └── security.py           # Auth decorators, audit log, sanitizers
+│   ├── __init__.py             # Flask Blueprint definition
+│   ├── admin_routes.py         # All admin panel routes
+│   ├── user_routes.py          # All user panel routes
+│   ├── login_routes.py         # Authentication (login, logout, password reset)
+│   ├── ajax_routes.py          # AJAX endpoints: server stats, domain-by-user lookup
+│   ├── custom_pages.py         # Installer, misc pages
+│   └── security.py             # Auth helpers, audit log, input sanitizers
 │
 ├── Database/
-│   ├── DbConfig.py           # MySQL connection manager
-│   ├── config.ini            # DB + mail config (chmod 600, gitignored)
-│   └── sample.config.ini     # Template for config.ini
+│   ├── DbConfig.py             # MySQL connection manager (auto-reconnect)
+│   ├── config.ini              # DB + mail credentials (chmod 600, gitignored)
+│   └── sample.config.ini       # Template for config.ini
 │
 ├── apps/
-│   ├── static/               # CSS, JS, images
-│   └── templates/            # Jinja2 HTML templates
-│       ├── adminFiles/       # Admin dashboard templates
-│       ├── userFiles/        # User dashboard templates
-│       ├── authentication/   # Login / reset password
-│       ├── installer/        # First-run installer UI
-│       └── error_pages/      # 403, 404, 429, 500
+│   ├── static/
+│   │   ├── css/saspanel.css    # Custom sp-* design system (dark theme, CSS variables)
+│   │   └── js/                 # csrf-inject.js, panel utilities
+│   └── templates/
+│       ├── layout/             # adminheader.html, adminfooter.html, footer.html
+│       ├── adminFiles/         # Admin templates: Domains, FTP, Mail, Databases, SubDomains, CronJobs
+│       ├── userFiles/          # User templates (same sections, user-scoped)
+│       ├── authentication/     # Login, password reset
+│       ├── installer/          # First-run web installer
+│       └── error_pages/        # 403, 404, 429, 500
 │
 ├── scripts/
-│   ├── installer.sh          # Nginx + VSFTPD config
-│   ├── packages_installer.sh # Mail stack + Roundcube + WebFTP
-│   ├── mysql_admin.sh        # MySQL root setup + schema import
-│   ├── add_vhost.sh          # Add Nginx vhost for a domain
-│   ├── ssl_certificate_generate.sh  # Issue Let's Encrypt cert
-│   ├── add_cron_job.sh       # Add user cron job
-│   ├── database.sql          # SASPanel MySQL schema
-│   ├── mail.sql              # Virtual mail schema
-│   └── saspanel.service      # Systemd service unit
+│   ├── database.sql            # SASPanel MySQL schema
+│   ├── mail.sql                # Virtual mail (Postfix/Dovecot) MySQL schema
+│   ├── add_vhost.sh            # Add Nginx virtual host for a domain
+│   ├── ssl_certificate_generate.sh  # Issue Let's Encrypt certificate
+│   ├── add_cron_job.sh         # Add a user cron job
+│   └── saspanel.service        # systemd service unit file
 │
-└── logs/                     # Runtime logs (gitignored)
-    ├── access.log
+└── logs/                       # Runtime logs (gitignored)
     ├── error.log
+    ├── access.log
     ├── service.log
-    └── audit.log             # Security event audit trail
+    └── audit.log               # Security event audit trail
 ```
-
----
-
-## 📸 Screenshots
-
-| Admin Dashboard | User Dashboard |
-|----------------|---------------|
-| Server monitoring, user list, package management | Domains, databases, FTP, email, cron jobs |
 
 ---
 
@@ -437,7 +419,6 @@ SASPanel/
 ### Panel won't start — `SECRET_KEY not set`
 
 ```bash
-# Add SECRET_KEY to your .env file
 python3 -c "import secrets; print(secrets.token_hex(32))"
 echo "SECRET_KEY=PASTE_RESULT_HERE" >> /home/SASPanel/.env
 sudo systemctl restart saspanel
@@ -446,63 +427,72 @@ sudo systemctl restart saspanel
 ### Database connection failed
 
 ```bash
-# Check MySQL is running
 sudo systemctl status mysql
-
-# Verify credentials
 mysql -u root -p -e "SHOW DATABASES;"
-
-# Check config.ini
 cat /home/SASPanel/Database/config.ini
 ```
 
-### Panel is running but I get 403 on installer
+### Panel returns 403 on `/installer`
 
-This means the database is already connected — the installer is intentionally locked. Navigate to `/login` instead.
+The installer locks itself once the database is connected. Navigate to `/login` instead.
 
-### Nginx shows 502 Bad Gateway
+### Nginx 502 Bad Gateway
 
 ```bash
-# Check if SASPanel is running on port 5000
 sudo systemctl status saspanel
 curl http://localhost:5000
 ```
 
-### View logs
+### Domain dropdown doesn't populate in Add Email / Add Subdomain forms
+
+Domains load via AJAX from `/ajax/domains_by_user`. Check:
+
+1. The selected user has at least one non-deleted domain
+2. Open browser **DevTools → Console** — error messages are now shown inline
+3. `tail -f /home/SASPanel/logs/error.log` for server-side errors
+
+### Subdomain shows double domain (e.g. `sub.example.com.example.com`)
+
+Already fixed — pull the latest code and restart.
+
+### FTP or email account creation silently fails
 
 ```bash
-# Application errors
 tail -f /home/SASPanel/logs/error.log
-
-# Security events (login attempts, injection attempts, etc.)
-tail -f /home/SASPanel/logs/audit.log
-
-# Full install log
-cat /var/log/saspanel_install.log
+sudo systemctl status vsftpd       # FTP
+sudo systemctl status postfix dovecot  # Mail
 ```
 
-### Reset admin password via MySQL
+### Reset admin password
 
 ```bash
-python3 -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('YOUR_NEW_PASSWORD'))"
-
-mysql -u root -p saspanel
+python3 -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('NEW_PASSWORD'))"
+mysql -u root -p saspanel -e "UPDATE administrator SET Admin_Password='HASH' WHERE Admin_Email='admin@yourdomain.com';"
 ```
-```sql
-UPDATE administrator SET Admin_Password = 'PASTE_HASH_HERE' WHERE Admin_Email = 'admin@yourdomain.com';
+
+### View all logs
+
+```bash
+tail -f /home/SASPanel/logs/error.log   # Application errors
+tail -f /home/SASPanel/logs/audit.log   # Security events
+cat /var/log/saspanel_install.log       # Installer output
 ```
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
-
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m 'Add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
+3. Commit: `git commit -m 'feat: describe your change'`
+4. Push: `git push origin feature/my-feature`
 5. Open a Pull Request
+
+**Code style notes:**
+- All templates must use the `sp-*` CSS design system (`apps/static/css/saspanel.css`) — no Bootstrap classes
+- All `<script>` tags must include `nonce="{{ csp_nonce }}"`
+- All DB queries must use parameterized `%s` placeholders
+- All shell commands must go through `functions.py` helpers with `_validate()` checks
 
 ---
 
