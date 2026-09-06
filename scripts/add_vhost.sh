@@ -6,6 +6,12 @@ set -euo pipefail
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
 
+# Root check FIRST — before any work, so failure is obvious
+if [ "$(id -u)" != "0" ]; then
+    echo "ERROR: Script must be run as root." >&2
+    exit 1
+fi
+
 # SH-04: Validate args (belt-and-suspenders — Python already validates these)
 username="${1:?Username argument is required}"
 domain="${2:?Domain argument is required}"
@@ -30,9 +36,6 @@ mkdir -p "${WEB_DIR}/${WEB_USER}/domains/${domain}/public_html"
 mkdir -p "${WEB_DIR}/${WEB_USER}/crobjobs/logs"
 chown -R "${WEB_USER}:${WEB_USER}" "${WEB_DIR}/${WEB_USER}/"
 
-# Root check
-[ "$(id -g)" != "0" ] && echo "Script must be run as root." >&2 && exit 1
-
 # Create nginx vhost config (domain is whitelist-validated above)
 cat > "${NGINX_AVAILABLE_VHOSTS}/${domain}-vhost.conf" <<EOF
 server {
@@ -45,12 +48,13 @@ server {
     access_log ${WEB_DIR}/${WEB_USER}/logs/${domain}-access.log;
     error_log  ${WEB_DIR}/${WEB_USER}/logs/${domain}-error.log;
 
-    include php.conf;
-    include snippets/phpmyadmin.conf;
+    include /etc/nginx/php.conf;
 }
 EOF
 
-# Create placeholder index.html
+# Create placeholder index.html only if public_html is empty
+if [ ! -f "${WEB_DIR}/${WEB_USER}/domains/${domain}/public_html/index.html" ] && \
+   [ ! -f "${WEB_DIR}/${WEB_USER}/domains/${domain}/public_html/index.php" ]; then
 cat > "${WEB_DIR}/${WEB_USER}/domains/${domain}/public_html/index.html" <<EOF
 <!DOCTYPE html>
 <html lang="en">
@@ -65,11 +69,13 @@ cat > "${WEB_DIR}/${WEB_USER}/domains/${domain}/public_html/index.html" <<EOF
 </body>
 </html>
 EOF
+fi
 
 # Permissions — all variables quoted
 chown -R "${WEB_USER}:${WEB_USER}" "${WEB_DIR}/${WEB_USER}"
 ln -sf "${NGINX_AVAILABLE_VHOSTS}/${domain}-vhost.conf" \
        "${NGINX_ENABLED_VHOSTS}/${domain}-vhost.conf"
 
-service nginx restart
+# Validate config before reloading (never restart — kills live connections)
+nginx -t && systemctl reload nginx
 echo "Site created for ${domain}"
