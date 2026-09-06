@@ -1,81 +1,140 @@
 {% include "layout/adminheader.html" %}
-{% block body %}
-    <!-- ============================================================== -->
-            <!-- Start Page Content here -->
-            <!-- ============================================================== -->
 
-            <div class="content-page">
-                <div class="content">
+<div class="sp-page-header">
+  <h1 class="sp-page-title">MySQL Databases</h1>
+  <p class="sp-page-subtitle">Create and manage databases for hosted users</p>
+</div>
 
-                    <!-- Start Content-->
-                    <div class="container-fluid">
-                        <div class="row page-title">
-                            <div class="col-md-12">
-                                <nav aria-label="breadcrumb" class="float-right mt-1">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewDatabases") }}">MYSQL Databases</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Database List</li>
-                                    </ol>
-                                </nav>
-                                <h4 class="mb-1 mt-0"> Databases List</h4>
-                            </div>
-                        </div>
-                        {% for message in get_flashed_messages() %}
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                        {% endfor %}
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h4 class="header-title mt-0 mb-1">Databases List</h4>
-                                        <p class="sub-header">
-                                            You can View, Change password and Delete Databases Here.
-                                        </p>
+{% if msg %}
+<div class="sp-alert {{ msg.error }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ msg.message }}
+</div>
+{% endif %}
+{% for message in get_flashed_messages() %}
+<div class="sp-alert success">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  {{ message }}
+</div>
+{% endfor %}
 
-                                        <table id="basic-datatable" class="table nowrap">
-                                            <thead>
-                                                <tr>
-                                                    <th>User's Name</th>
-                                                    <th>User's Email</th>
-                                                    <th>Database Username</th>
-                                                    <th>Database Name</th>
-                                                    <th>phpMyAdmin</th>
-                                                    <th>Manage</th>
-                                                </tr>
-                                            </thead>
+<div class="sp-tab-container">
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="tab-list">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      All Databases
+    </button>
+    <button class="sp-tab" data-tab="tab-add">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Database
+    </button>
+  </div>
 
+  <!-- ── Tab: List ── -->
+  <div class="sp-tab-panel active" id="tab-list">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Database List</span>
+        <div class="sp-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="db-search" placeholder="Search databases…" aria-label="Search databases"/>
+        </div>
+      </div>
+      <div class="sp-table-wrap">
+        <table class="sp-table" id="db-table">
+          <thead>
+            <tr>
+              <th>User Name</th>
+              <th>Email</th>
+              <th>DB Username</th>
+              <th>Database Name</th>
+              <th>phpMyAdmin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if results %}
+              {% for record in results %}
+                <tr>
+                  <td class="sp-fw-600">{{ record[14] }}</td>
+                  <td class="muted">{{ record[12] }}</td>
+                  <td><code style="font-size:12px;color:var(--accent-h);">{{ record[1] }}</code></td>
+                  <td><code style="font-size:12px;color:var(--text);">{{ record[6] }}</code></td>
+                  <td>
+                    <a href="http://{{ mainhost }}/phpmyadmin" target="_blank" rel="noopener noreferrer"
+                       class="sp-btn sp-btn-ghost" style="padding:5px 10px;font-size:12px;">phpMyAdmin ↗</a>
+                  </td>
+                  <td>
+                    <div class="sp-flex sp-gap-8">
+                      <a href="{{ url_for('routes.admin_updateDBPass', DbID=record[0]) }}"
+                         class="sp-btn-icon edit" title="Change password" aria-label="Change DB password">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      </a>
+                      <a href="{{ url_for('routes.admin_deleteDatabase', DbID=record[5]) }}"
+                         class="sp-btn-icon delete" title="Delete database" aria-label="Delete database"
+                         onclick="return confirm('Delete database {{ record[6] }}? This is irreversible.')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" style="text-align:center;padding:40px;color:var(--text-dim);">No databases found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-                                            <tbody>
-                                            {% if results %}
-                                                {% for record in results %}
-                                                <tr>
-                                                    <td>{{ record[14] }}</td>
-                                                    <td>{{ record[12] }}</td>
-                                                    <td>{{ record[1] }}</td>
-                                                    <td>{{ record[6] }}</td>
-                                                    <td><button type="button" class="btn btn-primary btn-sm">Login</button></td>
-                                                    <td><a href="{{ url_for('routes.admin_updateDBPass', DbID=record[0]) }}"><button type="button" class="btn btn-info btn-sm">Change Password</button></a> <a href="{{ url_for('routes.admin_deleteDatabase', DbID=record[5]) }}" class="custom-confirm-link" data-confirmation="Are you sure you want to remove this?"><button type="button" class="btn btn-warning btn-sm">Delete</button></a></td>
-                                                </tr>
-                                                {% endfor %}
-                                            {% endif %}
+  <!-- ── Tab: Add ── -->
+  <div class="sp-tab-panel" id="tab-add">
+    <div class="sp-card" style="max-width:560px;">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Create New Database</span>
+      </div>
+      <div class="sp-card-body">
+        <form method="POST" action="{{ url_for('routes.admin_addDB') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="sp-form-group">
+            <label class="sp-label" for="db-user">Assign to User <span style="color:var(--danger)">*</span></label>
+            <select name="userID" id="db-user" class="sp-select" required>
+              <option value="">— Select User —</option>
+              {% if users %}
+                {% for user in users %}
+                  <option value="{{ user[0] }}">{{ user[2] }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+          <div class="sp-form-group">
+            <label class="sp-label" for="databaseName">Database Name <span style="color:var(--danger)">*</span></label>
+            <input type="text" name="databaseName" id="databaseName" class="sp-input"
+                   placeholder="my_database" required autocomplete="off"
+                   pattern="[a-zA-Z0-9_]+" title="Letters, numbers, and underscores only"/>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">Only letters, numbers, and underscores. Must be unique.</div>
+          </div>
+          <div class="sp-flex sp-gap-8" style="margin-top:8px;">
+            <button type="submit" class="sp-btn sp-btn-primary">Create Database</button>
+            <button type="reset" class="sp-btn sp-btn-ghost">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-                                            </tbody>
-                                        </table>
+</div>
 
-                                    </div> <!-- end card body-->
-                                </div> <!-- end card -->
-                            </div><!-- end col-->
-                        </div>
-                        <!-- end row-->
-                        <!-- end row-->
-                    </div> <!-- container-fluid -->
+<script>
+document.getElementById('db-search').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('#db-table tbody tr').forEach(function(r) {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
 
-                </div> <!-- content -->
 {% include "layout/adminfooter.html" %}
-{% endblock %}

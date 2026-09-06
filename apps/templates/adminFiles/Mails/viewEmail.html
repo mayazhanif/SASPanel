@@ -1,79 +1,155 @@
 {% include "layout/adminheader.html" %}
-{% block body %}
-    <!-- ============================================================== -->
-            <!-- Start Page Content here -->
-            <!-- ============================================================== -->
 
-            <div class="content-page">
-                <div class="content">
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Email Accounts</h1>
+  <p class="sp-page-subtitle">Manage mailboxes for hosted domains</p>
+</div>
 
-                    <!-- Start Content-->
-                    <div class="container-fluid">
-                        <div class="row page-title">
-                            <div class="col-md-12">
-                                <nav aria-label="breadcrumb" class="float-right mt-1">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="{{ url_for("routes.admin_dashboard") }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="{{url_for("routes.admin_viewEmail") }}">Mail Accounts</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Email Accounts</li>
-                                    </ol>
-                                </nav>
-                                <h4 class="mb-1 mt-0"> Email Accounts</h4>
-                            </div>
-                        </div>
-                        {% for message in get_flashed_messages() %}
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                        {% endfor %}
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h4 class="header-title mt-0 mb-1">Email Accounts</h4>
-                                        <p class="sub-header">
-                                            Type the Password and confirm password to Change the Password of Mail Account.
-                                        </p>
+{% if msg %}
+<div class="sp-alert {{ msg.error }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ msg.message }}
+</div>
+{% endif %}
+{% for message in get_flashed_messages() %}
+<div class="sp-alert success">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  {{ message }}
+</div>
+{% endfor %}
 
-                                        <table id="basic-datatable" class="table nowrap">
-                                            <thead>
-                                                <tr>
-                                                    <th>User Email</th>
-                                                    <th>Domain Name</th>
-                                                    <th>Mail Account</th>
-                                                    <th>Manage</th>
-                                                </tr>
-                                            </thead>
+<div class="sp-tab-container">
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="tab-list">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      All Mailboxes
+    </button>
+    <button class="sp-tab" data-tab="tab-add">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Email
+    </button>
+  </div>
 
+  <!-- ── Tab: List ── -->
+  <div class="sp-tab-panel active" id="tab-list">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Mailbox List</span>
+        <div class="sp-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="mail-search" placeholder="Search mailboxes…" aria-label="Search email accounts"/>
+        </div>
+      </div>
+      <div class="sp-table-wrap">
+        <table class="sp-table" id="mail-table">
+          <thead>
+            <tr>
+              <th>User Name</th>
+              <th>Email Address</th>
+              <th>Domain</th>
+              <th>Webmail</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if results %}
+              {% for record in results %}
+                <tr>
+                  <td class="sp-fw-600">{{ record[10] if record[10] else '—' }}</td>
+                  <td>
+                    <span style="color:var(--accent-h);font-weight:500;">{{ record[1] }}@{{ record[15] if record[15] else record[4] }}</span>
+                  </td>
+                  <td class="muted">{{ record[15] if record[15] else record[4] }}</td>
+                  <td>
+                    <a href="http://{{ mainhost }}/roundcube" target="_blank" rel="noopener noreferrer"
+                       class="sp-btn sp-btn-ghost" style="padding:5px 10px;font-size:12px;">Roundcube ↗</a>
+                  </td>
+                  <td>
+                    <div class="sp-flex sp-gap-8">
+                      <a href="{{ url_for('routes.admin_updateEmail', mailID=record[0]) }}"
+                         class="sp-btn-icon edit" title="Change password" aria-label="Change mail password">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      </a>
+                      <a href="{{ url_for('routes.admin_deleteEmail', mailID=record[0]) }}"
+                         class="sp-btn-icon delete" title="Delete mailbox" aria-label="Delete email account"
+                         onclick="return confirm('Delete email account {{ record[1] }}?')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" style="text-align:center;padding:40px;color:var(--text-dim);">No email accounts found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-                                            <tbody>
-                                            {% if results %}
-                                                  {% for record in results %}
-                                                    <tr>
-                                                        <td>{{record[8]}}</td>
-                                                        <td>{{record[18]}}</td>
-                                                        <td><a href="">{{record[3]}}</a></td>
-                                                        <td><a href="{{ url_for('routes.admin_deleteEmail', mailID=record[0]) }}" class="custom-confirm-link" data-confirmation="Are you sure you want to remove this?"><button type="button" class="btn btn-info btn-sm">Delete</button></a> <a href="{{ url_for('routes.admin_updateEmail', mailID=record[0]) }}"><button type="button" class="btn btn-warning btn-sm">Change Password</button></a></td>
-                                                    </tr>
-                                                  {% endfor %}
-                                            {% endif %}
+  <!-- ── Tab: Add ── -->
+  <div class="sp-tab-panel" id="tab-add">
+    <div class="sp-card" style="max-width:560px;">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Add Email Account</span>
+      </div>
+      <div class="sp-card-body">
+        <form method="POST" action="{{ url_for('routes.admin_addEmail') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="sp-form-group">
+            <label class="sp-label" for="mail-user">Assign to User <span style="color:var(--danger)">*</span></label>
+            <select name="userID" id="mail-user" class="sp-select" required>
+              <option value="">— Select User —</option>
+              {% if users %}
+                {% for user in users %}
+                  <option value="{{ user[0] }}">{{ user[2] }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+          <div class="sp-form-group">
+            <label class="sp-label" for="mail-domain">Domain <span style="color:var(--danger)">*</span></label>
+            <select name="domainID" id="mail-domain" class="sp-select" required>
+              <option value="">— Select Domain —</option>
+              {% if domains %}
+                {% for domain in domains %}
+                  <option value="{{ domain[0] }}">{{ domain[1] }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+          <div class="sp-form-group">
+            <label class="sp-label" for="mail-prefix">Email Prefix <span style="color:var(--danger)">*</span></label>
+            <input type="text" name="emailPrefix" id="mail-prefix" class="sp-input"
+                   placeholder="info, support, admin…" required autocomplete="off"/>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">e.g. "info" → info@yourdomain.com</div>
+          </div>
+          <div class="sp-form-group">
+            <label class="sp-label" for="mail-pass">Password <span style="color:var(--danger)">*</span></label>
+            <input type="password" name="emailPass" id="mail-pass" class="sp-input"
+                   placeholder="••••••••" required maxlength="128" autocomplete="new-password"/>
+          </div>
+          <div class="sp-flex sp-gap-8" style="margin-top:8px;">
+            <button type="submit" class="sp-btn sp-btn-primary">Create Mailbox</button>
+            <button type="reset" class="sp-btn sp-btn-ghost">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
+</div>
 
+<script>
+document.getElementById('mail-search').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('#mail-table tbody tr').forEach(function(r) {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
 
-                                            </tbody>
-                                        </table>
-
-                                    </div> <!-- end card body-->
-                                </div> <!-- end card -->
-                            </div><!-- end col-->
-                        </div>
-                        <!-- end row-->
-                        <!-- end row-->
-                    </div> <!-- container-fluid -->
-
-                </div> <!-- content -->
 {% include "layout/adminfooter.html" %}
-{% endblock %}

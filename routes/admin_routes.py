@@ -35,8 +35,11 @@ def admin_viewUser():
             'WHERE Is_Deleted=0 AND users.Admin_id=%s;',
             (str(session['id']),)
         )
+        userList = cursor.fetchall()
+        # UI: also fetch packages for the embedded Add User tab
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
         results = cursor.fetchall()
-        return render_template('adminFiles/users/viewUser.html', results=results)
+        return render_template('adminFiles/users/viewUser.html', userList=userList, results=results)
     else:
         return redirect(url_for('routes.login'))
 
@@ -279,11 +282,11 @@ def admin_addPackage():
                 Sub_Domains    = _to_nonneg_int(request.form['subdomains'], 'Subdomain limit')
                 Storage_Limit  = _to_nonneg_int(request.form['storage'],    'Storage limit', max_val=999999)
             except ValueError as e:
-                return render_template('adminFiles/Packages/addPackage.html',
-                                       msg={'error': 'danger', 'message': str(e)})
+                return render_template('adminFiles/Packages/viewPackages.html',
+                                       msg={'error': 'danger', 'message': str(e)}, packages=[])
             if not Package_Name or len(Package_Name) > 128:
-                return render_template('adminFiles/Packages/addPackage.html',
-                                       msg={'error': 'danger', 'message': 'Package name must be 1-128 characters.'})
+                return render_template('adminFiles/Packages/viewPackages.html',
+                                       msg={'error': 'danger', 'message': 'Package name must be 1-128 characters.'}, packages=[])
             CGI_ACCESS='0'
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
@@ -292,12 +295,14 @@ def admin_addPackage():
                            (Package_Name, Admin_id, Limit_FTP, Limit_Mails, Limit_Domains, CGI_ACCESS, Limit_DB, Sub_Domains, Storage_Limit))
             mysqlconnection.commit()
             if cursor.rowcount>0:
-                return render_template('adminFiles/Packages/addPackage.html', msg={"error":"success","message":"Package Added."})
+                flash('Package created successfully.')
+                return redirect(url_for('routes.admin_viewPackages'))
             else:
-                return render_template('adminFiles/Packages/addPackage.html', msg={"error":"primary","message":"Fill all fields Correctly."})
+                return render_template('adminFiles/Packages/viewPackages.html',
+                                       msg={'error': 'primary', 'message': 'Package not created. Fill all fields correctly.'}, packages=[])
 
         else:
-            return render_template('adminFiles/Packages/addPackage.html', title='Add package')
+            return redirect(url_for('routes.admin_viewPackages'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -308,8 +313,8 @@ def admin_viewPackages():
         cursor = mysqlconnection.cursor()
         # FIX R14-04: info-leak — was showing ALL packages from all admins
         cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
-        results = cursor.fetchall()
-        return render_template('adminFiles/Packages/viewPackages.html', results=results)
+        packages = cursor.fetchall()
+        return render_template('adminFiles/Packages/viewPackages.html', packages=packages)
     else:
         return redirect(url_for('routes.login'))
 
@@ -565,34 +570,30 @@ def admin_addDB():
             userID = request.form['userID']
             if(userID==""):
                 msg={"error":"danger", "message": "User not Selected."}
-                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+                return render_template('adminFiles/MysqlDatabase/viewDatabases.html', users=users, msg=msg, results=[])
             # FIX R9-04: IDOR — verify userID belongs to this admin before adding database
             cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id= %s AND users.Admin_id=%s;',(userID, str(session['id'])))
             DBUserbyID = cursor.fetchone()
             if DBUserbyID is None:
                 msg={"error":"danger", "message": "User not found or access denied."}
-                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+                return render_template('adminFiles/MysqlDatabase/viewDatabases.html', users=users, msg=msg, results=[])
 
-            #print(DBUserbyID[0])
             databaseName = request.form['databaseName']
-            #query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '"+databaseName+"', '"+userID+"', '"+str(DBUserbyID[0])+"', '1');"
-            #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '1', '0', '0');"
             try:
                 cursor.execute("INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, %s, %s, %s, '1');",(databaseName,userID,str(DBUserbyID[0])))
                 mysqlconnection.commit()
             except:
                 msg={"error":"danger","message":"Database name already in use."}
-                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+                return render_template('adminFiles/MysqlDatabase/viewDatabases.html', users=users, msg=msg, results=[])
             if cursor.rowcount>0:
                 create_database(cursor,databaseName,DBUserbyID[1])
-                msg={"error":"success","message":"Database Added."}
-                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+                flash('Database created successfully.')
+                return redirect(url_for('routes.admin_viewDatabases'))
             else:
                 msg = {"error": "danger", "message": "Database Adding not Successfull."}
-                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+                return render_template('adminFiles/MysqlDatabase/viewDatabases.html', users=users, msg=msg, results=[])
         else:
-            msg=''
-            return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
+            return redirect(url_for('routes.admin_viewDatabases'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -611,8 +612,10 @@ def admin_viewDatabases():
             (str(session['id']),)
         )
         results = cursor.fetchall()
-        msg = ''
-        return render_template('adminFiles/MysqlDatabase/viewDatabases.html', results=results)
+        # UI: fetch users for the embedded Add Database tab
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
+        users = cursor.fetchall()
+        return render_template('adminFiles/MysqlDatabase/viewDatabases.html', results=results, users=users)
     else:
         return redirect(url_for('routes.login'))
 
