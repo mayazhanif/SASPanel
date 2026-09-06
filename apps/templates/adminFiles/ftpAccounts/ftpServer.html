@@ -1,139 +1,129 @@
 {% include "layout/adminheader.html" %}
-{% block body %}
 
-<div class="content-page">
-    <div class="content">
-        <div class="container-fluid">
+<div class="sp-page-header">
+  <h1 class="sp-page-title">FTP Server Info</h1>
+  <p class="sp-page-subtitle">Connection details and quick-start guide for FTP access</p>
+</div>
 
-            <!-- Page Title -->
-            <div class="row page-title">
-                <div class="col-md-12">
-                    <nav aria-label="breadcrumb" class="float-right mt-1">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url_for('routes.admin_dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ url_for('routes.admin_viewAccounts') }}">FTP Accounts</a></li>
-                            <li class="breadcrumb-item active">FTP Server Info</li>
-                        </ol>
-                    </nav>
-                    <h4 class="mb-1 mt-0">FTP Server Information</h4>
-                </div>
-            </div>
+<!-- Back link -->
+<div style="margin-bottom:1.5rem;">
+  <a href="{{ url_for('routes.admin_viewAccounts') }}" class="sp-btn sp-btn-ghost" style="font-size:0.875rem;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to FTP Accounts
+  </a>
+</div>
 
-            <div class="row">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;align-items:start;">
 
-                <!-- Server Info Card -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white d-flex align-items-center">
-                            <i data-feather="server" class="mr-2"></i>
-                            <h5 class="mb-0">Connection Details</h5>
-                        </div>
-                        <div class="card-body p-0">
-                            <table class="table table-borderless mb-0">
-                                <tbody>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold" style="width:40%">Protocol</td>
-                                        <td><span class="badge badge-success">FTP / FTPS</span></td>
-                                    </tr>
-                                    <tr class="bg-light">
-                                        <td class="text-muted font-weight-bold">Server IP</td>
-                                        <td><code>{{ mainhost }}</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">Hostname</td>
-                                        <td><code>ftp.{{ mainhost }}</code></td>
-                                    </tr>
-                                    <tr class="bg-light">
-                                        <td class="text-muted font-weight-bold">FTP Port</td>
-                                        <td><code>21</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">FTPS Port</td>
-                                        <td><code>990</code></td>
-                                    </tr>
-                                    <tr class="bg-light">
-                                        <td class="text-muted font-weight-bold">Passive Ports</td>
-                                        <td><code>40000 – 50000</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted font-weight-bold">Encryption</td>
-                                        <td><span class="badge badge-info">Explicit TLS</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+  <!-- Connection Details Card -->
+  <div class="sp-card">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:-2px;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Connection Details
+      </span>
+    </div>
+    <div class="sp-table-wrap">
+      <table class="sp-table">
+        <tbody>
+          <tr>
+            <td style="color:var(--sp-text-muted);font-weight:500;width:45%">Protocol</td>
+            <td><span class="sp-badge sp-badge-success">FTP / FTPS</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--sp-text-muted);font-weight:500;">Server IP</td>
+            <td><code style="background:var(--sp-surface-2);padding:2px 6px;border-radius:4px;font-size:0.8rem;">{{ mainhost }}</code></td>
+          </tr>
+          <tr>
+            <td style="color:var(--sp-text-muted);font-weight:500;">Hostname</td>
+            <td><code style="background:var(--sp-surface-2);padding:2px 6px;border-radius:4px;font-size:0.8rem;">ftp.{{ mainhost }}</code></td>
+          </tr>
+          <tr>
+            <td style="color:var(--sp-text-muted);font-weight:500;">FTP Port</td>
+            <td><code style="background:var(--sp-surface-2);padding:2px 6px;border-radius:4px;font-size:0.8rem;">21</code></td>
+          </tr>
+          <tr>
+            <td style="color:var(--sp-text-muted);font-weight:500;">FTPS Port</td>
+            <td><code style="background:var(--sp-surface-2);padding:2px 6px;border-radius:4px;font-size:0.8rem;">990</code></td>
+          </tr>
+          <tr>
+            <td style="color:var(--sp-text-muted);font-weight:500;">Passive Ports</td>
+            <td><code style="background:var(--sp-surface-2);padding:2px 6px;border-radius:4px;font-size:0.8rem;">40000 – 50000</code></td>
+          </tr>
+          <tr>
+            <td style="color:var(--sp-text-muted);font-weight:500;">Encryption</td>
+            <td><span class="sp-badge sp-badge-info">Explicit TLS</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-                <!-- Web FTP Card -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-info text-white d-flex align-items-center">
-                            <i data-feather="globe" class="mr-2"></i>
-                            <h5 class="mb-0">Web FTP Access</h5>
-                        </div>
-                        <div class="card-body text-center">
-                            <p class="text-muted mb-3">Access files through a browser without an FTP client.</p>
-                            <a href="http://{{ mainhost }}/webftp/" target="_blank" class="btn btn-info btn-lg btn-block">
-                                <i data-feather="external-link" class="mr-1"></i> Open Web FTP
-                            </a>
-                            <small class="text-muted d-block mt-2">
-                                URL: <code>http://{{ mainhost }}/webftp/</code>
-                            </small>
-                        </div>
-                    </div>
+  <!-- Web FTP + Clients Card -->
+  <div class="sp-card">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:-2px;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Web FTP Access
+      </span>
+    </div>
+    <div style="padding:1.25rem;">
+      <p style="color:var(--sp-text-muted);font-size:0.875rem;margin-bottom:1rem;">
+        Access your files directly through a browser — no FTP client needed.
+      </p>
+      <a href="http://{{ mainhost }}/webftp/" target="_blank" rel="noopener"
+         class="sp-btn sp-btn-primary" style="width:100%;justify-content:center;display:flex;margin-bottom:0.75rem;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open Web FTP
+      </a>
+      <p style="font-size:0.75rem;color:var(--sp-text-muted);text-align:center;">
+        <code style="font-size:0.72rem;">http://{{ mainhost }}/webftp/</code>
+      </p>
 
-                    <!-- FTP Clients Card -->
-                    <div class="card mt-0">
-                        <div class="card-header bg-secondary text-white d-flex align-items-center">
-                            <i data-feather="download" class="mr-2"></i>
-                            <h5 class="mb-0">Recommended FTP Clients</h5>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="list-group list-group-flush">
-                                <a href="https://filezilla-project.org/" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    FileZilla <span class="badge badge-primary">Free</span>
-                                </a>
-                                <a href="https://winscp.net/" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    WinSCP <span class="badge badge-primary">Free</span>
-                                </a>
-                                <a href="https://cyberduck.io/" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                    Cyberduck <span class="badge badge-primary">Free</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <hr style="border-color:var(--sp-border);margin:1rem 0;">
 
-                <!-- Quick-Connect Guide Card -->
-                <div class="col-lg-4 col-md-12">
-                    <div class="card">
-                        <div class="card-header bg-success text-white d-flex align-items-center">
-                            <i data-feather="book-open" class="mr-2"></i>
-                            <h5 class="mb-0">Quick-Connect Guide</h5>
-                        </div>
-                        <div class="card-body">
-                            <ol class="pl-3 mb-0">
-                                <li class="mb-2">Open your FTP client (e.g. FileZilla).</li>
-                                <li class="mb-2">Set <strong>Host</strong> to <code>{{ mainhost }}</code>.</li>
-                                <li class="mb-2">Enter your <strong>FTP Username</strong> and <strong>Password</strong> from the FTP Accounts list.</li>
-                                <li class="mb-2">Set <strong>Port</strong> to <code>21</code>.</li>
-                                <li class="mb-2">Select <strong>Explicit FTP over TLS</strong> for encryption.</li>
-                                <li>Click <strong>Quickconnect</strong>.</li>
-                            </ol>
-                            <hr>
-                            <div class="alert alert-warning mb-0 py-2">
-                                <i data-feather="alert-triangle" class="mr-1"></i>
-                                <small>Always use FTPS (TLS) — plain FTP transmits passwords in clear text.</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <p style="font-weight:600;font-size:0.8rem;color:var(--sp-text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">Recommended Clients</p>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;">
+        <a href="https://filezilla-project.org/" target="_blank" rel="noopener"
+           style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;background:var(--sp-surface-2);border-radius:6px;text-decoration:none;color:var(--sp-text);">
+          <span>FileZilla</span><span class="sp-badge sp-badge-success" style="font-size:0.7rem;">Free</span>
+        </a>
+        <a href="https://winscp.net/" target="_blank" rel="noopener"
+           style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;background:var(--sp-surface-2);border-radius:6px;text-decoration:none;color:var(--sp-text);">
+          <span>WinSCP</span><span class="sp-badge sp-badge-success" style="font-size:0.7rem;">Free</span>
+        </a>
+        <a href="https://cyberduck.io/" target="_blank" rel="noopener"
+           style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0.75rem;background:var(--sp-surface-2);border-radius:6px;text-decoration:none;color:var(--sp-text);">
+          <span>Cyberduck</span><span class="sp-badge sp-badge-success" style="font-size:0.7rem;">Free</span>
+        </a>
+      </div>
+    </div>
+  </div>
 
-            </div><!-- end row -->
-        </div><!-- end container-fluid -->
-    </div><!-- end content -->
-</div><!-- end content-page -->
+  <!-- Quick Connect Guide -->
+  <div class="sp-card">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:-2px;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Quick-Connect Guide
+      </span>
+    </div>
+    <div style="padding:1.25rem;">
+      <ol style="padding-left:1.25rem;margin:0 0 1rem;color:var(--sp-text);line-height:2;">
+        <li>Open your FTP client (e.g. FileZilla)</li>
+        <li>Set <strong>Host</strong> to <code style="background:var(--sp-surface-2);padding:1px 5px;border-radius:4px;">{{ mainhost }}</code></li>
+        <li>Enter your <strong>FTP Username</strong> and <strong>Password</strong></li>
+        <li>Set <strong>Port</strong> to <code style="background:var(--sp-surface-2);padding:1px 5px;border-radius:4px;">21</code></li>
+        <li>Select <strong>Explicit FTP over TLS</strong></li>
+        <li>Click <strong>Quickconnect</strong></li>
+      </ol>
+      <div class="sp-alert warning" style="margin:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Always use FTPS (TLS) — plain FTP sends passwords in clear text.
+      </div>
+    </div>
+  </div>
+
+</div>
 
 {% include "layout/adminfooter.html" %}
-{% endblock %}

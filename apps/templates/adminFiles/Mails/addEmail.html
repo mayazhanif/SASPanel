@@ -1,226 +1,198 @@
 {% include "layout/adminheader.html" %}
-{% block body %}
 
-<div class="content-page">
-    <div class="content">
-        <div class="container-fluid">
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Add Email Account</h1>
+  <p class="sp-page-subtitle">Create a new mailbox for one of your hosted users</p>
+</div>
 
-            <!-- Page Title -->
-            <div class="row page-title">
-                <div class="col-md-12">
-                    <nav aria-label="breadcrumb" class="float-right mt-1">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ url_for('routes.admin_dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ url_for('routes.admin_viewEmail') }}">Mail Accounts</a></li>
-                            <li class="breadcrumb-item active">Add Mail Account</li>
-                        </ol>
-                    </nav>
-                    <h4 class="mb-1 mt-0">Add Mail Account</h4>
-                </div>
-            </div>
+<!-- Back -->
+<div style="margin-bottom:1.5rem;">
+  <a href="{{ url_for('routes.admin_viewEmail') }}" class="sp-btn sp-btn-ghost" style="font-size:0.875rem;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Mail Accounts
+  </a>
+</div>
 
-            <div class="row justify-content-center">
-                <div class="col-xl-7 col-lg-9">
+{% for message in get_flashed_messages() %}
+<div class="sp-alert danger" style="margin-bottom:1rem;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ message }}
+</div>
+{% endfor %}
 
-                    {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ messages[0] }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    {% endif %}
-                    {% endwith %}
-
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-primary text-white d-flex align-items-center">
-                            <i data-feather="mail" class="mr-2"></i>
-                            <h5 class="mb-0">Create Email Account</h5>
-                        </div>
-                        <div class="card-body">
-                            <form method="POST" action="{{ url_for('routes.admin_addEmail') }}" autocomplete="off" id="addEmailForm">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                                <!-- Step 1: Assign to User -->
-                                <div class="form-group">
-                                    <label for="userID">
-                                        <i data-feather="user" class="icon-xs mr-1"></i>
-                                        Assign to User <span class="text-danger">*</span>
-                                    </label>
-                                    <select id="userID" name="userID" class="custom-select" required>
-                                        <option value="">— Select User —</option>
-                                        {% for user in users %}
-                                        <option value="{{ user[0] }}">{{ user[1] }} &lt;{{ user[2] }}&gt;</option>
-                                        {% endfor %}
-                                    </select>
-                                    <small class="form-text text-muted">Select a user to load their domains.</small>
-                                </div>
-
-                                <!-- Step 2: Domain (loaded via AJAX) -->
-                                <div class="form-group">
-                                    <label for="domainID">
-                                        <i data-feather="globe" class="icon-xs mr-1"></i>
-                                        Domain <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <select id="domainID" name="domainID" class="custom-select" required disabled>
-                                            <option value="">— Select User first —</option>
-                                        </select>
-                                        <div class="input-group-append">
-                                            <span class="input-group-text" id="domain-spinner" style="display:none;">
-                                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <small class="form-text text-muted" id="domain-hint">Domains will appear after selecting a user.</small>
-                                </div>
-
-                                <!-- Step 3: Email Prefix -->
-                                <div class="form-group">
-                                    <label for="suffix">
-                                        <i data-feather="at-sign" class="icon-xs mr-1"></i>
-                                        Email Prefix <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="suffix" name="suffix"
-                                               placeholder="info, support, admin…"
-                                               pattern="[a-zA-Z0-9][a-zA-Z0-9.\-_+]*"
-                                               maxlength="64" required autocomplete="off">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text" id="email-preview">@domain.com</span>
-                                        </div>
-                                    </div>
-                                    <small class="form-text text-muted">
-                                        e.g. <code>info</code> → <strong id="preview-full">info@yourdomain.com</strong>
-                                    </small>
-                                </div>
-
-                                <!-- Password -->
-                                <div class="form-group">
-                                    <label for="Password">
-                                        <i data-feather="lock" class="icon-xs mr-1"></i>
-                                        Password <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="Password" name="Password"
-                                               placeholder="Min. 8 characters"
-                                               minlength="8" maxlength="64" required autocomplete="new-password">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary" type="button" id="togglePw" tabindex="-1">
-                                                <i data-feather="eye" id="pwEyeIcon"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <hr class="mt-4">
-
-                                <!-- Actions -->
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <a href="{{ url_for('routes.admin_viewEmail') }}" class="btn btn-outline-secondary">
-                                        <i data-feather="arrow-left" class="mr-1"></i> Back
-                                    </a>
-                                    <div>
-                                        <button type="reset" class="btn btn-light mr-2">
-                                            <i data-feather="refresh-cw" class="mr-1"></i> Reset
-                                        </button>
-                                        <button type="submit" class="btn btn-primary" id="submitBtn">
-                                            <i data-feather="plus-circle" class="mr-1"></i> Create Mailbox
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div><!-- end card -->
-
-                </div>
-            </div><!-- end row -->
-        </div><!-- end container-fluid -->
+<div style="max-width:580px;">
+  <div class="sp-card">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:7px;vertical-align:-2px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Create Email Account
+      </span>
     </div>
+    <div style="padding:1.5rem;">
+      <form method="POST" action="{{ url_for('routes.admin_addEmail') }}" autocomplete="off" id="addEmailForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <!-- Step 1: User -->
+        <div class="sp-form-group">
+          <label for="userID" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+            Assign to User <span style="color:#f87171;">*</span>
+          </label>
+          <select id="userID" name="userID" class="sp-select" required style="width:100%;">
+            <option value="">— Select User —</option>
+            {% for user in users %}
+            <option value="{{ user[0] }}">{{ user[1] }} &lt;{{ user[2] }}&gt;</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--text-muted);font-size:0.75rem;margin-top:4px;display:block;">
+            Select a user to load their domains.
+          </small>
+        </div>
+
+        <!-- Step 2: Domain (AJAX loaded) -->
+        <div class="sp-form-group">
+          <label for="domainID" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+            Domain <span style="color:#f87171;">*</span>
+          </label>
+          <div style="position:relative;">
+            <select id="domainID" name="domainID" class="sp-select" required disabled style="width:100%;">
+              <option value="">— Select User first —</option>
+            </select>
+            <span id="domainSpinner" style="display:none;position:absolute;right:2.5rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.8rem;">Loading…</span>
+          </div>
+          <small id="domainHint" style="color:var(--text-muted);font-size:0.75rem;margin-top:4px;display:block;">
+            Domains will appear after selecting a user.
+          </small>
+        </div>
+
+        <!-- Step 3: Email Prefix -->
+        <div class="sp-form-group">
+          <label for="suffix" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+            Email Prefix <span style="color:#f87171;">*</span>
+          </label>
+          <div style="display:flex;gap:0;align-items:stretch;">
+            <input type="text" class="sp-input" id="suffix" name="suffix"
+                   placeholder="info, support, admin…"
+                   pattern="[a-zA-Z0-9][a-zA-Z0-9.\-_+]*"
+                   maxlength="64" required autocomplete="off"
+                   style="border-radius:6px 0 0 6px;flex:1;min-width:0;">
+            <span id="domainSuffix"
+                  style="display:flex;align-items:center;padding:0 0.75rem;background:var(--surface2);border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;font-size:0.85rem;color:var(--text-muted);white-space:nowrap;">
+              @domain.com
+            </span>
+          </div>
+          <small style="color:var(--text-muted);font-size:0.75rem;margin-top:4px;display:block;">
+            Preview: <strong id="emailPreview">info@yourdomain.com</strong>
+          </small>
+        </div>
+
+        <!-- Password -->
+        <div class="sp-form-group">
+          <label for="Password" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+            Password <span style="color:#f87171;">*</span>
+          </label>
+          <div style="position:relative;">
+            <input type="password" class="sp-input" id="Password" name="Password"
+                   placeholder="Min. 8 characters"
+                   minlength="8" maxlength="64" required autocomplete="new-password"
+                   style="padding-right:2.5rem;width:100%;box-sizing:border-box;">
+            <button type="button" id="togglePw"
+                    style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
+              <svg id="pwEye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+          <button type="reset" class="sp-btn sp-btn-ghost">Reset</button>
+          <button type="submit" class="sp-btn sp-btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Create Mailbox
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <script nonce="{{ csp_nonce }}">
 (function() {
-    var userSel   = document.getElementById('userID');
-    var domSel    = document.getElementById('domainID');
-    var spinner   = document.getElementById('domain-spinner');
-    var hint      = document.getElementById('domain-hint');
-    var suffixIn  = document.getElementById('suffix');
-    var preview   = document.getElementById('email-preview');
-    var previewFull = document.getElementById('preview-full');
-    var pwInput   = document.getElementById('Password');
-    var togglePw  = document.getElementById('togglePw');
-    var eyeIcon   = document.getElementById('pwEyeIcon');
+  var userSel    = document.getElementById('userID');
+  var domSel     = document.getElementById('domainID');
+  var domHint    = document.getElementById('domainHint');
+  var spinner    = document.getElementById('domainSpinner');
+  var suffixIn   = document.getElementById('suffix');
+  var domSuffix  = document.getElementById('domainSuffix');
+  var preview    = document.getElementById('emailPreview');
+  var pwInput    = document.getElementById('Password');
+  var togglePw   = document.getElementById('togglePw');
+  var pwEye      = document.getElementById('pwEye');
 
-    // Load domains when user changes
-    userSel.addEventListener('change', function() {
-        var uid = this.value;
-        domSel.innerHTML = '<option value="">— Loading… —</option>';
-        domSel.disabled = true;
-        preview.textContent = '@domain.com';
-        previewFull.textContent = (suffixIn.value || 'info') + '@yourdomain.com';
+  // Load domains for selected user via AJAX
+  userSel.addEventListener('change', function() {
+    var uid = this.value;
+    domSel.innerHTML = '<option value="">Loading…</option>';
+    domSel.disabled = true;
+    domSuffix.textContent = '@domain.com';
+    preview.textContent = (suffixIn.value || 'info') + '@yourdomain.com';
 
-        if (!uid) {
-            domSel.innerHTML = '<option value="">— Select User first —</option>';
-            hint.textContent = 'Domains will appear after selecting a user.';
-            return;
-        }
-
-        spinner.style.display = 'flex';
-        hint.textContent = 'Loading domains…';
-
-        fetch('/ajax/domains_by_user?user_id=' + encodeURIComponent(uid))
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                spinner.style.display = 'none';
-                domSel.innerHTML = '';
-                if (!data.length) {
-                    domSel.innerHTML = '<option value="">— No domains found for this user —</option>';
-                    hint.textContent = 'This user has no active domains yet.';
-                    return;
-                }
-                var opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = '— Select Domain —';
-                domSel.appendChild(opt);
-                data.forEach(function(d) {
-                    var o = document.createElement('option');
-                    o.value = d.id;
-                    o.textContent = d.domain;
-                    o.dataset.domain = d.domain;
-                    domSel.appendChild(o);
-                });
-                domSel.disabled = false;
-                hint.textContent = data.length + ' domain(s) available.';
-            })
-            .catch(function() {
-                spinner.style.display = 'none';
-                domSel.innerHTML = '<option value="">— Error loading domains —</option>';
-                hint.textContent = 'Failed to load domains. Please refresh.';
-            });
-    });
-
-    // Live email preview
-    function updatePreview() {
-        var sel = domSel.options[domSel.selectedIndex];
-        var domain = sel && sel.dataset.domain ? sel.dataset.domain : 'yourdomain.com';
-        var prefix = suffixIn.value || 'info';
-        preview.textContent = '@' + domain;
-        previewFull.textContent = prefix + '@' + domain;
+    if (!uid) {
+      domSel.innerHTML = '<option value="">— Select User first —</option>';
+      domHint.textContent = 'Domains will appear after selecting a user.';
+      return;
     }
-    suffixIn.addEventListener('input', updatePreview);
-    domSel.addEventListener('change', updatePreview);
 
-    // Toggle password visibility
-    togglePw.addEventListener('click', function() {
-        var isPass = pwInput.type === 'password';
-        pwInput.type = isPass ? 'text' : 'password';
-        eyeIcon.setAttribute('data-feather', isPass ? 'eye-off' : 'eye');
-        feather.replace();
-    });
+    spinner.style.display = '';
+    domHint.textContent = 'Loading domains…';
+
+    fetch('/ajax/domains_by_user?user_id=' + encodeURIComponent(uid))
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        spinner.style.display = 'none';
+        domSel.innerHTML = '';
+        if (!data || !data.length) {
+          domSel.innerHTML = '<option value="">— No domains for this user —</option>';
+          domHint.textContent = 'This user has no active domains yet.';
+          return;
+        }
+        var opt = document.createElement('option');
+        opt.value = ''; opt.textContent = '— Select Domain —';
+        domSel.appendChild(opt);
+        data.forEach(function(d) {
+          var o = document.createElement('option');
+          o.value = d.id; o.textContent = d.domain; o.dataset.domain = d.domain;
+          domSel.appendChild(o);
+        });
+        domSel.disabled = false;
+        domHint.textContent = data.length + ' domain(s) available.';
+      })
+      .catch(function() {
+        spinner.style.display = 'none';
+        domSel.innerHTML = '<option value="">— Error loading domains —</option>';
+        domHint.textContent = 'Failed to load. Please refresh.';
+      });
+  });
+
+  // Live email preview
+  function updatePreview() {
+    var sel = domSel.options[domSel.selectedIndex];
+    var domain = (sel && sel.dataset.domain) ? sel.dataset.domain : 'yourdomain.com';
+    var prefix = suffixIn.value || 'info';
+    domSuffix.textContent = '@' + domain;
+    preview.textContent = prefix + '@' + domain;
+  }
+  suffixIn.addEventListener('input', updatePreview);
+  domSel.addEventListener('change', updatePreview);
+
+  // Password show/hide
+  togglePw.addEventListener('click', function() {
+    var show = pwInput.type === 'password';
+    pwInput.type = show ? 'text' : 'password';
+    pwEye.innerHTML = show
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  });
 })();
 </script>
 
 {% include "layout/adminfooter.html" %}
-{% endblock %}
