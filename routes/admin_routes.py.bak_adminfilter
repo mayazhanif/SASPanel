@@ -46,10 +46,12 @@ def admin_viewUser():
         # FIX R14-01: info-leak — was showing ALL users from all admins
         cursor.execute(
             'SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id '
-            'WHERE Is_Deleted=0;')
+            'WHERE Is_Deleted=0 AND users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         userList = cursor.fetchall()
         # UI: also fetch packages for the embedded Add User tab
-        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1;')
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
         results = cursor.fetchall()
         return render_template('adminFiles/users/viewUser.html', userList=userList, results=results)
     else:
@@ -65,8 +67,8 @@ def admin_deleteUser():
             # FIX R14-02: IDOR — no Admin_id ownership check; any admin could delete any user
             cursor.execute(
                 "UPDATE `users` SET `Is_Deleted` = '1' "
-                "WHERE `users`.`User_id` =%s",
-                (userID)
+                "WHERE `users`.`User_id` =%s AND Admin_id=%s",
+                (userID, str(session['id']))
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
@@ -88,13 +90,13 @@ def admin_profile():
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
         # FIXED: parameterized queries (was raw string concatenation)
-        cursor.execute('SELECT * FROM users WHERE Is_Deleted=0')
+        cursor.execute('SELECT * FROM users WHERE Is_Deleted=0 AND Admin_id=%s', (session['id'],))
         cursor.fetchall()
         totalUsers = str(cursor.rowcount)
-        cursor.execute('SELECT Reg_Date FROM administrator WHERE 1=1')
+        cursor.execute('SELECT Reg_Date FROM administrator WHERE Admin_id=%s', (session['id'],))
         details = cursor.fetchone()
         regDate = str(details[0]) if details else ''
-        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1')
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s', (session['id'],))
         cursor.fetchall()
         totalPackages = str(cursor.rowcount)
 
@@ -103,7 +105,7 @@ def admin_profile():
             # FIX R6-01: cap Name length to prevent DoS / DB truncation
             if not Name or len(Name) > 128:
                 return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages, msg={'error': 'danger', 'message': 'Name must be 1-128 characters.'})
-            cursor.execute('UPDATE `administrator` SET `Admin_Name` = %s WHERE Admin_id = %s;', (Name))
+            cursor.execute('UPDATE `administrator` SET `Admin_Name` = %s WHERE Admin_id = %s;', (Name, session['id']))
             mysqlconnection.commit()
             if cursor.rowcount > 0:
                 session['Name'] = Name
@@ -122,7 +124,7 @@ def admin_profile():
                 cursor = mysqlconnection.cursor()
                 # FIXED: use bcrypt instead of MD5
                 securePassword = hash_password(pass1)
-                cursor.execute('UPDATE `administrator` SET `Admin_Password` = %s WHERE Admin_id = %s;', (securePassword))
+                cursor.execute('UPDATE `administrator` SET `Admin_Password` = %s WHERE Admin_id = %s;', (securePassword, session['id']))
                 mysqlconnection.commit()
                 if cursor.rowcount > 0:
                     return render_template('adminFiles/profile.html', users=totalUsers, regDate=regDate, totalPackages=totalPackages, passmsg={'error': 'success', 'message': 'Password Updated Successfully.'})
@@ -142,7 +144,7 @@ def admin_addUser():
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
         # FIX R15-05: info-leak — package dropdown showed ALL admins' packages
-        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1;')
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
         results = cursor.fetchall()
         if request.method == 'POST' and 'Name' in request.form and 'Email' in request.form and 'pass1' in request.form and 'pass2' in request.form and 'packageID' in request.form:
             User_Name = request.form['Name']
@@ -205,13 +207,13 @@ def admin_updateUser():
             userID=request.args.get('userID')
             cursor = mysqlconnection.cursor()
             # FIX R15-06: info-leak — package dropdown showed ALL admins' packages in update form
-            cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1;')
+            cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
             results = cursor.fetchall()
             # FIX R14-03: IDOR — no Admin_id scope on GET fetch; any admin could view any user's data
             cursor.execute(
                 "SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id "
-                "WHERE Is_Deleted=0 AND User_id=%s",
-                (userID)
+                "WHERE Is_Deleted=0 AND User_id=%s AND users.Admin_id=%s",
+                (userID, str(session['id']))
             )
             user = cursor.fetchone()
             if cursor.rowcount>0:
@@ -241,7 +243,7 @@ def admin_updateUser():
             # FIXED: bcrypt instead of MD5 (VULN-updateUser)
             securePassword = hash_password(password)
             cursor = mysqlconnection.cursor()
-            cursor.execute("UPDATE `users` SET `Package_Id` = %s, `User_email` = %s, `User_Password` = %s, `User_Name` = %s WHERE `users`.`User_id` = %s AND Admin_id = %s", (packageID, Email, securePassword, Name, userID))
+            cursor.execute("UPDATE `users` SET `Package_Id` = %s, `User_email` = %s, `User_Password` = %s, `User_Name` = %s WHERE `users`.`User_id` = %s AND Admin_id = %s", (packageID, Email, securePassword, Name, userID, session['id']))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('User Updated.')
@@ -314,7 +316,7 @@ def admin_viewPackages():
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
         # FIX R14-04: info-leak — was showing ALL packages from all admins
-        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1;')
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
         packages = cursor.fetchall()
         return render_template('adminFiles/Packages/viewPackages.html', packages=packages)
     else:
@@ -329,7 +331,7 @@ def admin_updatePackage():
             packageID=request.args.get('packageID')
             cursor = mysqlconnection.cursor()
             # FIX R14-05: IDOR — no Admin_id scope; any admin could view any package
-            cursor.execute('SELECT * FROM `packages` WHERE Package_Id=%s', (packageID))
+            cursor.execute('SELECT * FROM `packages` WHERE Package_Id=%s AND Admin_id=%s', (packageID, str(session['id'])))
             package = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('adminFiles/Packages/updatePackage.html', package=package)
@@ -392,7 +394,7 @@ def admin_deletePackage():
             packageID=request.args.get('packageID')
             cursor = mysqlconnection.cursor()
             # FIX IDOR-P1: only delete packages belonging to this admin
-            cursor.execute("UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` =%s AND `Admin_id`=%s",(packageID))
+            cursor.execute("UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` =%s AND `Admin_id`=%s",(packageID, str(session['id'])))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Hosting Package Deleted.')
@@ -410,7 +412,7 @@ def admin_addDomain():
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
         # FIX R10-05: info-leak — was showing ALL users from all admins in dropdown
-        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'DomainName' in request.form:
             userID = request.form['userID']
@@ -418,7 +420,7 @@ def admin_addDomain():
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/domains/viewDomains.html', users=users, msg=msg, results=[])
             # FIX R9-03: IDOR — verify userID belongs to this admin before adding domain
-            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id=%s;',(userID))
+            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id=%s AND Admin_id=%s;',(userID, str(session['id'])))
             user = cursor.fetchone()
             if user is None:
                 msg={"error":"danger", "message": "User not found or access denied."}
@@ -516,10 +518,12 @@ def admin_viewDomains():
             'SELECT * FROM domains '
             'JOIN users ON domains.User_id = users.User_id '
             'JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id '
-            'WHERE users.Admin_id=%s;')
+            'WHERE users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         # UI: also fetch users list so the embedded Add Domain form can populate its dropdown
-        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         return render_template('adminFiles/domains/viewDomains.html', results=results, users=users)
     else:
@@ -537,20 +541,20 @@ def admin_updateDomains():
             cursor.execute(
                 "SELECT `Domain_Suspended` FROM domains "
                 "WHERE `domains`.`Domain_Id` =%s "
-                "",
-                (domainID)
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (domainID, str(session['id']))
             )
             domain = cursor.fetchone()
             if domain is None:
                 flash('Domain not found or access denied.')
                 return redirect(url_for('routes.admin_viewDomains'))
             if domain[0]==0:
-                cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '1' WHERE `domains`.`Domain_Id` =%s",(domainID))
+                cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '1' WHERE `domains`.`Domain_Id` =%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",(domainID, str(session['id'])))
                 mysqlconnection.commit()
                 flash('Domain Suspended.')
                 return redirect(url_for("routes.admin_viewDomains"))
             else:
-                cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '0' WHERE `domains`.`Domain_Id` =%s",(domainID))
+                cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '0' WHERE `domains`.`Domain_Id` =%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",(domainID, str(session['id'])))
                 mysqlconnection.commit()
                 flash('Domain not Suspended.')
                 return redirect(url_for("routes.admin_viewDomains"))
@@ -568,8 +572,8 @@ def admin_deleteDomain():
             cursor.execute(
                 'SELECT Domain_Name FROM `domains` '
                 'WHERE Is_Deleted=0 AND Domain_Id=%s '
-                '',
-                (domainID)
+                'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+                (domainID, str(session['id']))
             )
             row = cursor.fetchone()
             # FIX R7-04: null-pointer crash + no Admin_id ownership check on domain delete
@@ -581,8 +585,8 @@ def admin_deleteDomain():
             cursor.execute(
                 "UPDATE `domains` SET `Is_Deleted` = '1' "
                 "WHERE `domains`.`Domain_Id` =%s "
-                "AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",
-                (domainID)
+                "AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (domainID, str(session['id']))
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
@@ -602,7 +606,7 @@ def admin_addDB():
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
         # FIX R10-04: info-leak — was showing ALL users from all admins in dropdown
-        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'databaseName' in request.form:
             userID = request.form['userID']
@@ -610,7 +614,7 @@ def admin_addDB():
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/MysqlDatabase/viewDatabases.html', users=users, msg=msg, results=[])
             # FIX R9-04: IDOR — verify userID belongs to this admin before adding database
-            cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id= %s;',(userID))
+            cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id= %s AND users.Admin_id=%s;',(userID, str(session['id'])))
             DBUserbyID = cursor.fetchone()
             if DBUserbyID is None:
                 msg={"error":"danger", "message": "User not found or access denied."}
@@ -646,10 +650,12 @@ def admin_viewDatabases():
             'SELECT * FROM mysqldbusers '
             'LEFT JOIN msqldatabases ON msqldatabases.DbUser_ID = mysqldbusers.DbUser_ID '
             'LEFT JOIN users ON users.User_id = mysqldbusers.User_id '
-            'WHERE msqldatabases.Is_Active = 1')
+            'WHERE msqldatabases.Is_Active = 1 AND users.Admin_id=%s',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         # UI: fetch users for the embedded Add Database tab
-        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0;')
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         return render_template('adminFiles/MysqlDatabase/viewDatabases.html', results=results, users=users)
     else:
@@ -665,8 +671,8 @@ def admin_deleteDatabase():
             # FIX R19-06: scope SELECT to this admin's DBs to prevent info-leak via timing
             cursor.execute(
                 'SELECT DbName FROM `msqldatabases` '
-                'WHERE DB_ID=%s',
-                (DbID)
+                'WHERE DB_ID=%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+                (DbID, str(session['id']))
             )
             getDBName = cursor.fetchone()
             if getDBName is None:
@@ -674,7 +680,7 @@ def admin_deleteDatabase():
                 return redirect(url_for("routes.admin_viewDatabases"))
             getDBName = getDBName[0]
             # FIX IDOR-D1: verify the DB belongs to a user owned by this admin
-            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",(DbID))
+            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",(DbID, str(session['id'])))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 drop_database(cursor,getDBName)
@@ -703,8 +709,8 @@ def admin_updateDBPass():
             cursor.execute(
                 "SELECT * FROM `mysqldbusers` "
                 "WHERE `mysqldbusers`.`DbUser_ID` =%s "
-                "",
-                (DbUser_ID)
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (DbUser_ID, str(session['id']))
             )
             database = cursor.fetchone()
             if database is None:
@@ -718,8 +724,8 @@ def admin_updateDBPass():
             cursor.execute(
                 "SELECT DbUsername FROM `mysqldbusers` "
                 "WHERE `mysqldbusers`.`DbUser_ID` =%s "
-                "",
-                (DbUser_ID)
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (DbUser_ID, str(session['id']))
             )
             row = cursor.fetchone()
             if row is None:
@@ -766,7 +772,7 @@ def admin_addAccounts():
                 flash('User not selected.')
                 return redirect(url_for('routes.admin_viewAccounts'))
             # FIX D-09: IDOR — verify userID belongs to this admin before adding FTP account
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID))
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s AND Admin_id=%s',(userID, str(session['id'])))
             row = cursor.fetchone()
             if row is None:
                 flash('User not found or access denied.')
@@ -809,11 +815,15 @@ def admin_viewAccounts():
         # FIX R14-07: info-leak — was showing ALL FTP accounts from all admins
         cursor.execute(
             'SELECT * FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id '
-            'WHERE ftp_accounts.Is_Active=1;')
+            'WHERE ftp_accounts.Is_Active=1 AND users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         # Also fetch users list for the 'Add FTP Account' form dropdown
         cursor.execute(
-            'SELECT User_id, User_Name, User_email FROM `users` WHERE Is_Deleted=0;')
+            'SELECT User_id, User_Name, User_email FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;',
+            (str(session['id']),)
+        )
         users = cursor.fetchall()
         msg = ''
         return render_template('adminFiles/ftpAccounts/viewAccounts.html', results=results, users=users)
@@ -832,8 +842,8 @@ def admin_updateAccountPass():
             cursor.execute(
                 "SELECT * FROM `ftp_accounts` "
                 "INNER JOIN users ON ftp_accounts.User_id = users.User_id "
-                "WHERE ftp_accounts.Account_Id=%s",
-                (AccID)
+                "WHERE ftp_accounts.Account_Id=%s AND users.Admin_id=%s",
+                (AccID, str(session['id']))
             )
             account = cursor.fetchone()
             if account is not None:
@@ -843,7 +853,7 @@ def admin_updateAccountPass():
         elif request.method == 'POST' and 'AccID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             AccID = request.form['AccID']
             # FIX IDOR-F1: verify FTP account belongs to a user under this admin
-            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id WHERE Is_Active=1 AND `ftp_accounts`.`Account_Id`=%s', (AccID))
+            cursor.execute('SELECT FTP_Username FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id WHERE Is_Active=1 AND `ftp_accounts`.`Account_Id`=%s AND users.Admin_id=%s', (AccID, str(session['id'])))
             row = cursor.fetchone()
             if row is None:
                 flash('FTP Account not found or access denied.')
@@ -885,8 +895,8 @@ def admin_deleteAccount():
             cursor.execute(
                 'SELECT FTP_Username FROM `ftp_accounts` '
                 'INNER JOIN users ON ftp_accounts.User_id = users.User_id '
-                'WHERE ftp_accounts.Is_Active=1 AND ftp_accounts.Account_Id=%s',
-                (AccID)
+                'WHERE ftp_accounts.Is_Active=1 AND ftp_accounts.Account_Id=%s AND users.Admin_id=%s',
+                (AccID, str(session['id']))
             )
             row = cursor.fetchone()
             # FIX R7-02: null-pointer crash if AccID not found
@@ -901,8 +911,8 @@ def admin_deleteAccount():
                 "UPDATE `ftp_accounts` "
                 "SET `Is_Active` = '0' "
                 "WHERE `ftp_accounts`.`Account_Id` =%s "
-                "",
-                (AccID)
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (AccID, str(session['id']))
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
@@ -936,7 +946,9 @@ def admin_addEmail():
         # Fetch users for the dropdown — domains load dynamically via AJAX
         cursor.execute(
             'SELECT User_id, User_Name, User_email FROM `users` '
-            'WHERE Is_Deleted=0 ORDER BY User_Name;')
+            'WHERE Is_Deleted=0 AND Admin_id=%s ORDER BY User_Name;',
+            (str(session['id']),)
+        )
         users = cursor.fetchall()
 
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form:
@@ -956,8 +968,8 @@ def admin_addEmail():
             cursor.execute(
                 "SELECT * FROM `domains` "
                 "WHERE Is_Deleted=0 AND Domain_Id=%s "
-                "",
-                (domainID)
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (domainID, str(session['id']))
             )
             rDomain = cursor.fetchone()
             # FIX D-10: IDOR — domainID verified to belong to this admin's users
@@ -999,11 +1011,15 @@ def admin_viewEmail():
             'SELECT * FROM mail_accounts '
             'LEFT JOIN users ON users.User_id = mail_accounts.User_id '
             'LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id '
-            'WHERE mail_accounts.Is_Active = 1')
+            'WHERE mail_accounts.Is_Active = 1 AND users.Admin_id=%s',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         # Also fetch users list for the 'Add Mail Account' form dropdown
         cursor.execute(
-            'SELECT User_id, User_Name, User_email FROM `users` WHERE Is_Deleted=0;')
+            'SELECT User_id, User_Name, User_email FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;',
+            (str(session['id']),)
+        )
         users = cursor.fetchall()
         msg = ''
         return render_template('adminFiles/Mails/viewEmail.html', results=results, users=users)
@@ -1021,8 +1037,8 @@ def admin_deleteEmail():
             cursor.execute(
                 "UPDATE `mail_accounts` SET `Is_Active` = '0' "
                 "WHERE `mail_accounts`.`Mail_Id` =%s "
-                "AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",
-                (mailID)
+                "AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (mailID, str(session['id']))
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
@@ -1050,8 +1066,8 @@ def admin_updateEmail():
             cursor.execute(
                 "SELECT * FROM `mail_accounts` "
                 "WHERE Mail_Id=%s "
-                "",
-                (mailID)
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (mailID, str(session['id']))
             )
             mail = cursor.fetchone()
             if mail is None:
@@ -1069,8 +1085,8 @@ def admin_updateEmail():
                 cursor.execute(
                     "UPDATE `mail_accounts` SET `Mail_Pass` = %s "
                     "WHERE `mail_accounts`.`Mail_Id` = %s "
-                    "",
-                    (EncodedPassword, mailID)
+                    "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                    (EncodedPassword, mailID, str(session['id']))
                 )
 
                 mysqlconnection.commit()
@@ -1078,8 +1094,8 @@ def admin_updateEmail():
                     # FIX R21-02: re-scope Mail_Address SELECT to this admin's accounts (TOCTOU)
                     cursor.execute(
                         "SELECT Mail_Address FROM `mail_accounts` "
-                        "WHERE Mail_Id=%s",
-                        (mailID)
+                        "WHERE Mail_Id=%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                        (mailID, str(session['id']))
                     )
                     mail = cursor.fetchone()
                     change_mail_password(cursor,mail[0],pass1)
@@ -1108,7 +1124,9 @@ def admin_addSubDomain():
         # FIX R13-01: info-leak — was showing ALL domains from all admins in dropdown
         cursor.execute(
             'SELECT * FROM `domains` WHERE Is_Deleted=0 '
-            ';')
+            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s);',
+            (str(session['id']),)
+        )
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form :
             domainID = request.form['domainID']
@@ -1118,8 +1136,8 @@ def admin_addSubDomain():
             # FIX R10-01: IDOR — verify domainID belongs to this admin before adding subdomain
             cursor.execute(
                 'SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id '
-                'WHERE domains.Is_Deleted=0 AND Domain_Id=%s',
-                (domainID)
+                'WHERE domains.Is_Deleted=0 AND Domain_Id=%s AND users.Admin_id=%s',
+                (domainID, str(session['id']))
             )
             row = cursor.fetchone()
             if row is None:
@@ -1169,12 +1187,16 @@ def admin_viewSubDomains():
             'SELECT * FROM subdomains '
             'LEFT JOIN users ON users.User_id = subdomains.User_id '
             'LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id '
-            'WHERE subdomains.Is_Active = 1')
+            'WHERE subdomains.Is_Active = 1 AND users.Admin_id=%s',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         # UI: also fetch domains for embedded Add Subdomain tab
         cursor.execute(
             'SELECT * FROM `domains` WHERE Is_Deleted=0 '
-            ';')
+            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s);',
+            (str(session['id']),)
+        )
         domains = cursor.fetchall()
         return render_template('adminFiles/SubDomains/viewSubDomains.html', results=results, domains=domains)
     else:
@@ -1189,8 +1211,8 @@ def admin_deleteSubDomain():
             cursor.execute(
                 'SELECT SubDomain FROM `subdomains` '
                 'WHERE Is_Active=1 AND `subdomains`.`SDomain_ID`=%s '
-                '',
-                (SdomainID)
+                'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+                (SdomainID, str(session['id']))
             )
             row = cursor.fetchone()
             # FIX R8-02: NullPointer crash + IDOR — no Admin_id ownership check before
@@ -1202,8 +1224,8 @@ def admin_deleteSubDomain():
             cursor.execute(
                 "UPDATE `subdomains` SET `Is_Active` = '0' "
                 "WHERE `subdomains`.`SDomain_ID` =%s "
-                "",
-                (SdomainID)
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (SdomainID, str(session['id']))
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
@@ -1243,7 +1265,7 @@ def admin_error_logs_ajax():
         cursor.execute(
             'SELECT servUser, Domain_Name FROM `domains` '
             'INNER JOIN users ON domains.User_id = users.User_id '
-            'WHERE domains.Is_Deleted=0 AND domains.Domain_Id=%s',
+            'WHERE domains.Is_Deleted=0 AND domains.Domain_Id=%s AND users.Admin_id=%s',
             (domainID, adminID)
         )
         domainData = cursor.fetchone()
@@ -1284,7 +1306,9 @@ def admin_access_logs():
         # FIX R13-06: info-leak — was showing ALL domains from all admins in log viewer dropdown
         cursor.execute(
             'SELECT * FROM `domains` WHERE Is_Deleted=0 '
-            '')
+            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+            (str(session['id']),)
+        )
         domains = cursor.fetchall()
         return render_template('adminFiles/Logs/access_logs.html', msg=msg, domains=domains)
     else:
@@ -1302,7 +1326,7 @@ def admin_access_logs_ajax():
         cursor.execute(
             'SELECT servUser, Domain_Name FROM `domains` '
             'INNER JOIN users ON domains.User_id = users.User_id '
-            'WHERE domains.Is_Deleted=0 AND domains.Domain_Id=%s',
+            'WHERE domains.Is_Deleted=0 AND domains.Domain_Id=%s AND users.Admin_id=%s',
             (domainID, adminID)
         )
         domainData = cursor.fetchone()
@@ -1340,16 +1364,18 @@ def admin_cron_jobs():
         # FIX R11-05: show only cron jobs belonging to this admin's users
         cursor.execute(
             'SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id '
-            'WHERE cronjobs.Is_Deleted=0;')
+            'WHERE cronjobs.Is_Deleted=0 AND users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         cronjobs = cursor.fetchall()
         # FIX R11-06: show only this admin's own users in dropdown
-        cursor.execute('SELECT User_id,User_email FROM `users` WHERE Is_Deleted=0;')
+        cursor.execute('SELECT User_id,User_email FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
             userID = request.form['userID']
             # FIX R8-03: IDOR — admin could set cron for any user, not just their own
             # Verify userID belongs to a user under this admin
-            cursor.execute('SELECT User_id FROM users WHERE User_id=%s AND Is_Deleted=0', (userID))
+            cursor.execute('SELECT User_id FROM users WHERE User_id=%s AND Admin_id=%s AND Is_Deleted=0', (userID, str(session['id'])))
             if cursor.fetchone() is None:
                 msg = {'error': 'danger', 'message': 'User not found or access denied.'}
                 return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
@@ -1408,7 +1434,9 @@ def admin_cron_jobs():
                 # FIX R14-12: cron refresh was showing ALL users' cron jobs, not just this admin's
                 cursor.execute(
                     'SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id '
-                    'WHERE cronjobs.Is_Deleted=0;')
+                    'WHERE cronjobs.Is_Deleted=0 AND users.Admin_id=%s;',
+                    (str(session['id']),)
+                )
                 cronjobs = cursor.fetchall()
                 msg = {"error": "success", "message": "Cron Job Added."}
                 return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
@@ -1433,8 +1461,8 @@ def admin_deleteJob():
                 'SELECT servUser FROM `users` '
                 'INNER JOIN cronjobs ON users.User_id=cronjobs.User_id '
                 'WHERE cronjobs.Is_Deleted=0 AND cronjobs.Job_ID=%s '
-                '',
-                (JobID)
+                'AND users.Admin_id=%s',
+                (JobID, str(session['id']))
             )
             row = cursor.fetchone()
             # FIX R8-04: NullPointer crash + IDOR — no Admin_id ownership before
@@ -1447,8 +1475,8 @@ def admin_deleteJob():
             cursor.execute(
                 "UPDATE `cronjobs` SET `Is_Deleted` = '1' "
                 "WHERE `cronjobs`.`Job_ID` =%s "
-                "AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",
-                (JobID)
+                "AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (JobID, str(session['id']))
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
