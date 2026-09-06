@@ -802,7 +802,18 @@ if [[ -f "${SASPANEL_DIR}/requirements.txt" ]]; then
 fi
 
 # ── Create initial admin account (werkzeug now available in venv) ─────────────
+# Widen password hash columns to varchar(512) — werkzeug scrypt hashes are 160+ chars
+mysql -u root -p"${DB_ROOT_PASS}" saspanel <<'ALTEREOF'
+ALTER TABLE `administrator` MODIFY `Admin_Password` varchar(512) NOT NULL;
+ALTER TABLE `users`         MODIFY `User_Password`  varchar(512) NOT NULL;
+ALTER TABLE `mysqldbusers`  MODIFY `DbPassword`     varchar(512) NOT NULL;
+ALTER TABLE `mail_accounts` MODIFY `Mail_Pass`      varchar(512) NOT NULL;
+ALTER TABLE `ftp_accounts`  MODIFY `FTP_Password`   varchar(512) NOT NULL;
+ALTEREOF
+success "Password columns widened to varchar(512)."
+
 section "Creating admin account"
+
 
 # Inject password via env — never passes it on the command line or process list
 export _ADMIN_PASS="${PANEL_ADMIN_PASS}"
