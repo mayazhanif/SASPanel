@@ -135,7 +135,7 @@
 
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.getElementById('cron-search').addEventListener('input', function() {
   var q = this.value.toLowerCase();
   document.querySelectorAll('#cron-table tbody tr').forEach(function(r) {

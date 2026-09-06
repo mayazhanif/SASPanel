@@ -130,7 +130,7 @@
 
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.getElementById('ftp-search').addEventListener('input', function() {
   var q = this.value.toLowerCase();
   document.querySelectorAll('#ftp-table tbody tr').forEach(function(r) {

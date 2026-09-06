@@ -121,7 +121,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.getElementById('domain-search').addEventListener('input', function() {
   var q = this.value.toLowerCase();
   document.querySelectorAll('#domains-table tbody tr').forEach(function(r) {

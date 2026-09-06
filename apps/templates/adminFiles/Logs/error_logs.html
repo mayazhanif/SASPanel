@@ -1,4 +1,4 @@
 <!-- Merged into access_logs.html — redirect handled by backend -->
 {% include "layout/adminheader.html" %}
-<script>window.location.replace("{{ url_for('routes.admin_accessLogs') }}");</script>
+<script nonce="{{ csp_nonce }}">window.location.replace("{{ url_for('routes.admin_accessLogs') }}");</script>
 {% include "layout/adminfooter.html" %}

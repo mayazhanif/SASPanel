@@ -118,7 +118,7 @@
 
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 document.getElementById('sub-search').addEventListener('input', function() {
   var q = this.value.toLowerCase();
   document.querySelectorAll('#sub-table tbody tr').forEach(function(r) {

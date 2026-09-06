@@ -54,7 +54,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 var _aTimer = null, _eTimer = null;
 function fetchLog(url, id) {
   fetch(url).then(function(r){return r.json();}).then(function(d){

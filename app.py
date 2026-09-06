@@ -13,6 +13,7 @@ Security improvements:
 """
 
 import os
+import secrets
 from urllib.parse import urlparse
 
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -113,6 +114,21 @@ from routes import routes as blueprint  # noqa: E402
 
 app.register_blueprint(blueprint)
 
+# ------------------------------------------------------------------
+# Per-request CSP nonce — exposes {{ csp_nonce }} to every template
+# ------------------------------------------------------------------
+@app.context_processor
+def inject_csp_nonce():
+    """Generate a fresh random nonce for every request.
+    Templates use it as: <script nonce="{{ csp_nonce }}">...
+    The nonce is also injected into the CSP header in add_security_headers().
+    """
+    nonce = secrets.token_urlsafe(16)
+    # Store on g so add_security_headers() can read the same value
+    from flask import g
+    g.csp_nonce = nonce
+    return dict(csp_nonce=nonce)
+
 
 # ------------------------------------------------------------------
 # Security headers on every response
@@ -129,15 +145,16 @@ def add_security_headers(response):
     response.headers['X-XSS-Protection']       = '1; mode=block'
     response.headers['Referrer-Policy']        = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy']     = 'geolocation=(), microphone=(), camera=()'
-    # Content Security Policy — 'unsafe-inline' removed from script-src (R18-06)
-    # If inline <script> blocks are needed, migrate them to external files or use nonces.
+    # Content Security Policy with per-request nonce for inline scripts
+    from flask import g
+    nonce = getattr(g, 'csp_nonce', '')
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
-        "script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        f"script-src 'self' 'nonce-{nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
         "img-src 'self' data:; "
-        "connect-src 'self';"
+        "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
     )
     return response
 
