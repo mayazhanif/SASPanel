@@ -64,7 +64,7 @@ requests>=2.31.0
 Routes==2.5.1
 six==1.16.0
 SQLAlchemy==1.4.23
-sqlparse==0.4.1
+sqlparse==0.6.0
 toml==0.10.2
 tzdata==2021.5
 Unipath==1.1
