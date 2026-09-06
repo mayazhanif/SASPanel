@@ -120,7 +120,10 @@ cd /usr/share
 wget -q https://github.com/mayazhanif/web-ftp/raw/main/webftp.zip
 unzip -q webftp.zip
 chown -R www-data:www-data /usr/share/webftp
-chmod 777 /usr/share/webftp/tmp
+# FIX R23-02: chmod 777 makes webftp/tmp world-writable (anyone can upload files via web).
+# Use 770 (www-data group only) so the web server can write but public cannot.
+chown www-data:www-data /usr/share/webftp/tmp
+chmod 770 /usr/share/webftp/tmp
 
 cat > /etc/nginx/snippets/webftp.conf <<'EOF'
 location /webftp {
@@ -357,13 +360,22 @@ protocol pop3 {
 }
 EOF
 
-# SH-02 FIX: MAIL_PASS from env, not $2
-cat > /etc/dovecot/dovecot-sql.conf <<EOF
-driver = mysql
-connect = host=127.0.0.1 dbname=mail user=mail_admin password=${MAIL_PASS}
-default_pass_scheme = PLAIN
-password_query = SELECT email as user, password FROM users WHERE email='%u';
-EOF
-chmod 600 /etc/dovecot/dovecot-sql.conf
+# FIX R23-01: Was <<EOF (unquoted) which shell-expands ${MAIL_PASS} in the heredoc.
+# If MAIL_PASS contains $, `, or \ the shell mangles the value before writing it.
+# Use Python to write the file safely without any shell interpolation of the password.
+python3 - <<PYEOF
+import os
+mail_pass = open('${MAIL_PASS_FILE}').read().strip()
+dovecot_sql = (
+    'driver = mysql\n'
+    'connect = host=127.0.0.1 dbname=mail user=mail_admin password=' + mail_pass + '\n'
+    'default_pass_scheme = PLAIN\n'
+    "password_query = SELECT email as user, password FROM users WHERE email='%u';\n"
+)
+with open('/etc/dovecot/dovecot-sql.conf', 'w') as f:
+    f.write(dovecot_sql)
+os.chmod('/etc/dovecot/dovecot-sql.conf', 0o600)
+print('dovecot-sql.conf written safely via Python.')
+PYEOF
 
 echo "packages_installer.sh completed."

@@ -945,7 +945,12 @@ def user_cron_jobs():
                 msg = {'error': 'danger', 'message': 'Invalid log filename. Use only letters, digits, dots, underscores, hyphens.'}
                 return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
-            getUsername = cursor.fetchone()[0]
+            # FIX R23-03: null guard — fetchone()[0] crashes if user deleted mid-session
+            _serv = cursor.fetchone()
+            if _serv is None:
+                msg = {'error': 'danger', 'message': 'User account not found. Please log in again.'}
+                return render_template('userFiles/CronJobs/cron_jobs.html', msg=msg, cronjobs=cronjobs)
+            getUsername = _serv[0]
             base_logs = f'/home/{getUsername}/crobjobs/logs'
             try:
                 logFileLink = safe_log_path(base_logs, logFile)

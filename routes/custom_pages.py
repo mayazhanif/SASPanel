@@ -60,9 +60,20 @@ def installer():
         if len(DBpass1) < 12:
             return render_template('installer/installer.html',
                                    msg={'error': 'danger', 'message': 'DB password must be at least 12 characters.'})
+        # FIX R23-04: cap max length to prevent DoS via huge password input
+        if len(DBpass1) > 128:
+            return render_template('installer/installer.html',
+                                   msg={'error': 'danger', 'message': 'DB password must be 128 characters or fewer.'})
         if DBpass1 != DBpass2:
             return render_template('installer/installer.html',
                                    msg={'error': 'danger', 'message': 'Password and Confirm Password Mismatch.'})
+        # FIX R23-05: validate length of all other password fields before install
+        if not (1 <= len(mailserverpassword) <= 128):
+            return render_template('installer/installer.html',
+                                   msg={'error': 'danger', 'message': 'Mail server password must be 1-128 characters.'})
+        if not (1 <= len(emailpassword) <= 128):
+            return render_template('installer/installer.html',
+                                   msg={'error': 'danger', 'message': 'Email password must be 1-128 characters.'})
 
         # FIX R12-06: validate full email address properly before passing to install_packages()
         # emailaddress here is the local-part only (before @); domain comes from the domain field
