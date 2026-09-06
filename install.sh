@@ -896,17 +896,9 @@ StandardError=append:{sd}/logs/service.log
 # Security hardening
 NoNewPrivileges=yes
 ProtectSystem=strict
-# /etc/passwd, /etc/shadow, /etc/group* — required by useradd/chpasswd to create FTP/mail OS accounts
-# /etc/vsftpd.* — FTP user and chroot allowlists
-# /etc/nginx/sites-* — virtual host management
-ReadWritePaths={sd}/logs /home /tmp /var/run \
-    /etc/nginx \
-    /etc/vsftpd.chroot_list /etc/vsftpd.user_list \
-    /etc/passwd /etc/passwd- \
-    /etc/shadow /etc/shadow- \
-    /etc/group  /etc/group- \
-    /etc/gshadow /etc/gshadow- \
-    /etc/subuid /etc/subgid
+# /home        — FTP user home directories (created by add_ftp helpers)
+# /etc/nginx   — virtual host config management
+ReadWritePaths={sd}/logs /home /tmp /var/run /etc/nginx
 
 [Install]
 WantedBy=multi-user.target
