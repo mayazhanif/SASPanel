@@ -104,7 +104,7 @@
               <option value="">— Select User —</option>
               {% if users %}
                 {% for user in users %}
-                  <option value="{{ user[0] }}">{{ user[2] }}</option>
+                  <option value="{{ user[0] }}">{{ user[1] }} &lt;{{ user[2] }}&gt;</option>
                 {% endfor %}
               {% endif %}
             </select>
@@ -116,7 +116,7 @@
           </div>
           <div class="sp-form-group">
             <label class="sp-label" for="ftp-pass">Password <span style="color:var(--danger)">*</span></label>
-            <input type="password" name="ftpPass" id="ftp-pass" class="sp-input"
+            <input type="password" name="ftpPassword" id="ftp-pass" class="sp-input"
                    placeholder="••••••••" required maxlength="128" autocomplete="new-password"/>
           </div>
           <div class="sp-flex sp-gap-8" style="margin-top:8px;">
