@@ -16,6 +16,20 @@ from datetime import datetime
 from datetime import timedelta
 from crontab import CronTab
 
+
+def safe_referrer_redirect(fallback='routes.admin_dashboard'):
+    """Redirect back to referrer ONLY if it's on the same host.
+    Prevents open-redirect via a spoofed Referer header.
+    Falls back to the admin dashboard if the referrer is absent or external.
+    """
+    referrer = request.referrer
+    if referrer:
+        ref_host = urlparse(referrer).netloc
+        req_host = urlparse(request.url).netloc
+        if ref_host == req_host:
+            return redirect(referrer)
+    return redirect(url_for(fallback))
+
 @routes.route('/admin/dashboard')
 def admin_dashboard():
     if check_admin_Login():
@@ -218,14 +232,14 @@ def admin_updateUser():
             from functions import validateEmail
             if not validateEmail(Email):
                 flash('Invalid email address.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
             if not Name or len(Name) > 128:
                 flash('Name must be 1-128 characters.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
             # FIX R19-02: enforce password length before bcrypt to prevent DoS
             if len(password) < 8 or len(password) > 128:
                 flash('Password must be between 8 and 128 characters.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
             # FIXED: bcrypt instead of MD5 (VULN-updateUser)
             securePassword = hash_password(password)
             cursor = mysqlconnection.cursor()
@@ -233,12 +247,12 @@ def admin_updateUser():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('User Updated.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
             else:
                 flash('User Not Updated.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
         else:
-            return redirect(request.referrer)
+            return safe_referrer_redirect()
 
     else:
         return redirect(url_for('routes.login'))
@@ -348,10 +362,10 @@ def admin_updatePackage():
                 Storage_Limit  = _to_nonneg_int(request.form['storage'],    'Storage limit', max_val=999999)
             except ValueError as e:
                 flash(str(e))
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
             if not Package_Name or len(Package_Name) > 128:
                 flash('Package name must be 1-128 characters.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
             CGI_ACCESS='0'
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
@@ -362,12 +376,12 @@ def admin_updatePackage():
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Hosting Package Updated.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
             else:
                 flash('Hosting Package Not Updated.')
-                return redirect(request.referrer)
+                return safe_referrer_redirect()
         else:
-            return redirect(request.referrer)
+            return safe_referrer_redirect()
 
     else:
         return redirect(url_for('routes.login'))

@@ -822,11 +822,14 @@ PYEOF
 success "Database/config.ini written (chmod 600)."
 
 # Write .env with SECRET_KEY
+# NOTE: SESSION_COOKIE_SECURE starts as 'false' because HTTPS is not yet
+# configured at this point. After certbot runs successfully, the post-hook
+# below flips it to 'true' so cookies are only sent over HTTPS in production.
 cat > "${SASPANEL_DIR}/.env" <<EOF
 SECRET_KEY=${PANEL_SECRET_KEY}
 FLASK_ENV=production
 FLASK_DEBUG=0
-SESSION_COOKIE_SECURE=true
+SESSION_COOKIE_SECURE=false
 MAIL_SERVER=localhost
 MAIL_PORT=587
 MAIL_USERNAME=${MAIL_ADMIN_EMAIL}
@@ -935,4 +938,17 @@ echo ""
 echo -e "  ${BOLD}Service status:${NC}  systemctl status saspanel"
 echo -e "  ${BOLD}View logs:${NC}       tail -f ${SASPANEL_DIR}/logs/error.log"
 echo -e "  ${BOLD}Install log:${NC}     ${LOG_FILE}"
+echo ""
+echo -e "${YELLOW}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}${BOLD}  HTTPS / SSL — Enable after DNS is pointing to this server${NC}"
+echo -e "${YELLOW}${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "  1. Point your domain DNS A-record to: ${SERVER_IP}"
+echo -e "  2. Run certbot:"
+echo -e "     ${BOLD}certbot --nginx -d ${PANEL_DOMAIN} --non-interactive --agree-tos -m ${ADMIN_EMAIL}${NC}"
+echo -e "  3. After certbot succeeds, enable secure cookies:"
+echo -e "     ${BOLD}sed -i 's/SESSION_COOKIE_SECURE=false/SESSION_COOKIE_SECURE=true/' ${SASPANEL_DIR}/.env${NC}"
+echo -e "     ${BOLD}systemctl restart saspanel${NC}"
+echo ""
+echo -e "${GREEN}${BOLD}  Panel is running on HTTP until you complete HTTPS setup above.${NC}"
 echo ""
