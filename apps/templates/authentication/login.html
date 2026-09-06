@@ -47,6 +47,7 @@
                                 </div>
                                 {% endif %}
                                         <form action="" class="authentication-form" method="POST">
+                                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                          <div class="form-group">
                                                 <label class="form-control-label">UserType</label>
                                                 <div class="input-group input-group-merge">
