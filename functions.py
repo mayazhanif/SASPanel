@@ -612,16 +612,19 @@ def remove_vhost(domain: str):
 
 def add_ftp_only(username: str, password: str):
     username = _validate(username, 'username')
-    _run(['useradd', username])
+    _run(['useradd', '-m', username])  # -m creates the home directory
     subprocess.run(['chpasswd'], input=f'{username}:{password}\n',
                    text=True, capture_output=True)
-    try:
-        with open('/etc/vsftpd.chroot_list', 'a') as f:
-            f.write(username + '\n')
-    except Exception as ex:
-        print(f'vsftpd.chroot_list error: {ex}')
+    # Add to chroot_list (exempt from chroot) and user_list (allowlist)
+    for fpath in ('/etc/vsftpd.chroot_list', '/etc/vsftpd.user_list'):
+        try:
+            with open(fpath, 'a') as f:
+                f.write(username + '\n')
+        except Exception as ex:
+            print(f'{fpath} error: {ex}')
     _run(['chown', '-R', f'{username}:{username}', f'/home/{username}'])
     _run(['chmod', '0755', f'/home/{username}'])
+    _run(['systemctl', 'reload', 'vsftpd'])
 
 
 def add_ftp(ftpusername: str, username: str, password: str):
@@ -630,19 +633,32 @@ def add_ftp(ftpusername: str, username: str, password: str):
     _run(['useradd', '--home', f'/home/{username}', ftpusername])
     subprocess.run(['chpasswd'], input=f'{ftpusername}:{password}\n',
                    text=True, capture_output=True)
-    try:
-        with open('/etc/vsftpd.chroot_list', 'a') as f:
-            f.write(ftpusername + '\n')
-    except Exception as ex:
-        print(f'vsftpd.chroot_list error: {ex}')
+    # Add to chroot_list (exempt from chroot) and user_list (allowlist)
+    for fpath in ('/etc/vsftpd.chroot_list', '/etc/vsftpd.user_list'):
+        try:
+            with open(fpath, 'a') as f:
+                f.write(ftpusername + '\n')
+        except Exception as ex:
+            print(f'{fpath} error: {ex}')
     _run(['chown', '-R', f'{ftpusername}:{ftpusername}', f'/home/{username}'])
     _run(['chmod', '0755', f'/home/{username}'])
+    _run(['systemctl', 'reload', 'vsftpd'])
 
 
 def remove_ftp(ftpusername: str):
     ftpusername = _validate(ftpusername, 'username')
     _run(['chage', '-E0', ftpusername])
     _run(['usermod', '-s', '/sbin/nologin', ftpusername])
+    # Remove from user_list so the account is actually denied by vsftpd
+    for fpath in ('/etc/vsftpd.user_list', '/etc/vsftpd.chroot_list'):
+        try:
+            with open(fpath, 'r') as f:
+                lines = [l for l in f.readlines() if l.strip() != ftpusername]
+            with open(fpath, 'w') as f:
+                f.writelines(lines)
+        except Exception as ex:
+            print(f'{fpath} cleanup error: {ex}')
+    _run(['systemctl', 'reload', 'vsftpd'])
 
 
 def change_ftp_pass(ftpUsername: str, ftpPassword: str):

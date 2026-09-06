@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="https://img.shields.io/badge/SASPanel-Web%20Hosting%20Control%20Panel-6C63FF?style=for-the-badge&logo=server&logoColor=white"/>
 
@@ -111,7 +111,6 @@ Email:  admin@yourdomain.com
   Panel URL:      http://1.2.3.4:5000
   phpMyAdmin:     http://1.2.3.4/phpmyadmin
   Roundcube:      http://1.2.3.4/roundcube
-  Web FTP:        http://1.2.3.4/webftp
 
 ⚠  All credentials saved to: /root/saspanel_credentials.txt
    shred -u /root/saspanel_credentials.txt

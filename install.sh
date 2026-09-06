@@ -9,7 +9,7 @@
 #    1. Checks prerequisites (OS, root, internet)
 #    2. Generates all passwords automatically (cryptographically secure)
 #    3. Installs: MySQL, Nginx, PHP-FPM, Certbot, VSFTPD, Postfix, Dovecot
-#    4. Configures: virtual mail stack, roundcube, webftp, phpmyadmin
+#    4. Configures: virtual mail stack, roundcube, phpmyadmin
 #    5. Clones / updates SASPanel from /home/SASPanel
 #    6. Sets up Python venv + pip dependencies
 #    7. Writes Database/config.ini with generated credentials
@@ -183,12 +183,11 @@ mkdir -p /etc/nginx/snippets
 
 # BUG FIX: Create empty snippet placeholders BEFORE starting nginx.
 # The default site config includes these files — nginx will refuse to start
-# if they don't exist. The real content is written later (steps 11-13).
+# if they don't exist. The real content is written later (steps 11-12).
 touch /etc/nginx/snippets/phpmyadmin.conf
 touch /etc/nginx/snippets/roundcube.conf
-touch /etc/nginx/snippets/webftp.conf
 
-# Default vhost — serves phpmyadmin, roundcube, webftp
+# Default vhost — serves phpmyadmin, roundcube
 cat > /etc/nginx/sites-available/default <<'NGINXEOF'
 server {
     listen 80 default_server;
@@ -203,7 +202,6 @@ server {
     include /etc/nginx/php.conf;
     include snippets/phpmyadmin.conf;
     include snippets/roundcube.conf;
-    include snippets/webftp.conf;
 }
 NGINXEOF
 
@@ -620,10 +618,10 @@ section "Installing Roundcube"
 
 cd /usr/share
 if [[ ! -d roundcube ]]; then
-    wget -q https://github.com/roundcube/roundcubemail/releases/download/1.6.6/roundcubemail-1.6.6-complete.tar.gz
-    tar xf roundcubemail-1.6.6-complete.tar.gz
-    mv roundcubemail-1.6.6 roundcube
-    rm -f roundcubemail-1.6.6-complete.tar.gz
+    wget -q https://github.com/roundcube/roundcubemail/releases/download/1.7.4/roundcubemail-1.7.4-complete.tar.gz
+    tar xf roundcubemail-1.7.4-complete.tar.gz
+    mv roundcubemail-1.7.4 roundcube
+    rm -f roundcubemail-1.7.4-complete.tar.gz
 fi
 chown -R www-data:www-data /usr/share/roundcube
 
@@ -740,39 +738,7 @@ EOF
 
 success "Roundcube installed."
 
-# =============================================================================
-# 13. INSTALL WEB-FTP
-# =============================================================================
-section "Installing Web-FTP"
-
-cd /usr/share
-if [[ ! -d webftp ]]; then
-    wget -q https://github.com/mayazhanif/web-ftp/raw/main/webftp.zip
-    unzip -q webftp.zip
-    rm -f webftp.zip
-fi
-chown -R www-data:www-data /usr/share/webftp
-# BUG FIX: chmod 777 is world-writable (anyone can upload/execute files).
-# Use 770 so only www-data (the web server) can write to the tmp directory.
-chown www-data:www-data /usr/share/webftp/tmp 2>/dev/null || true
-chmod 770 /usr/share/webftp/tmp 2>/dev/null || true
-
-cat > /etc/nginx/snippets/webftp.conf <<'EOF'
-location /webftp {
-    root /usr/share/;
-    index index.php index.html index.htm;
-    location ~ ^/webftp/(.+\.php)$ {
-        root /usr/share/;
-        include /etc/nginx/php.conf;
-    }
-    location ~* ^/webftp/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
-        root /usr/share/;
-    }
-}
-EOF
-
-systemctl restart nginx
-success "Web-FTP installed."
+# (Web-FTP removed — use Roundcube for webmail and FTP clients directly)
 
 # =============================================================================
 # 14. SETUP SASPANEL PYTHON APP
@@ -981,7 +947,6 @@ echo ""
 echo -e "  ${BOLD}Panel URL:${NC}     http://${SERVER_IP}:5000"
 echo -e "  ${BOLD}phpMyAdmin:${NC}    http://${SERVER_IP}/phpmyadmin"
 echo -e "  ${BOLD}Roundcube:${NC}     http://${SERVER_IP}/roundcube"
-echo -e "  ${BOLD}Web FTP:${NC}       http://${SERVER_IP}/webftp"
 echo ""
 echo -e "${YELLOW}${BOLD}⚠  All credentials saved to: ${CRED_FILE}${NC}"
 echo -e "${YELLOW}   Please save them to a password manager, then delete the file:${NC}"
