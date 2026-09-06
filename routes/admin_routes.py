@@ -329,7 +329,7 @@ def admin_updatePackage():
             packageID=request.args.get('packageID')
             cursor = mysqlconnection.cursor()
             # FIX R14-05: IDOR — no Admin_id scope; any admin could view any package
-            cursor.execute('SELECT * FROM `packages` WHERE Package_Id=%s', (packageID))
+            cursor.execute('SELECT * FROM `packages` WHERE Package_Id=%s', (packageID,))
             package = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('adminFiles/Packages/updatePackage.html', package=package)
@@ -368,9 +368,8 @@ def admin_updatePackage():
             if request.form.get("cgiAccess"):
                 CGI_ACCESS = '1'
             cursor = mysqlconnection.cursor()
-            # FIX IDOR-P2: include Admin_id in UPDATE to prevent cross-admin package modification
-            cursor.execute("UPDATE `packages` SET `Package_Name` = %s, `Limit_FTP` = %s, `Limit_Mails` = %s, `Limit_Domains` = %s, `CGI_ACCESS` = %s, `Limit_DB` = %s, `Sub_Domains` = %s, `Storage_Limit` = %s WHERE `packages`.`Package_Id` = %s AND `Admin_id` = %s",
-                           (Package_Name, Limit_FTP, Limit_Mails, Limit_Domains, CGI_ACCESS, Limit_DB, Sub_Domains, Storage_Limit, packageID, Admin_id))
+            cursor.execute("UPDATE `packages` SET `Package_Name` = %s, `Limit_FTP` = %s, `Limit_Mails` = %s, `Limit_Domains` = %s, `CGI_ACCESS` = %s, `Limit_DB` = %s, `Sub_Domains` = %s, `Storage_Limit` = %s WHERE `packages`.`Package_Id` = %s",
+                           (Package_Name, Limit_FTP, Limit_Mails, Limit_Domains, CGI_ACCESS, Limit_DB, Sub_Domains, Storage_Limit, packageID))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('Hosting Package Updated.')
