@@ -1,7 +1,6 @@
 import json
 from flask import render_template, session, request, redirect, url_for, flash
 from . import routes
-from app import *
 import functions
 from functions import hash_password
 from Database.DbConfig import mysqlconnection
@@ -10,9 +9,9 @@ from routes.security import (
     sanitize_shell_arg, sanitize_cron_command,
     sanitize_log_filename, safe_log_path, sanitize_log_content,
 )
-import functions
+from functions import *
 from urllib.parse import urlparse
-from flask import current_app as app
+from flask import current_app
 from datetime import datetime
 from datetime import timedelta
 from crontab import CronTab
@@ -805,28 +804,28 @@ def user_error_logs_ajax():
         # FIX R19-05: null guard — fetchone()[0] crashes if user deleted mid-session
         _serv = cursor.fetchone()
         if _serv is None:
-            return app.response_class(response=json.dumps({'data': 'User account error.'}), status=403, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'User account error.'}), status=403, mimetype='application/json')
         userName = _serv[0]
         # FIXED VULN-02: validate domainName to prevent path traversal / LFI
         try:
             safe_domain = sanitize_log_filename(domainName)
             safe_user = sanitize_shell_arg(userName, 'username')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid domain name.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid domain name.'}), status=400, mimetype='application/json')
         # Verify the domain actually belongs to this user (IDOR prevention)
         cursor.execute('SELECT Domain_Name FROM `domains` WHERE Domain_Name=%s AND User_id=%s AND Is_Deleted=0', (safe_domain, userID))
         if cursor.fetchone() is None:
             log_security_event('IDOR_LOG_ACCESS', f'domain={safe_domain!r} user={userID}')
-            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
         base_dir = f'/home/{safe_user}/logs'
         try:
             fname = safe_log_path(base_dir, safe_domain, '-error.log')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
         raw = readLines(fname, 100)
         # FIXED VULN-13: HTML-escape to prevent second-order XSS
         Result['data'] = sanitize_log_content(raw)
-        response = app.response_class(
+        response = current_app.response_class(
             response=json.dumps(Result),
             status=200,
             mimetype='application/json'
@@ -861,26 +860,26 @@ def user_access_logs_ajax():
         # FIX R19-05: null guard — fetchone()[0] crashes if user deleted mid-session
         _serv = cursor.fetchone()
         if _serv is None:
-            return app.response_class(response=json.dumps({'data': 'User account error.'}), status=403, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'User account error.'}), status=403, mimetype='application/json')
         userName = _serv[0]
         # FIXED VULN-02: validate domainName + ownership check
         try:
             safe_domain = sanitize_log_filename(domainName)
             safe_user = sanitize_shell_arg(userName, 'username')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid domain name.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid domain name.'}), status=400, mimetype='application/json')
         cursor.execute('SELECT Domain_Name FROM `domains` WHERE Domain_Name=%s AND User_id=%s AND Is_Deleted=0', (safe_domain, userID))
         if cursor.fetchone() is None:
             log_security_event('IDOR_LOG_ACCESS', f'domain={safe_domain!r} user={userID}')
-            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
         base_dir = f'/home/{safe_user}/logs'
         try:
             fname = safe_log_path(base_dir, safe_domain, '-access.log')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
         raw = readLines(fname, 100)
         Result['data'] = sanitize_log_content(raw)
-        response = app.response_class(
+        response = current_app.response_class(
             response=json.dumps(Result),
             status=200,
             mimetype='application/json'

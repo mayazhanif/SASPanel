@@ -11,7 +11,7 @@ from routes.security import (
     sanitize_log_filename, safe_log_path, sanitize_log_content,
 )
 from urllib.parse import urlparse
-from flask import current_app as app
+from flask import current_app
 from datetime import datetime
 from datetime import timedelta
 from crontab import CronTab
@@ -1191,7 +1191,7 @@ def admin_error_logs_ajax():
         )
         domainData = cursor.fetchone()
         if domainData is None:
-            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
         userName = domainData[0]
         Domain = domainData[1]
         # FIXED VULN-02: validate domain from DB before building path
@@ -1199,16 +1199,16 @@ def admin_error_logs_ajax():
             safe_domain = sanitize_log_filename(Domain)
             safe_user = sanitize_shell_arg(userName, 'username')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
         base_dir = f'/home/{safe_user}/logs'
         try:
             fname = safe_log_path(base_dir, safe_domain, '-error.log')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
         raw = readLines(fname, 100)
         # FIXED VULN-13: HTML-escape log content to prevent second-order XSS
         Result['data'] = sanitize_log_content(raw)
-        response = app.response_class(
+        response = current_app.response_class(
             response=json.dumps(Result),
             status=200,
             mimetype='application/json'
@@ -1252,22 +1252,22 @@ def admin_access_logs_ajax():
         )
         domainData = cursor.fetchone()
         if domainData is None:
-            return app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Access denied.'}), status=403, mimetype='application/json')
         userName = domainData[0]
         Domain = domainData[1]
         try:
             safe_domain = sanitize_log_filename(Domain)
             safe_user = sanitize_shell_arg(userName, 'username')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
         base_dir = f'/home/{safe_user}/logs'
         try:
             fname = safe_log_path(base_dir, safe_domain, '-access.log')
         except ValueError:
-            return app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
+            return current_app.response_class(response=json.dumps({'data': 'Invalid log path.'}), status=400, mimetype='application/json')
         raw = readLines(fname, 100)
         Result['data'] = sanitize_log_content(raw)
-        response = app.response_class(
+        response = current_app.response_class(
             response=json.dumps(Result),
             status=200,
             mimetype='application/json'

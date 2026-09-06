@@ -1,22 +1,15 @@
-from flask import render_template, redirect, url_for
-from app import app
+from flask import redirect, url_for, jsonify
 from . import routes
-from app import *
 from Database.DbConfig import mysqlconnection
 from cachelib import SimpleCache
-import json
+from functions import check_admin_Login, check_user_Login, GetAllInfo
 
 
 @routes.route('/get_updates')
 def get_updates():
     mysqlconnection.reconnect()
     if check_admin_Login() or check_user_Login():
-        Result = GetAllInfo()
-        response = app.response_class(
-            response=json.dumps(Result),
-                status=200,
-                mimetype='application/json'
-        )
-        return response
+        result = GetAllInfo()
+        return jsonify(result)
     else:
         return redirect(url_for('routes.login'))
