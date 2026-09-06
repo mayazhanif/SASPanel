@@ -49,26 +49,26 @@ def mysql_connect():
   currentDirectory = os.path.dirname(os.path.abspath(__file__))
   initfile = os.path.join(currentDirectory, 'config.ini')
   config = configparser.RawConfigParser()
-  #print(initfile)
   config.read(initfile)
+  # FIX R15-01: bare except left DatabaseDetails undefined if [config] section was missing,
+  # causing an unhandled NameError in the next try block. Now return None explicitly on failure.
   try:
     DatabaseDetails = dict(config.items('config'))
-  except:
+  except Exception as e:
+    print(f'Config parse error: {e}')
     mysqlconnection = None
+    return None
   try:
-    #print(DatabaseDetails['password'])
-    #print(mysqlconnection)
     mysqlconnection = mysql.connector.connect(
       host=DatabaseDetails['host'],
       user=DatabaseDetails['user'],
       password=DatabaseDetails['password'],
       database=DatabaseDetails['database'],
     )
-    #mysqlconnection= "testValue"
     print("Connection Successfull.")
   except Exception as e:
     print(e)
     mysqlconnection = None
   return mysqlconnection
 
-mysqlconnection = mysql_connect()
+mysqlconnection = mysql_connect()

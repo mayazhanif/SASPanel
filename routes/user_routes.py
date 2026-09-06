@@ -116,8 +116,12 @@ def user_addDomain():
                 return render_template('userFiles/domains/addDomain.html', msg=msg)
             #querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
             cursor.execute("SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
-            limit=cursor.fetchone()
-            limit= limit[0]
+            # FIX R15-02: null guard — limit fetchone() crashes if user record is missing
+            limit_row = cursor.fetchone()
+            if limit_row is None:
+                msg = {"error": "danger", "message": "User account error. Please contact support."}
+                return render_template('userFiles/domains/addDomain.html', msg=msg)
+            limit = limit_row[0]
             #cursor.rowcount>
             #queryinUSe ="SELECT * FROM `domains` where User_id="+userID
             cursor.execute("SELECT * FROM `domains` where User_id=%s",(userID,))
@@ -680,8 +684,14 @@ def user_addSubDomain():
             cursor.execute("SELECT Sub_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
+            # FIX R15-03: restore SELECT servUser with null guard (original accidentally removed SELECT)
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
-            getUserName = cursor.fetchone()[0]
+            _serv_row = cursor.fetchone()
+            if _serv_row is None:
+                msg = {'error': 'danger', 'message': 'User not found. Please log in again.'}
+                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            getUserName = _serv_row[0]
+
             # FIXED VULN-03: parameterized query (was raw string concat)
             cursor.execute('SELECT COUNT(*) FROM `subdomains` WHERE User_id=%s AND Is_Active=1', (userID,))
             in_use = cursor.fetchone()[0]

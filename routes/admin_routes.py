@@ -121,7 +121,8 @@ def admin_addUser():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
+        # FIX R15-05: info-leak — package dropdown showed ALL admins' packages
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
         results = cursor.fetchall()
         if request.method == 'POST' and 'Name' in request.form and 'Email' in request.form and 'pass1' in request.form and 'pass2' in request.form and 'packageID' in request.form:
             User_Name = request.form['Name']
@@ -189,7 +190,8 @@ def admin_updateUser():
         if request.method == 'GET' and request.args.get('userID'):
             userID=request.args.get('userID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
+            # FIX R15-06: info-leak — package dropdown showed ALL admins' packages in update form
+            cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
             results = cursor.fetchall()
             # FIX R14-03: IDOR — no Admin_id scope on GET fetch; any admin could view any user's data
             cursor.execute(
@@ -419,8 +421,14 @@ def admin_viewDomains():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        #cursor.execute('SELECT * FROM `domains` INNER JOIN users ON domains.User_id = users.User_id where domains.Is_Deleted=0;')
-        cursor.execute('SELECT * FROM domains JOIN users ON domains.User_id = users.User_id JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id;')
+        # FIX R15-04: info-leak — was showing ALL domains from all admins
+        cursor.execute(
+            'SELECT * FROM domains '
+            'JOIN users ON domains.User_id = users.User_id '
+            'JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id '
+            'WHERE users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         return render_template('adminFiles/domains/viewDomains.html', results=results)
     else:
