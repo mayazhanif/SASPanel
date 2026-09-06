@@ -72,14 +72,32 @@ tar xf roundcubemail-1.4.13-complete.tar.gz
 mv roundcubemail-1.4.13 roundcube
 chown -R www-data:www-data /usr/share/roundcube
 
-# SH-03 FIX: Use MYSQL_PWD env var + separate statements instead of shell-interpolated one-liners
+# FIX R14-09: ${ROUNDCUBE_PASS} was directly interpolated into SQL heredoc.
+# Bootstrap with empty password first, then set via Python helper with SQL escaping.
 MYSQL_PWD="${ROOT_PASS}" mysql -u root <<SQL
-CREATE USER IF NOT EXISTS 'roundcube'@'localhost' IDENTIFIED BY '${ROUNDCUBE_PASS}';
+CREATE USER IF NOT EXISTS 'roundcube'@'localhost' IDENTIFIED BY '';
 CREATE DATABASE IF NOT EXISTS roundcubedb;
 GRANT ALL PRIVILEGES ON roundcubedb.* TO 'roundcube'@'localhost';
 FLUSH PRIVILEGES;
 SQL
 MYSQL_PWD="${ROOT_PASS}" mysql -u root roundcubedb < /usr/share/roundcube/SQL/mysql.initial.sql
+
+# Use Python to SQL-escape and set the real roundcube password
+RC_PASS_FILE=$(mktemp)
+trap 'rm -f "${RC_PASS_FILE}"' EXIT
+chmod 600 "${RC_PASS_FILE}"
+printf '%s' "${ROUNDCUBE_PASS}" > "${RC_PASS_FILE}"
+python3 - <<PYEOF
+import subprocess, os, tempfile
+pw = open('${RC_PASS_FILE}').read().strip()
+with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+    f.write("ALTER USER 'roundcube'@'localhost' IDENTIFIED BY '{pw}';\nFLUSH PRIVILEGES;\n".format(pw=pw.replace("'", "''")))
+    fname = f.name
+env = os.environ.copy()
+env['MYSQL_PWD'] = os.environ.get('ROOT_PASS', '')
+subprocess.run(['mysql', '-u', 'root'], stdin=open(fname), env=env)
+os.unlink(fname)
+PYEOF
 
 cat > /etc/nginx/snippets/roundcube.conf <<'EOF'
 location /roundcube {
@@ -134,24 +152,49 @@ rm -rf /usr/share/roundcube/installer
 
 service nginx restart
 
-# ---------------------------------------------------------------------------
-# Mail database setup
-# SH-03 FIX: Use MYSQL_PWD + heredoc — no shell SQL injection via $DOMAIN/$EMAIL
-# ---------------------------------------------------------------------------
+# FIX R14-10: ${MAIL_PASS} was directly interpolated into SQL heredoc.
+# Bootstrap with empty password, then set via Python helper.
 MYSQL_PWD="${ROOT_PASS}" mysql -u root <<SQL
-CREATE USER IF NOT EXISTS 'mail_admin'@'%' IDENTIFIED BY '${MAIL_PASS}';
+CREATE USER IF NOT EXISTS 'mail_admin'@'%' IDENTIFIED BY '';
 CREATE DATABASE IF NOT EXISTS mail;
 GRANT ALL PRIVILEGES ON mail.* TO 'mail_admin'@'%';
 FLUSH PRIVILEGES;
 SQL
 MYSQL_PWD="${ROOT_PASS}" mysql -u root mail < /home/SASPanel/scripts/mail.sql
 
-# Insert initial domain and mailbox using parameterised approach (Python helper)
-# to avoid shell injection — values validated by Python before reaching here
-MYSQL_PWD="${MAIL_PASS}" mysql -u mail_admin mail <<SQL
-INSERT IGNORE INTO domains (domain) VALUES ('${DOMAIN}');
-INSERT IGNORE INTO users (email, password) VALUES ('${EMAIL}', '${EMAIL_PASS}');
-SQL
+MAIL_PASS_FILE=$(mktemp)
+trap 'rm -f "${MAIL_PASS_FILE}"' EXIT
+chmod 600 "${MAIL_PASS_FILE}"
+printf '%s' "${MAIL_PASS}" > "${MAIL_PASS_FILE}"
+
+# FIX R14-11: ${DOMAIN}, ${EMAIL}, ${EMAIL_PASS} were directly interpolated into SQL heredoc.
+# Use Python helper with SQL escaping for INSERT statements.
+DOMAIN_FILE=$(mktemp); EMAIL_FILE=$(mktemp); EPASS_FILE=$(mktemp)
+trap 'rm -f "${DOMAIN_FILE}" "${EMAIL_FILE}" "${EPASS_FILE}"' EXIT
+chmod 600 "${DOMAIN_FILE}" "${EMAIL_FILE}" "${EPASS_FILE}"
+printf '%s' "${DOMAIN}"     > "${DOMAIN_FILE}"
+printf '%s' "${EMAIL}"      > "${EMAIL_FILE}"
+printf '%s' "${EMAIL_PASS}" > "${EPASS_FILE}"
+
+python3 - <<PYEOF
+import subprocess, os, tempfile
+def sq(s): return s.replace("'", "''")
+mail_pw  = open('${MAIL_PASS_FILE}').read().strip()
+domain   = sq(open('${DOMAIN_FILE}').read().strip())
+email    = sq(open('${EMAIL_FILE}').read().strip())
+email_pw = sq(open('${EPASS_FILE}').read().strip())
+
+with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+    f.write("ALTER USER 'mail_admin'@'%' IDENTIFIED BY '{pw}';\nFLUSH PRIVILEGES;\n".format(pw=sq(mail_pw)))
+    f.write("INSERT IGNORE INTO mail.domains (domain) VALUES ('{d}');\n".format(d=domain))
+    f.write("INSERT IGNORE INTO mail.users (email, password) VALUES ('{e}', '{p}');\n".format(e=email, p=email_pw))
+    fname = f.name
+env = os.environ.copy()
+env['MYSQL_PWD'] = os.environ.get('ROOT_PASS', '')
+subprocess.run(['mysql', '-u', 'root'], stdin=open(fname), env=env)
+os.unlink(fname)
+print('Mail DB users and data created via Python helper.')
+PYEOF
 
 chmod +x /var/lib/nginx -R
 
