@@ -78,6 +78,14 @@ read -r -p "Email: " ADMIN_EMAIL
 
 success "Domain: ${DOMAIN}  |  Email: ${ADMIN_EMAIL}"
 
+# FIX R7-08: validate DOMAIN and ADMIN_EMAIL before using in SQL heredocs and shell scripts
+if ! [[ "${DOMAIN}" =~ ^[a-zA-Z0-9][a-zA-Z0-9.\-]{1,251}[a-zA-Z0-9]$ ]]; then
+    error "Invalid domain name '${DOMAIN}'. Use only letters, digits, dots, and hyphens."
+fi
+if ! [[ "${ADMIN_EMAIL}" =~ ^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$ ]]; then
+    error "Invalid email address '${ADMIN_EMAIL}'."
+fi
+
 # =============================================================================
 # 2. GENERATE ALL CREDENTIALS SECURELY
 # =============================================================================

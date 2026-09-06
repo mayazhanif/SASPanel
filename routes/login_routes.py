@@ -149,10 +149,13 @@ def forgot_password():
                 (Token, userID)
             )
             mysqlconnection.commit()
-            o        = urlparse(request.base_url)
-            mainhost = o.hostname + (':' + str(o.port) if o.port else '')
-            scheme   = 'https'  # always use HTTPS for reset links
-            url      = f'{scheme}://{mainhost}/reset?token={Token}'
+            # FIX R7-09: Host header injection — build reset URL from configured SERVER_NAME
+            # not from request.base_url (which uses the user-controlled Host: header)
+            import os
+            trusted_host = os.environ.get('SERVER_NAME') or os.environ.get('MAIL_SERVER') or request.host
+            # Strip any port that isn't the real panel port
+            scheme = 'https'
+            url = f'{scheme}://{trusted_host}/reset?token={Token}'
             body = (
                 f'<p style="text-align:center"><b>Password Reset</b></p>'
                 f'<p style="text-align:center">Click the link below to reset your password. '

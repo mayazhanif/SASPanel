@@ -100,6 +100,12 @@ def user_addDomain():
         if request.method == 'POST' and 'DomainName' in request.form:
             userID = str(session["id"])
             DomainName = request.form['DomainName']
+            # FIX R7-05: validate DomainName before passing to add_vhost/generate_SSL
+            try:
+                DomainName = sanitize_shell_arg(DomainName, 'domain')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid domain name. Use only letters, digits, dots, hyphens.'}
+                return render_template('userFiles/domains/addDomain.html', msg=msg)
             #querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
             cursor.execute("SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
@@ -271,8 +277,12 @@ def user_deleteDatabase():
             DbID=request.args.get('DbID')
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT DbName FROM `msqldatabases` where DB_ID=%s and msqldatabases.User_id=%s',(DbID,userID))
-            #print(cursor.fetchone()[0])
-            getDBName = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            # FIX R7-06: null-pointer crash if DB doesn't belong to this user
+            if row is None:
+                flash('Database not found or access denied.')
+                return redirect(url_for('routes.user_viewDatabases'))
+            getDBName = row[0]
             #query="UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = "+DbID+" and msqldatabases.User_id="+userID
             cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s and msqldatabases.User_id=%s",(DbID,userID))
             mysqlconnection.commit()
@@ -724,7 +734,12 @@ def user_deleteSubDomain():
             SdomainID=request.args.get('SdomainID')
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=%s and subdomains.User_id=%s', (SdomainID, userID))
-            SubDomainName = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            # FIX R7-07: null-pointer crash if subdomain doesn't belong to this user
+            if row is None:
+                flash('Subdomain not found or access denied.')
+                return redirect(url_for('routes.user_viewSubDomains'))
+            SubDomainName = row[0]
             # FIXED VULN-04: fully parameterized (was partially concatenated)
             cursor.execute("UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = %s AND User_id=%s", (SdomainID, userID))
             mysqlconnection.commit()

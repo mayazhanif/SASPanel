@@ -353,6 +353,12 @@ def admin_addDomain():
             getUserName = user[0]
             getEmail = user[1]
             DomainName = request.form['DomainName']
+            # FIX R7-03: validate DomainName before passing to add_vhost/generate_SSL (shell scripts)
+            try:
+                DomainName = sanitize_shell_arg(DomainName, 'domain')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid domain name. Use only letters, digits, dots, hyphens.'}
+                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '"+userID+"', '0', '0');"
             try:
                 cursor.execute("INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, %s, %s, '0', '0');",(DomainName,userID))
@@ -442,9 +448,19 @@ def admin_deleteDomain():
             domainID=request.args.get('domainID')
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT Domain_Name FROM `domains` where Is_Deleted=0 and Domain_Id=%s',(domainID,))
-            DomainName = cursor.fetchone()[0]
-            #query="UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` ="+domainID
-            cursor.execute("UPDATE `domains` SET `Is_Deleted` = '1' WHERE `domains`.`Domain_Id` =%s",(domainID,))
+            row = cursor.fetchone()
+            # FIX R7-04: null-pointer crash + no Admin_id ownership check on domain delete
+            if row is None:
+                flash('Domain not found or access denied.')
+                return redirect(url_for('routes.admin_viewDomains'))
+            DomainName = row[0]
+            # Scope deletion to domains belonging to this admin's users
+            cursor.execute(
+                "UPDATE `domains` SET `Is_Deleted` = '1' "
+                "WHERE `domains`.`Domain_Id` =%s "
+                "AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (domainID, str(session['id']))
+            )
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(DomainName)
@@ -598,6 +614,12 @@ def admin_addAccounts():
             getUserName = cursor.fetchone()[0]
             ftpUsername = request.form['ftpUsername']
             ftpPassword = request.form['ftpPassword']
+            # FIX R7-01: validate ftpUsername — it becomes a Linux OS username
+            try:
+                ftpUsername = sanitize_shell_arg(ftpUsername, 'username')
+            except ValueError:
+                msg = {'error': 'danger', 'message': 'Invalid FTP username. Lowercase letters, digits, hyphens, underscores only.'}
+                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
             encodedPass = Base64Encode(ftpPassword)
             #ftpPassword = request.form['ftpPassword']
             Directory = "/home/username/public_html"
@@ -690,7 +712,12 @@ def admin_deleteAccount():
             AccID=request.args.get('AccID')
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT FTP_Username FROM `ftp_accounts` where Is_Active=1 and `ftp_accounts`.`Account_Id`=%s',(AccID,))
-            ftpUsername = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            # FIX R7-02: null-pointer crash if AccID not found + no Admin_id ownership was checked
+            if row is None:
+                flash('FTP Account not found or access denied.')
+                return redirect(url_for('routes.admin_viewAccounts'))
+            ftpUsername = row[0]
             #query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID
             cursor.execute("UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` =%s ",(AccID,))
             mysqlconnection.commit()
