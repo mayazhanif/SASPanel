@@ -474,7 +474,12 @@ def admin_deleteDomain():
         if request.method == 'GET' and request.args.get('domainID'):
             domainID=request.args.get('domainID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT Domain_Name FROM `domains` where Is_Deleted=0 and Domain_Id=%s',(domainID,))
+            cursor.execute(
+                'SELECT Domain_Name FROM `domains` '
+                'WHERE Is_Deleted=0 AND Domain_Id=%s '
+                'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+                (domainID, str(session['id']))
+            )
             row = cursor.fetchone()
             # FIX R7-04: null-pointer crash + no Admin_id ownership check on domain delete
             if row is None:
@@ -1342,8 +1347,14 @@ def admin_deleteJob():
                 flash('Cron job not found or access denied.')
                 return redirect(url_for('routes.admin_cron_jobs'))
             getUsername = row[0]
-            #query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID
-            cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` =%s",(JobID,))
+            # FIX R16-07: IDOR — UPDATE had no Admin_id scope; SELECT verified ownership
+            # but the UPDATE itself only filtered on Job_ID, allowing race-condition bypass.
+            cursor.execute(
+                "UPDATE `cronjobs` SET `Is_Deleted` = '1' "
+                "WHERE `cronjobs`.`Job_ID` =%s "
+                "AND `User_id` IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (JobID, str(session['id']))
+            )
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 my_cron = CronTab(user=getUsername)

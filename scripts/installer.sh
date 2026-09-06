@@ -1,13 +1,13 @@
 #!/bin/bash
+# installer.sh — SASPanel base system setup
+# R16-09 FIX: added set -euo pipefail (consistent with all other scripts)
+# Script is invoked as root by install_packages() so sudo is not needed.
+set -euo pipefail
 PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
 export PATH
-sudo apt-get install -y mysql-server nginx curl wget acl
+apt-get install -y mysql-server nginx curl wget acl
 echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections
 echo "postfix postfix/mailname string mail.saspanel.org" | debconf-set-selections
-echo "dovecot-core dovecot-core/create-ssl-cert boolean true" | debconf-set-selections
-sudo apt-get install postfix-mysql
-
-apt-get install nginx vsftpd
 mkdir -p /etc/nginx/backupDomains
 
 cat > /etc/nginx/php.conf <<EOF

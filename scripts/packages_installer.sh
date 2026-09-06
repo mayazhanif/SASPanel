@@ -140,8 +140,24 @@ service nginx restart
 
 # Roundcube config
 cp /usr/share/roundcube/config/config.inc.php.sample /usr/share/roundcube/config/config.inc.php
-sed -i "s|^\(\\\$config\['db_dsnw'\] =\).*$|\1 'mysqli://roundcube:${ROUNDCUBE_PASS}@localhost/roundcubedb';|" \
-    /usr/share/roundcube/config/config.inc.php
+# FIX R16-10: ${ROUNDCUBE_PASS} interpolated into sed expression breaks if password
+# contains /, |, &, or # (sed metacharacters). Use Python to write the DSN string safely.
+python3 - <<PYEOF
+import os, re
+rc_pass = open('${RC_PASS_FILE}').read().strip()
+conf_path = '/usr/share/roundcube/config/config.inc.php'
+with open(conf_path) as f:
+    content = f.read()
+# Replace the db_dsnw line safely — no sed metachar issues
+content = re.sub(
+    r"^\s*\\\$config\['db_dsnw'\]\s*=.*$",
+    "$config['db_dsnw'] = 'mysqli://roundcube:" + rc_pass.replace("\\", "\\\\").replace("'", "\\'") + "@localhost/roundcubedb';",
+    content, flags=re.MULTILINE
+)
+with open(conf_path, 'w') as f:
+    f.write(content)
+print('Roundcube DSN written safely.')
+PYEOF
 sed -i "s|^\(\\\$config\['smtp_server'\] =\).*$|\1 'localhost';|" /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\\\$config\['smtp_user'\] =\).*$|\1 '';|"           /usr/share/roundcube/config/config.inc.php
 sed -i "s|^\(\\\$config\['smtp_pass'\] =\).*$|\1 '';|"           /usr/share/roundcube/config/config.inc.php

@@ -8,21 +8,33 @@ def WriteConfig(password):
   initfile = os.path.join(currentDirectory, 'config.ini')
   config = configparser.RawConfigParser()
   config.read(initfile)
-  DatabaseDetails = config["config"]
-  DatabaseDetails["password"] = password
-  with open(initfile, 'w') as conf:
-    config.write(conf)
+  # FIX R16-04: KeyError if [config] section missing — raised silently during install
+  try:
+    DatabaseDetails = config['config']
+    DatabaseDetails['password'] = password
+    with open(initfile, 'w') as conf:
+      config.write(conf)
+  except KeyError as e:
+    print(f'WriteConfig error: section missing in config.ini: {e}')
+  except Exception as e:
+    print(f'WriteConfig error: {e}')
 
 def WriteMailConfig(email,password):
   currentDirectory = os.path.dirname(os.path.abspath(__file__))
   initfile = os.path.join(currentDirectory, 'config.ini')
   config = configparser.RawConfigParser()
   config.read(initfile)
-  DatabaseDetails = config["mail"]
-  DatabaseDetails["email"] = email
-  DatabaseDetails["password"] = password
-  with open(initfile, 'w') as conf:
-    config.write(conf)
+  # FIX R16-04: KeyError if [mail] section missing — raised silently during install
+  try:
+    DatabaseDetails = config['mail']
+    DatabaseDetails['email'] = email
+    DatabaseDetails['password'] = password
+    with open(initfile, 'w') as conf:
+      config.write(conf)
+  except KeyError as e:
+    print(f'WriteMailConfig error: section missing in config.ini: {e}')
+  except Exception as e:
+    print(f'WriteMailConfig error: {e}')
 
 # currentDirectory = os.path.dirname(os.path.abspath(__file__))
 # initfile = os.path.join(currentDirectory, 'config.ini')

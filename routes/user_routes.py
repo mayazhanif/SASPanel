@@ -231,8 +231,9 @@ def user_addDB():
         userID = str(session["id"])
         cursor = mysqlconnection.cursor()
         if request.method == 'POST' and 'databaseName' in request.form:
-            #querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%",(userID,)
-            cursor.execute("SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
+            # FIX R16-05: was SELECT Limit_Domains instead of SELECT Limit_DB —
+            # domain allowance was being used to gate database creation
+            cursor.execute("SELECT Limit_DB FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
             limit=cursor.fetchone()
             limit= limit[0]
             # FIXED: parameterized query (was raw string concatenation)
@@ -391,7 +392,12 @@ def user_addAccounts():
             encodedPass = Base64Encode(ftpPassword)
             Directory = "/home/username/public_html"
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
-            getUserName = cursor.fetchone()[0]
+            # FIX R16-06: null guard — fetchone()[0] crashes if user record deleted mid-session
+            _serv_row = cursor.fetchone()
+            if _serv_row is None:
+                msg = {'error': 'danger', 'message': 'User account error. Please contact support.'}
+                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+            getUserName = _serv_row[0]
             #query = "INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, '" + userID + "', '" + Directory + "', '" + ftpUsername + "', '" + encodedPass + "', '1');"
             try:
                 cursor.execute("INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, '1');",(userID,Directory,ftpUsername,encodedPass))
