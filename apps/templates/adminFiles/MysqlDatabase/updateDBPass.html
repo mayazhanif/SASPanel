@@ -1,84 +1,203 @@
 {% include "layout/adminheader.html" %}
 {% block body %}
 
-            <div class="content-page">
-                <div class="content">
-                    
-                    <!-- Start Content-->
-                    <div class="container-fluid">
-                        <div class="row page-title">
-                            <div class="col-md-12">
-                                <nav aria-label="breadcrumb" class="float-right mt-1">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="{{url_for('routes.admin_dashboard') }}">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="{{url_for('routes.admin_viewDatabases') }}">MYSQL Databases</a></li>
-                                        <li class="breadcrumb-item active">Update Database Password</li>
-                                    </ol>
-                                </nav>
-                                <h4 class="mb-1 mt-0">Update Database Password</h4>
+<div class="content-page">
+    <div class="content">
+        <div class="container-fluid">
+
+            <!-- Page Title -->
+            <div class="row page-title">
+                <div class="col-md-12">
+                    <nav aria-label="breadcrumb" class="float-right mt-1">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('routes.admin_dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('routes.admin_viewDatabases') }}">MySQL Databases</a></li>
+                            <li class="breadcrumb-item active">Update Database Password</li>
+                        </ol>
+                    </nav>
+                    <h4 class="mb-1 mt-0">Update Database Password</h4>
+                </div>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-xl-6 col-lg-8">
+
+                    {% for message in get_flashed_messages() %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i data-feather="alert-circle" class="mr-2"></i> {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+
+                    {% if msg %}
+                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
+                        <i data-feather="{{ 'check-circle' if msg.error == 'success' else 'alert-circle' }}" class="mr-2"></i>
+                        {{ msg.message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    <!-- DB Info Card -->
+                    {% if db %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-secondary text-white d-flex align-items-center py-2">
+                            <i data-feather="database" class="mr-2"></i>
+                            <h6 class="mb-0">Database Details</h6>
+                        </div>
+                        <div class="card-body py-2 px-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">DB Username</small>
+                                    <code class="text-dark font-weight-bold">{{ db[1] if db else '—' }}</code>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">DB User ID</small>
+                                    <code class="text-dark font-weight-bold">#{{ database }}</code>
+                                </div>
                             </div>
                         </div>
-                        {% for message in get_flashed_messages() %}
-                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                        {% endfor %}
-                            <div class="">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h4 class="header-title mt-0 mb-1">Update Database Password</h4>
-                                        <p class="sub-header">
-                                            Type the Password and Confirm password to Change the Password.
-                                        </p>
-                                {% if msg %}
-                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
-                                        {{ msg.message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                                {% endif %}
-                                        <form method="POST" role="form" class="parsley-examples">
+                    </div>
+                    {% endif %}
 
-                                            <div class="form-group row">
-                                                <label for="Password" class="col-md-2 col-form-label">Password<span class="text-danger">*</span></label>
-                                                <div class="col-md-7">
-                                                    <input id="Password" name="pass1" type="password" placeholder="Enter Password" required
-                                                            class="form-control">
-                                                </div>
-                                            </div>
-                                            <div class="form-group row">
-                                                <label for="confirmPassword" class="col-md-2 col-form-label">Confirm Password
-                                                    <span class="text-danger">*</span></label>
-                                                <div class="col-md-7">
-                                                    <input data-parsley-equalto="#Password" type="password" required
-                                                            placeholder="ReType Password" name="pass2" class="form-control" id="confirmPassword">
-                                                </div>
-                                            </div>
-                                            <input type="hidden" name="DbID" value="{{ database }}">
-                                            <div class="form-group row">
-                                                <div class="col-md-8 offset-md-4">
-                                                    <button type="submit" class="btn btn-primary mr-1">
-                                                        Update Password
-                                                    </button>
-                                                    <button type="reset"
-                                                            class="btn btn-secondary">
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div> <!-- end card -->
-
-                            </div> <!-- end col -->
+                    <!-- Password Form Card -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning text-dark d-flex align-items-center">
+                            <i data-feather="key" class="mr-2"></i>
+                            <h5 class="mb-0">Change Password</h5>
                         </div>
-                        <!-- end row -->
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                Enter a new password for this database user. The password will be updated in both the panel and the MySQL server immediately.
+                            </p>
 
+                            <form method="POST" action="{{ url_for('routes.admin_updateDBPass') }}" autocomplete="off" id="updatePassForm">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="DbID" value="{{ database }}">
 
+                                <!-- New Password -->
+                                <div class="form-group">
+                                    <label for="pass1">
+                                        <i data-feather="lock" class="icon-xs mr-1"></i>
+                                        New Password <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="pass1" name="pass1"
+                                               placeholder="Min. 8 characters"
+                                               minlength="8" maxlength="128" required autocomplete="new-password">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePass1" tabindex="-1">
+                                                <i data-feather="eye" id="eye1"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Strength bar -->
+                                    <div class="progress mt-1" style="height:4px;">
+                                        <div class="progress-bar" id="strengthBar" role="progressbar" style="width:0%"></div>
+                                    </div>
+                                    <small class="form-text" id="strengthLabel">&nbsp;</small>
+                                </div>
+
+                                <!-- Confirm Password -->
+                                <div class="form-group">
+                                    <label for="pass2">
+                                        <i data-feather="check-square" class="icon-xs mr-1"></i>
+                                        Confirm Password <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="pass2" name="pass2"
+                                               placeholder="Re-enter password"
+                                               minlength="8" maxlength="128" required autocomplete="new-password">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePass2" tabindex="-1">
+                                                <i data-feather="eye" id="eye2"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-danger" id="matchHint" style="display:none;">
+                                        <i data-feather="x-circle" class="icon-xs"></i> Passwords do not match.
+                                    </small>
+                                </div>
+
+                                <hr class="mt-4">
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="{{ url_for('routes.admin_viewDatabases') }}" class="btn btn-outline-secondary">
+                                        <i data-feather="arrow-left" class="mr-1"></i> Back
+                                    </a>
+                                    <button type="submit" class="btn btn-warning text-dark" id="submitBtn">
+                                        <i data-feather="save" class="mr-1"></i> Update Password
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div><!-- end card -->
+
+                </div>
+            </div><!-- end row -->
+        </div>
+    </div>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+(function() {
+    // Toggle visibility helpers
+    function togglePw(inputId, btnId, iconId) {
+        document.getElementById(btnId).addEventListener('click', function() {
+            var inp = document.getElementById(inputId);
+            var ico = document.getElementById(iconId);
+            var show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            ico.setAttribute('data-feather', show ? 'eye-off' : 'eye');
+            feather.replace();
+        });
+    }
+    togglePw('pass1', 'togglePass1', 'eye1');
+    togglePw('pass2', 'togglePass2', 'eye2');
+
+    // Password strength meter
+    var pass1 = document.getElementById('pass1');
+    var bar   = document.getElementById('strengthBar');
+    var label = document.getElementById('strengthLabel');
+    var colors = ['bg-danger','bg-warning','bg-info','bg-success'];
+    var labels = ['Weak','Fair','Good','Strong'];
+
+    pass1.addEventListener('input', function() {
+        var v = this.value, score = 0;
+        if (v.length >= 8)  score++;
+        if (/[A-Z]/.test(v)) score++;
+        if (/[0-9]/.test(v)) score++;
+        if (/[^A-Za-z0-9]/.test(v)) score++;
+        bar.className = 'progress-bar ' + (colors[score-1] || 'bg-danger');
+        bar.style.width = (score * 25) + '%';
+        label.textContent = v.length ? labels[score-1] || 'Very Weak' : '';
+        label.className = 'form-text ' + (score >= 3 ? 'text-success' : 'text-warning');
+    });
+
+    // Match check
+    var pass2 = document.getElementById('pass2');
+    var matchHint = document.getElementById('matchHint');
+    function checkMatch() {
+        var mismatch = pass2.value && pass2.value !== pass1.value;
+        matchHint.style.display = mismatch ? '' : 'none';
+        feather.replace();
+    }
+    pass1.addEventListener('input', checkMatch);
+    pass2.addEventListener('input', checkMatch);
+
+    // Prevent submit if mismatch
+    document.getElementById('updatePassForm').addEventListener('submit', function(e) {
+        if (pass1.value !== pass2.value) {
+            e.preventDefault();
+            matchHint.style.display = '';
+            pass2.focus();
+        }
+    });
+})();
+</script>
 
 {% include "layout/adminfooter.html" %}
 {% endblock %}

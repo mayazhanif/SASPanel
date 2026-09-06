@@ -664,10 +664,10 @@ def admin_updateDBPass():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        msg=''
+        msg = ''
         if request.method == 'GET' and request.args.get('DbID'):
-            DbUser_ID=request.args.get('DbID')
-            # FIX R9-05: IDOR — scope DB password view to admin's own users
+            DbUser_ID = request.args.get('DbID')
+            # FIX R9-05: IDOR - scope DB password view to admin's own users
             cursor.execute(
                 "SELECT * FROM `mysqldbusers` "
                 "WHERE `mysqldbusers`.`DbUser_ID` =%s "
@@ -678,9 +678,11 @@ def admin_updateDBPass():
             if database is None:
                 flash('Database not found or access denied.')
                 return redirect(url_for('routes.admin_viewDatabases'))
+            # FIX: was missing return — caused None response
+            return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, db=database, msg=msg)
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
-            # FIX R11-02: IDOR — POST branch never validated Admin_id ownership; also add null guard
+            # FIX R11-02: IDOR - POST branch validates Admin_id ownership
             cursor.execute(
                 "SELECT DbUsername FROM `mysqldbusers` "
                 "WHERE `mysqldbusers`.`DbUser_ID` =%s "
@@ -695,26 +697,28 @@ def admin_updateDBPass():
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
-                # FIX R21-04: cap DB password length before encoding/MySQL ALTER USER
+                # FIX R21-04: cap DB password length
                 if len(pass1) < 1 or len(pass1) > 128:
                     msg = {'error': 'danger', 'message': 'Password must be between 1 and 128 characters.'}
-                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, db=None, msg=msg)
                 EncodedPassword = Base64Encode(pass1)
-                #query = "UPDATE `mysqldbusers` SET `DbPassword` = '"+EncodedPassword+"' WHERE `mysqldbusers`.`DbUser_ID` = "+DbUser_ID+""
-                cursor.execute("UPDATE `mysqldbusers` SET `DbPassword` =%s WHERE `mysqldbusers`.`DbUser_ID` = %s",(EncodedPassword,DbUser_ID))
+                cursor.execute(
+                    "UPDATE `mysqldbusers` SET `DbPassword` =%s WHERE `mysqldbusers`.`DbUser_ID` = %s",
+                    (EncodedPassword, DbUser_ID)
+                )
                 mysqlconnection.commit()
-                if cursor.rowcount>0:
-                    changePassword(cursor,mysqlUsername,pass1)
-                    msg = {"error": "success", "message": "Database Password Updated."}
-                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+                if cursor.rowcount > 0:
+                    changePassword(cursor, mysqlUsername, pass1)
+                    msg = {'error': 'success', 'message': 'Database password updated successfully.'}
+                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, db=None, msg=msg)
                 else:
-                    msg = {"error": "danger", "message": "Password not Updated"}
-                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+                    msg = {'error': 'danger', 'message': 'Password not updated.'}
+                    return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, db=None, msg=msg)
             else:
-                msg = {"error": "danger", "message": "Password and confirm password does not match."}
-                return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+                msg = {'error': 'danger', 'message': 'Passwords do not match.'}
+                return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, db=None, msg=msg)
         else:
-            return redirect(url_for("routes.admin_viewDatabases"))
+            return redirect(url_for('routes.admin_viewDatabases'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -901,21 +905,26 @@ def admin_addEmail():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        # FIX R10-02: scope domain dropdown to this admin's users only (was showing ALL domains)
-        cursor.execute('SELECT * FROM `domains` WHERE Is_Deleted=0 AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s);', (str(session['id']),))
-        domains = cursor.fetchall()
-        if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form :
+        # Fetch users for the dropdown — domains load dynamically via AJAX
+        cursor.execute(
+            'SELECT User_id, User_Name, User_email FROM `users` '
+            'WHERE Is_Deleted=0 AND Admin_id=%s ORDER BY User_Name;',
+            (str(session['id']),)
+        )
+        users = cursor.fetchall()
+
+        if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form:
             domainID = request.form['domainID']
-            if(domainID==""):
-                flash('Domain not selected.')
-                return redirect(url_for('routes.admin_viewEmail'))
+            if domainID == '':
+                flash('Please select a domain.')
+                return render_template('adminFiles/Mails/addEmail.html', users=users, msg='')
             suffix = request.form['suffix']
             # FIX NEW-03: validate suffix to prevent injection into mail address and downstream XSS
             try:
                 suffix = sanitize_shell_arg(suffix, 'suffix')
             except ValueError:
                 flash('Invalid email prefix. Use only letters, digits, and hyphens.')
-                return redirect(url_for('routes.admin_viewEmail'))
+                return render_template('adminFiles/Mails/addEmail.html', users=users, msg='')
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
             cursor.execute(
@@ -928,26 +937,31 @@ def admin_addEmail():
             # FIX D-10: IDOR — domainID verified to belong to this admin's users
             if rDomain is None:
                 flash('Domain not found or access denied.')
-                return redirect(url_for('routes.admin_viewEmail'))
-            mail_adress= suffix+"@"+rDomain[1]
-            userID= str(rDomain[2])
+                return render_template('adminFiles/Mails/addEmail.html', users=users, msg='')
+            mail_adress = suffix + '@' + rDomain[1]
+            userID = str(rDomain[2])
             try:
-                cursor.execute("INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL,%s,%s,%s,%s, '1')",(domainID,userID,mail_adress,encodedPass))
+                cursor.execute(
+                    "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) "
+                    "VALUES (NULL,%s,%s,%s,%s,'1')",
+                    (domainID, userID, mail_adress, encodedPass)
+                )
                 mysqlconnection.commit()
-            except:
+            except Exception:
                 flash('Mail account already exists.')
-                return redirect(url_for('routes.admin_viewEmail'))
-            if cursor.rowcount>0:
-                create_mail_user(cursor,mail_adress,Password)
+                return render_template('adminFiles/Mails/addEmail.html', users=users, msg='')
+            if cursor.rowcount > 0:
+                create_mail_user(cursor, mail_adress, Password)
                 flash('Email account created successfully.')
                 return redirect(url_for('routes.admin_viewEmail'))
             else:
                 flash('Mail account not added.')
-                return redirect(url_for('routes.admin_viewEmail'))
-        else:
-            return redirect(url_for('routes.admin_viewEmail'))
+                return render_template('adminFiles/Mails/addEmail.html', users=users, msg='')
+        # GET — render blank form
+        return render_template('adminFiles/Mails/addEmail.html', users=users, msg='')
     else:
         return redirect(url_for('routes.login'))
+
 
 @routes.route('/admin/EmailAccounts/viewEmail')
 def admin_viewEmail():
