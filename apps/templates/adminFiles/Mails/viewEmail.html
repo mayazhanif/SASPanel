@@ -174,26 +174,40 @@ document.getElementById('mail-search').addEventListener('input', function() {
 
   userSel.addEventListener('change', function() {
     var uid = this.value;
-    domSel.innerHTML = '<option value="">Loading…</option>';
+    domSel.innerHTML = '<option value="">Loading\u2026</option>';
     domSel.disabled = true;
     atHint.textContent = '@domain.com';
     preview.textContent = (prefixIn.value || 'info') + '@yourdomain.com';
     if (!uid) {
-      domSel.innerHTML = '<option value="">— Select User first —</option>';
+      domSel.innerHTML = '<option value="">\u2014 Select User first \u2014</option>';
       domHint.textContent = 'Domains load after selecting a user.';
       return;
     }
-    domHint.textContent = 'Loading domains…';
-    fetch('/ajax/domains_by_user?user_id=' + encodeURIComponent(uid))
-      .then(function(r){ return r.json(); })
+    domHint.textContent = 'Loading domains\u2026';
+    fetch('/ajax/domains_by_user?user_id=' + encodeURIComponent(uid), {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(function(r) {
+        if (!r.ok) {
+          return r.json().then(function(e) {
+            throw new Error('Server error ' + r.status + ': ' + (e.error || r.statusText));
+          });
+        }
+        return r.json();
+      })
       .then(function(data) {
+        // data could be an error object if something went wrong
+        if (!Array.isArray(data)) {
+          throw new Error(data.error || 'Unexpected response from server');
+        }
         domSel.innerHTML = '';
-        if (!data || !data.length) {
-          domSel.innerHTML = '<option value="">— No domains for this user —</option>';
-          domHint.textContent = 'This user has no active domains.';
+        if (!data.length) {
+          domSel.innerHTML = '<option value="">\u2014 No domains found \u2014</option>';
+          domHint.textContent = 'This user has no active domains yet.';
           return;
         }
-        var o = document.createElement('option'); o.value=''; o.textContent='— Select Domain —';
+        var o = document.createElement('option'); o.value = ''; o.textContent = '\u2014 Select Domain \u2014';
         domSel.appendChild(o);
         data.forEach(function(d) {
           var opt = document.createElement('option');
@@ -203,9 +217,11 @@ document.getElementById('mail-search').addEventListener('input', function() {
         domSel.disabled = false;
         domHint.textContent = data.length + ' domain(s) available.';
       })
-      .catch(function() {
-        domSel.innerHTML = '<option value="">— Error loading —</option>';
-        domHint.textContent = 'Failed to load. Refresh and try again.';
+      .catch(function(err) {
+        console.error('[domains_by_user]', err);
+        domSel.innerHTML = '<option value="">\u2014 Error \u2014</option>';
+        domHint.textContent = 'Error: ' + err.message + '. Check console for details.';
+        domHint.style.color = 'var(--danger, #f87171)';
       });
   });
 
