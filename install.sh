@@ -93,7 +93,7 @@ section "Generating secure credentials"
 
 # Cryptographically secure random passwords
 gen_pass() { python3 -c "import secrets,string; \
-    a=string.ascii_letters+string.digits+'!@#%^&*'; \
+    a=string.ascii_letters+string.digits+'!@^\&*()_+-='; \
     print(''.join(secrets.choice(a) for _ in range(${1:-20})))"; }
 
 gen_hex()  { python3 -c "import secrets; print(secrets.token_hex(${1:-16}))"; }
@@ -582,6 +582,18 @@ with open('/etc/dovecot/dovecot-sql.conf', 'w') as f:
 import os; os.chmod('/etc/dovecot/dovecot-sql.conf', 0o600)
 print('dovecot-sql.conf written safely.')
 PYEOF
+
+# Enable submission (port 587) — commented out by default in Ubuntu master.cf.
+# Without this, Roundcube smtp_host=localhost:587 gets "Connection refused".
+sed -i 's/^#submission inet/submission inet/' /etc/postfix/master.cf
+# If the line didn't exist at all, append it
+grep -q "^submission inet" /etc/postfix/master.cf || cat >> /etc/postfix/master.cf <<'MEOF'
+submission inet n       -       y       -       -       smtpd
+  -o syslog_name=postfix/submission
+  -o smtpd_tls_security_level=may
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject
+MEOF
 
 systemctl enable postfix dovecot
 systemctl restart postfix dovecot
