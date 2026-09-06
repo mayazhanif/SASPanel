@@ -669,33 +669,29 @@ try:
     with open(conf_path) as f:
         content = f.read()
 except FileNotFoundError:
-    # config.inc.php may not exist yet — copy from sample
     import shutil
     sample = conf_path.replace('config.inc.php', 'config.inc.php.sample')
     shutil.copy(sample, conf_path)
     with open(conf_path) as f:
         content = f.read()
 
-# Set DB DSN
-content = re.sub(
-    r"^\s*\\\$config\['db_dsnw'\]\s*=.*$",
-    "$config['db_dsnw'] = 'mysqli://roundcube:"
-        + rc_pass.replace('\\', '\\\\').replace("'", "\\'")
-        + "@localhost/roundcubedb';",
-    content, flags=re.MULTILINE
-)
-# Set SMTP server
-content = re.sub(
-    r"^\s*\\\$config\['smtp_server'\]\s*=.*$",
-    "$config['smtp_server'] = 'localhost';",
-    content, flags=re.MULTILINE
-)
-# Set SMTP port
-content = re.sub(
-    r"^\s*\\\$config\['smtp_port'\]\s*=.*$",
-    "$config['smtp_port'] = 25;",
-    content, flags=re.MULTILINE
-)
+# Build safe DSN value
+dsn = "$config['db_dsnw'] = 'mysql://roundcube:" \
+    + rc_pass.replace('\\', '\\\\').replace("'", "\\'") \
+    + "@localhost/roundcubedb';"
+
+# NOTE: regex uses \$ (not \\\$) — in a raw string \$ means literal dollar sign.
+# The previous \\\$ incorrectly tried to match a backslash before $config.
+content = re.sub(r"\$config\['db_dsnw'\]\s*=.*?;", dsn, content)
+
+# Roundcube 1.7+ uses smtp_host (host:port) instead of smtp_server + smtp_port
+content = re.sub(r"\$config\['smtp_host'\]\s*=.*?;",
+    "$config['smtp_host'] = 'localhost:587';", content)
+content = re.sub(r"\$config\['smtp_server'\]\s*=.*?;",
+    "$config['smtp_host'] = 'localhost:587';", content)
+content = re.sub(r"\$config\['smtp_port'\]\s*=.*?;",
+    "$config['smtp_port'] = 587;", content)
+
 with open(conf_path, 'w') as f:
     f.write(content)
 print('Roundcube config written safely.')
@@ -710,9 +706,9 @@ conf_path = '/usr/share/roundcube/config/config.inc.php'
 with open(conf_path) as f:
     content = f.read()
 content = re.sub(
-    r"^\s*\\\$config\['des_key'\]\s*=.*$",
+    r"\$config\['des_key'\]\s*=.*?;",
     "$config['des_key'] = '" + deskey.replace('\\', '\\\\').replace("'", "\\'") + "';",
-    content, flags=re.MULTILINE
+    content
 )
 with open(conf_path, 'w') as f:
     f.write(content)
