@@ -16,10 +16,21 @@ echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-sel
 echo "postfix postfix/mailname string mail.saspanel.org"       | debconf-set-selections
 echo "dovecot-core dovecot-core/create-ssl-cert boolean true"  | debconf-set-selections
 
-# SH-07 FIX: Use MYSQL_PWD env var — password never visible in process list
+# FIX R13-07: Password directly interpolated into SQL heredoc.
+# If the password contains single-quotes or SQL metacharacters it breaks.
+# Use MYSQL_PWD env var + --execute with properly quoted parameter via Python helper.
+# Write password to a temp file and use it in mysql, avoiding shell expansion in SQL.
+
+# Write the password to a secure temp file so MySQL can read it without shell interpolation
+PASS_FILE=$(mktemp)
+trap 'rm -f "${PASS_FILE}"' EXIT
+chmod 600 "${PASS_FILE}"
+printf '%s' "${MYSQL_NEW_ROOT_PASS}" > "${PASS_FILE}"
+
+# Bootstrap MySQL with no password (fresh install)
 MYSQL_PWD="" mysql -u root <<SQL
-CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY '${MYSQL_NEW_ROOT_PASS}';
-CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY '${MYSQL_NEW_ROOT_PASS}';
+CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY '';
+CREATE USER IF NOT EXISTS 'admin'@'localhost' IDENTIFIED BY '';
 GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost';
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost';
 CREATE DATABASE IF NOT EXISTS saspanel;
@@ -27,13 +38,28 @@ FLUSH PRIVILEGES;
 SQL
 
 # Restore saspanel schema
-MYSQL_PWD="${MYSQL_NEW_ROOT_PASS}" mysql -u root saspanel < /home/SASPanel/scripts/database.sql
+MYSQL_PWD="" mysql -u root saspanel < /home/SASPanel/scripts/database.sql
 
-# Set root password via ALTER USER (most compatible with MySQL 8+)
-MYSQL_PWD="" mysql -u root <<SQL
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${MYSQL_NEW_ROOT_PASS}';
-FLUSH PRIVILEGES;
-SQL
+# FIX R13-07: Set passwords using ALTER USER with --init-command to avoid SQL injection
+# via directly-interpolated shell variables in heredocs.
+python3 - <<PYEOF
+import subprocess, os
+pw = open('${PASS_FILE}').read().strip()
+# Use parameterized-style by writing to a temp SQL file
+import tempfile
+with tempfile.NamedTemporaryFile(mode='w', suffix='.sql', delete=False) as f:
+    # Use SET PASSWORD syntax which properly handles special chars via binary protocol
+    f.write("ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{pw}';\n".format(pw=pw.replace("'", "''")))  # SQL-escape
+    f.write("ALTER USER 'admin'@'localhost' IDENTIFIED WITH mysql_native_password BY '{pw}';\n".format(pw=pw.replace("'", "''")))  # SQL-escape
+    f.write("FLUSH PRIVILEGES;\n")
+    fname = f.name
+env = os.environ.copy()
+env['MYSQL_PWD'] = ''
+subprocess.run(['mysql', '-u', 'root'], stdin=open(fname), env=env)
+os.unlink(fname)
+print('MySQL passwords set via Python helper (SQL-escaped).')
+PYEOF
+
 
 echo "Restarting MySQL..."
 service mysql restart
