@@ -1035,6 +1035,7 @@ def admin_updateEmail():
             if mail is None:
                 flash('Mail account not found or access denied.')
                 return redirect(url_for('routes.admin_viewEmail'))
+            return render_template('adminFiles/Mails/updateEmail.html', mail=mailID, email=mail[3])
         elif request.method == 'POST' and 'mailID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             mailID = request.form['mailID']
             pass1 = request.form['pass1']
