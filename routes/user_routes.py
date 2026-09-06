@@ -381,7 +381,7 @@ def user_addAccounts():
                 flash('FTP account limit reached.')
                 return redirect(url_for('routes.user_viewAccounts'))
             ftpUsername = request.form['ftpUsername']
-            ftpPassword = request.form['ftpPass']
+            ftpPassword = request.form['ftpPassword']
             # FIX R6-05: validate ftpUsername
             try:
                 ftpUsername = sanitize_shell_arg(ftpUsername, 'username')
