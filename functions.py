@@ -371,7 +371,7 @@ def check_admin_Login():
 # ---------------------------------------------------------------------------
 
 def hash_password(plain: str) -> str:
-    """Return a secure bcrypt hash of *plain*."""
+    """Return a secure PBKDF2-SHA256 hash of *plain* (via Werkzeug)."""
     return generate_password_hash(plain, method='pbkdf2:sha256', salt_length=16)
 
 
@@ -429,6 +429,10 @@ def validateEmail(email: str) -> bool:
 # ---------------------------------------------------------------------------
 
 def mailSender(title, receipt, body, type='PLAIN'):
+    # FIX R24-04: validate recipient email before passing to Flask-Mail
+    # An invalid address causes Flask-Mail to raise an unhandled exception.
+    if not validateEmail(str(receipt)):
+        raise ValueError(f'mailSender: invalid recipient address: {receipt!r}')
     mail = Mail(app)
     # FIX R18-04: use the configured MAIL_USERNAME as sender; not a hardcoded domain
     # Fallback to a generic noreply if not configured so email is not rejected as forgery.
@@ -747,6 +751,10 @@ def install_packages(root_password, mail_password, domain, emailaddress, emailpa
     env['EMAIL_PASS']      = emailpassword
     sp.run(['/bin/bash', 'scripts/packages_installer.sh'], env=env)
     sp.run(['cp', '/home/SASPanel/scripts/saspanel.service', '/etc/systemd/system'])
+    # FIX R24-01: create the dedicated system user required by saspanel.service (User=saspanel)
+    sp.run(['useradd', '--system', '--no-create-home', '--shell', '/usr/sbin/nologin', 'saspanel'],
+           check=False)  # check=False: may already exist on re-run
+    sp.run(['chown', '-R', 'saspanel:saspanel', '/home/SASPanel'])
     sp.run(['systemctl', 'daemon-reload'])
     sp.run(['systemctl', 'enable', 'saspanel'])
     sp.run(['systemctl', 'enable', 'dovecot'])

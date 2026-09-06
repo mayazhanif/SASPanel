@@ -5,9 +5,17 @@ After=network.target mysql.service
 Requires=mysql.service
 
 [Service]
+# FIX R24-01 / R20-05: Run as a dedicated unprivileged system user, NOT root.
+# Running as root means any RCE in Flask grants full system access.
+#
+# Setup (run once during install):
+#   useradd --system --no-create-home --shell /usr/sbin/nologin saspanel
+#   chown -R saspanel:saspanel /home/SASPanel
+#   usermod -aG www-data saspanel  # if nginx/vsftpd integration needed
+#
 Type=simple
-User=root
-Group=root
+User=saspanel
+Group=saspanel
 WorkingDirectory=/home/SASPanel
 EnvironmentFile=/home/SASPanel/.env
 ExecStart=/home/SASPanel/venv/bin/gunicorn \

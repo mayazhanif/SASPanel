@@ -57,6 +57,11 @@ def login(msg=''):
             return render_template('authentication/login.html',
                                    msg={'error': 'primary', 'message': 'Please fill all fields correctly.'})
 
+        # FIX R24-05: cap password length before bcrypt/PBKDF2 to prevent CPU-DoS
+        if len(password) > 128:
+            return render_template('authentication/login.html',
+                                   msg={'error': 'primary', 'message': 'Invalid email or password.'})
+
         if not validateEmail(Email):
             return render_template('authentication/login.html',
                                    msg={'error': 'primary', 'message': 'Email Invalid.'})
@@ -133,6 +138,9 @@ def forgot_password():
     mysqlconnection.reconnect()
     if request.method == 'POST' and 'Email' in request.form:
         Email  = request.form['Email'].strip()
+        # FIX R24-06: cap email at RFC 5321 max (254 chars) before DB query
+        if len(Email) > 254:
+            return render_template('authentication/forgot-password.html', reset=True)
         cursor = mysqlconnection.cursor()
         cursor.execute(
             'SELECT User_id, User_email FROM users WHERE User_email = %s AND Is_Deleted = 0',
