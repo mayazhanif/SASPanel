@@ -99,15 +99,20 @@ limiter = Limiter(
 
 # ------------------------------------------------------------------
 # Blueprint registration
+# Import route modules so their @routes.route() decorators fire,
+# then register the Blueprint. No wildcard imports — they were
+# re-exporting `app = current_app` from functions/route files and
+# overwriting the real Flask `app` object above.
 # ------------------------------------------------------------------
-from routes.admin_routes import *   # noqa: E402, F401, F403
-from routes.login_routes import *   # noqa: E402, F401, F403
-from routes.custom_pages import *   # noqa: E402, F401, F403
-from routes.user_routes import *    # noqa: E402, F401, F403
-from routes.ajax_routes import *    # noqa: E402, F401, F403
-from functions import *             # noqa: E402, F401, F403
+import routes.admin_routes   # noqa: E402, F401
+import routes.login_routes   # noqa: E402, F401
+import routes.custom_pages   # noqa: E402, F401
+import routes.user_routes    # noqa: E402, F401
+import routes.ajax_routes    # noqa: E402, F401
+from routes import routes as blueprint  # noqa: E402
 
-app.register_blueprint(routes)
+app.register_blueprint(blueprint)
+
 
 # ------------------------------------------------------------------
 # Security headers on every response

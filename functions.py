@@ -22,7 +22,7 @@ import time
 from hashlib import md5
 
 from flask import session, render_template
-from flask import current_app as app
+from flask import current_app
 from cachelib import SimpleCache
 from Database.DbConfig import mysqlconnection, WriteConfig, WriteMailConfig
 from flask_mail import Mail, Message
@@ -433,10 +433,8 @@ def mailSender(title, receipt, body, type='PLAIN'):
     # An invalid address causes Flask-Mail to raise an unhandled exception.
     if not validateEmail(str(receipt)):
         raise ValueError(f'mailSender: invalid recipient address: {receipt!r}')
-    mail = Mail(app)
-    # FIX R18-04: use the configured MAIL_USERNAME as sender; not a hardcoded domain
-    # Fallback to a generic noreply if not configured so email is not rejected as forgery.
-    sender = app.config.get('MAIL_USERNAME') or 'noreply@saspanel.local'
+    mail = Mail(current_app._get_current_object())
+    sender = current_app.config.get('MAIL_USERNAME') or 'noreply@saspanel.local'
     msg  = Message(title, sender=sender, recipients=[receipt])
     if type == 'PLAIN':
         msg.body = body
