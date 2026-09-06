@@ -227,17 +227,33 @@ success "Nginx installed and configured."
 # =============================================================================
 section "Installing PHP"
 
+# Enable the universe repo — required for php-imagick on Ubuntu 24.04
+add-apt-repository -y universe 2>/dev/null || true
+apt-get update -y -q
+
+# ── Core PHP extensions — guaranteed on Ubuntu 20.04 / 22.04 / 24.04 ──────────
 apt-get install -y \
     php-common php-cli php-fpm \
-    php-mysql php-net-ldap2 php-net-ldap3 php-imagick \
-    php-gd php-imap php-json php-curl php-zip php-xml \
-    php-mbstring php-bz2 php-intl php-gmp \
-    php-net-smtp php-mail-mime php-net-idna2 mailutils
+    php-mysql php-gd php-curl php-zip php-xml \
+    php-mbstring php-bz2 php-intl php-gmp mailutils
+
+# ── Optional extensions — present on older Ubuntu; silently skip if missing ────
+# php-net-ldap2/3, php-net-smtp, php-mail-mime, php-net-idna2 are PEAR packages
+# removed from Ubuntu 24.04 (Noble). Roundcube 1.6+ bundles them via Composer.
+# php-imagick requires the universe repo; php-imap / php-json may be built-in.
+for PKG in php-imagick php-imap php-json \
+           php-net-ldap2 php-net-ldap3 \
+           php-net-smtp php-mail-mime php-net-idna2; do
+    apt-get install -y "$PKG" 2>/dev/null \
+        && info "  Installed optional package: $PKG" \
+        || warn "  Optional package not available (skipping): $PKG"
+done
 
 # Find the PHP-FPM sock and update the nginx conf if needed
 PHP_FPM_SOCK=$(find /var/run/php/ -name "php*-fpm.sock" 2>/dev/null | head -1)
 if [[ -n "$PHP_FPM_SOCK" ]]; then
     sed -i "s|unix:/var/run/php/php-fpm.sock|unix:${PHP_FPM_SOCK}|g" /etc/nginx/php.conf
+    info "PHP-FPM socket: ${PHP_FPM_SOCK}"
 fi
 
 systemctl enable php*-fpm || true
