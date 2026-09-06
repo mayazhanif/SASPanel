@@ -409,13 +409,13 @@ def admin_addDomain():
             userID = request.form['userID']
             if userID == '':
                 msg={"error":"danger", "message": "User not Selected."}
-                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+                return render_template('adminFiles/domains/viewDomains.html', users=users, msg=msg, results=[])
             # FIX R9-03: IDOR — verify userID belongs to this admin before adding domain
             cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id=%s AND Admin_id=%s;',(userID, str(session['id'])))
             user = cursor.fetchone()
             if user is None:
                 msg={"error":"danger", "message": "User not found or access denied."}
-                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+                return render_template('adminFiles/domains/viewDomains.html', users=users, msg=msg, results=[])
             getUserName = user[0]
             getEmail = user[1]
             DomainName = request.form['DomainName']
@@ -424,14 +424,13 @@ def admin_addDomain():
                 DomainName = sanitize_shell_arg(DomainName, 'domain')
             except ValueError:
                 msg = {'error': 'danger', 'message': 'Invalid domain name. Use only letters, digits, dots, hyphens.'}
-                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
-            #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '"+DomainName+"', '"+userID+"', '0', '0');"
+                return render_template('adminFiles/domains/viewDomains.html', users=users, msg=msg, results=[])
             try:
                 cursor.execute("INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, %s, %s, '0', '0');",(DomainName,userID))
                 mysqlconnection.commit()
             except:
                 msg={"error":"danger","message":"Domain Already Added."}
-                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+                return render_template('adminFiles/domains/viewDomains.html', users=users, msg=msg, results=[])
             if cursor.rowcount>0:
                 DomainID = str(cursor.lastrowid)
                 add_vhost(getUserName,DomainName)
@@ -439,18 +438,16 @@ def admin_addDomain():
                 ExpiryDate = (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
                 privkey ="/etc/letsencrypt/live/"+DomainName+"/privkey.pem"
                 fullchain="/etc/letsencrypt/live/"+DomainName+"/fullchain.pem"
-                #query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
                 cursor.execute("INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, %s, '1');",(DomainID,userID,fullchain,privkey,ExpiryDate))
                 mysqlconnection.commit()
                 add_mail_domain(cursor,DomainName)
-                msg={"error":"success","message":"Domain Added."}
-                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+                flash('Domain Added successfully.')
+                return redirect(url_for('routes.admin_viewDomains'))
             else:
                 msg = {"error": "danger", "message": "Domain Not Added."}
-                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+                return render_template('adminFiles/domains/viewDomains.html', users=users, msg=msg, results=[])
         else:
-            msg=''
-            return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
+            return redirect(url_for('routes.admin_viewDomains'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -478,7 +475,10 @@ def admin_viewDomains():
             (str(session['id']),)
         )
         results = cursor.fetchall()
-        return render_template('adminFiles/domains/viewDomains.html', results=results)
+        # UI: also fetch users list so the embedded Add Domain form can populate its dropdown
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
+        users = cursor.fetchall()
+        return render_template('adminFiles/domains/viewDomains.html', results=results, users=users)
     else:
         return redirect(url_for('routes.login'))
 
