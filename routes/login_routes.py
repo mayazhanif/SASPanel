@@ -223,12 +223,15 @@ def reset_password():
         from functions import hash_password
         new_hash = hash_password(pass1)
         cursor   = mysqlconnection.cursor()
-        cursor.execute('UPDATE users SET User_Password = %s WHERE UserResetToken = %s;',
-                       (new_hash, token))
+        # FIX: single atomic UPDATE — sets new password AND clears token simultaneously
+        # eliminates the race-condition window between two separate queries
+        cursor.execute(
+            "UPDATE users SET User_Password = %s, UserResetToken = '' "
+            "WHERE UserResetToken = %s AND Is_Deleted = 0;",
+            (new_hash, token)
+        )
         mysqlconnection.commit()
         if cursor.rowcount > 0:
-            cursor.execute("UPDATE users SET UserResetToken = '' WHERE UserResetToken = %s;", (token,))
-            mysqlconnection.commit()
             log_security_event('PASSWORD_RESET_SUCCESS', f'token_prefix={token[:8]}')
             return render_template('authentication/forgot-password.html', reset=False,
                                    msg={'error': 'success', 'message': 'Password changed successfully.'})

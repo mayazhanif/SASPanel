@@ -181,6 +181,13 @@ mkdir -p /etc/nginx/sites-available
 mkdir -p /etc/nginx/sites-enabled
 mkdir -p /etc/nginx/snippets
 
+# BUG FIX: Create empty snippet placeholders BEFORE starting nginx.
+# The default site config includes these files — nginx will refuse to start
+# if they don't exist. The real content is written later (steps 11-13).
+touch /etc/nginx/snippets/phpmyadmin.conf
+touch /etc/nginx/snippets/roundcube.conf
+touch /etc/nginx/snippets/webftp.conf
+
 # Default vhost — serves phpmyadmin, roundcube, webftp
 cat > /etc/nginx/sites-available/default <<'NGINXEOF'
 server {
@@ -372,9 +379,9 @@ if [[ -f "${SCRIPTS_DIR}/mail.sql" ]]; then
 fi
 
 # FIX R17-04c: MAIL_ADMIN_EMAIL and MAIL_ADMIN_PASS in SQL heredoc — use Python helper
-MAIL_ADMIN_PASS_FILE=$(mktemp); MAIL_ADMIN_EMAIL_FILE=$(mktemp)
-chmod 600 "${MAIL_ADMIN_PASS_FILE}" "${MAIL_ADMIN_EMAIL_FILE}"
-trap 'rm -f "${MAIL_ADMIN_PASS_FILE}" "${MAIL_ADMIN_EMAIL_FILE}"' EXIT
+MAIL_ADMIN_EMAIL_FILE=$(mktemp); MAIL_ADMIN_PASS_FILE=$(mktemp)
+chmod 600 "${MAIL_ADMIN_EMAIL_FILE}" "${MAIL_ADMIN_PASS_FILE}"
+trap 'rm -f "${MAIL_ADMIN_EMAIL_FILE}" "${MAIL_ADMIN_PASS_FILE}"' EXIT
 printf '%s' "${MAIL_ADMIN_EMAIL}" > "${MAIL_ADMIN_EMAIL_FILE}"
 printf '%s' "${MAIL_ADMIN_PASS}"  > "${MAIL_ADMIN_PASS_FILE}"
 python3 - <<PYEOF
@@ -580,6 +587,10 @@ if [[ ! -d roundcube ]]; then
 fi
 chown -R www-data:www-data /usr/share/roundcube
 
+# BUG FIX: Generate DESKEY here — it is used in the sed command at line 628
+# but was never defined, causing sed to write a literal '${DESKEY}' into the config.
+DESKEY=$(python3 -c "import secrets; print(secrets.token_hex(12))")
+
 # FIX R20-02: ROUNDCUBE_PASS in SQL heredoc breaks on single-quote. Use Python helper.
 RC_PASS_SETUP_FILE=$(mktemp); chmod 600 "${RC_PASS_SETUP_FILE}"
 trap 'rm -f "${RC_PASS_SETUP_FILE}"' EXIT
@@ -656,7 +667,10 @@ if [[ ! -d webftp ]]; then
     rm -f webftp.zip
 fi
 chown -R www-data:www-data /usr/share/webftp
-chmod 777 /usr/share/webftp/tmp 2>/dev/null || true
+# BUG FIX: chmod 777 is world-writable (anyone can upload/execute files).
+# Use 770 so only www-data (the web server) can write to the tmp directory.
+chown www-data:www-data /usr/share/webftp/tmp 2>/dev/null || true
+chmod 770 /usr/share/webftp/tmp 2>/dev/null || true
 
 cat > /etc/nginx/snippets/webftp.conf <<'EOF'
 location /webftp {
@@ -754,9 +768,16 @@ chmod 750 "${SASPANEL_DIR}/logs"
 # =============================================================================
 section "Configuring systemd service (Gunicorn)"
 
-cat > /etc/systemd/system/saspanel.service <<EOF
-[Unit]
-Description=SASPanel — Web Hosting Control Panel
+# BUG FIX: Backslash line-continuations inside a cat<<EOF heredoc do NOT work —
+# the shell passes the literal '\' characters into the file, producing a broken
+# ExecStart line. Write the service file via Python instead so we can use
+# Python string formatting for the variable paths without any heredoc gotchas.
+python3 - <<PYEOF
+import os
+sd  = '${SASPANEL_DIR}'
+venv = '${VENV_DIR}'
+content = f"""[Unit]
+Description=SASPanel \u2014 Web Hosting Control Panel
 Documentation=https://github.com/mayazhanif/SASPanel
 After=network.target mysql.service
 Requires=mysql.service
@@ -765,29 +786,27 @@ Requires=mysql.service
 Type=simple
 User=root
 Group=root
-WorkingDirectory=${SASPANEL_DIR}
-EnvironmentFile=${SASPANEL_DIR}/.env
-ExecStart=${VENV_DIR}/bin/gunicorn \\
-    --workers 4 \\
-    --bind 0.0.0.0:5000 \\
-    --timeout 120 \\
-    --access-logfile ${SASPANEL_DIR}/logs/access.log \\
-    --error-logfile ${SASPANEL_DIR}/logs/error.log \\
-    app:app
+WorkingDirectory={sd}
+EnvironmentFile={sd}/.env
+ExecStart={venv}/bin/gunicorn --workers 4 --bind 0.0.0.0:5000 --timeout 120 --access-logfile {sd}/logs/access.log --error-logfile {sd}/logs/error.log app:app
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 RestartSec=5
-StandardOutput=append:${SASPANEL_DIR}/logs/service.log
-StandardError=append:${SASPANEL_DIR}/logs/service.log
+StandardOutput=append:{sd}/logs/service.log
+StandardError=append:{sd}/logs/service.log
 
 # Security hardening
 NoNewPrivileges=yes
 ProtectSystem=strict
-ReadWritePaths=${SASPANEL_DIR}/logs /home /tmp /var/run /etc/nginx /etc/vsftpd.chroot_list
+ReadWritePaths={sd}/logs /home /tmp /var/run /etc/nginx /etc/vsftpd.chroot_list
 
 [Install]
 WantedBy=multi-user.target
-EOF
+"""
+with open('/etc/systemd/system/saspanel.service', 'w') as f:
+    f.write(content)
+print('saspanel.service written.')
+PYEOF
 
 systemctl daemon-reload
 systemctl enable saspanel

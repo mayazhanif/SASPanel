@@ -141,16 +141,16 @@ def admin_addUser():
             # FIX R6-02: validate email format + cap name length before INSERT
             from functions import validateEmail
             if not validateEmail(User_email):
-                return render_template('adminFiles/users/addUser.html', results=results,
-                                       msg={'error': 'danger', 'message': 'Invalid email address.'})
+                flash('Invalid email address.')
+                return redirect(url_for('routes.admin_viewUser'))
             if not User_Name or len(User_Name) > 128:
-                return render_template('adminFiles/users/addUser.html', results=results,
-                                       msg={'error': 'danger', 'message': 'Name must be 1-128 characters.'})
+                flash('Name must be 1-128 characters.')
+                return redirect(url_for('routes.admin_viewUser'))
             if User_Password == Confirm_Password:
                 # FIX R19-01: enforce password length before bcrypt to prevent DoS
                 if len(User_Password) < 8 or len(User_Password) > 128:
-                    return render_template('adminFiles/users/addUser.html', results=results,
-                                           msg={'error': 'danger', 'message': 'Password must be between 8 and 128 characters.'})
+                    flash('Password must be between 8 and 128 characters.')
+                    return redirect(url_for('routes.admin_viewUser'))
                 # FIXED: bcrypt instead of MD5 (VULN-addUser)
                 securePassword = hash_password(User_Password)
                 packageID = request.form['packageID']
@@ -164,33 +164,23 @@ def admin_addUser():
                     dbUser = generateservUser(User_Name, User_email)
                     dbPassword = generatePassword()
                     base64dbPassword = Base64Encode(dbPassword)
-                    #query = "INSERT INTO `mysqldbusers` (`DbUser_ID`, `DbUsername`, `DbPassword`, `User_id`, `Is_Active`) VALUES (NULL, '"+dbUser+"', '"+base64dbPassword+"', '"+userID+"', '1')"
                     try:
                         cursor.execute("INSERT INTO `mysqldbusers` (`DbUser_ID`, `DbUsername`, `DbPassword`, `User_id`, `Is_Active`) VALUES (NULL, %s, %s, %s, '1')",(dbUser,base64dbPassword,userID))
                         mysqlconnection.commit()
                         createUser(cursor,dbUser,dbPassword)
                     except:
-                        return render_template('adminFiles/users/addUser.html',
-                                               msg={"error": "primary", "message": "Email Already Exists."})
-                    UserInfo = {}
-                    UserInfo["Name"] = User_email;
-                    UserInfo["ServUser"] = servUser;
-                    UserInfo["Email"] = User_email;
-                    UserInfo["Password"] = User_Password;
-                    UserInfo["DBUser"] = dbUser;
-                    UserInfo["DBPass"] = dbPassword;
-
-                    # session["Name"]=Package_Name;
-                    return render_template('adminFiles/users/addUser.html',
-                                           msg={"error": "success", "message": "User Added Successfully."}, UserInfo=UserInfo )
+                        flash('Email already exists.')
+                        return redirect(url_for('routes.admin_viewUser'))
+                    flash(f'User {User_email} added. DB user: {dbUser} | DB pass: {dbPassword}')
+                    return redirect(url_for('routes.admin_viewUser'))
                 else:
-                    return render_template('adminFiles/users/addUser.html',
-                                           msg={"error": "primary", "message": "Fill all fields Correctly."})
+                    flash('User not created. Fill all fields correctly.')
+                    return redirect(url_for('routes.admin_viewUser'))
             else:
-                return render_template('adminFiles/users/addUser.html',
-                                       msg={"error": "primary", "message": "Password and Confirm Password does not Match."})
+                flash('Password and Confirm Password do not match.')
+                return redirect(url_for('routes.admin_viewUser'))
         else:
-            return render_template('adminFiles/users/addUser.html', results=results)
+            return redirect(url_for('routes.admin_viewUser'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -720,20 +710,17 @@ def admin_addAccounts():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        # FIX R10-03: info-leak — was showing ALL users from all admins in dropdown
-        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
-        users = cursor.fetchall()
-        if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form :
+        if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form:
             userID = request.form['userID']
             if(userID==""):
-                msg={"error":"danger", "message": "User not Selected."}
-                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+                flash('User not selected.')
+                return redirect(url_for('routes.admin_viewAccounts'))
             # FIX D-09: IDOR — verify userID belongs to this admin before adding FTP account
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s AND Admin_id=%s',(userID, str(session['id'])))
             row = cursor.fetchone()
             if row is None:
-                msg={"error":"danger", "message": "User not found or access denied."}
-                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+                flash('User not found or access denied.')
+                return redirect(url_for('routes.admin_viewAccounts'))
             getUserName = row[0]
             ftpUsername = request.form['ftpUsername']
             ftpPassword = request.form['ftpPassword']
@@ -741,28 +728,25 @@ def admin_addAccounts():
             try:
                 ftpUsername = sanitize_shell_arg(ftpUsername, 'username')
             except ValueError:
-                msg = {'error': 'danger', 'message': 'Invalid FTP username. Lowercase letters, digits, hyphens, underscores only.'}
-                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+                flash('Invalid FTP username. Lowercase letters, digits, hyphens, underscores only.')
+                return redirect(url_for('routes.admin_viewAccounts'))
             encodedPass = Base64Encode(ftpPassword)
-            #ftpPassword = request.form['ftpPassword']
             Directory = "/home/username/public_html"
-            #query = "INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, '"+userID+"', '"+Directory+"', '"+ftpUsername+"', '"+encodedPass+"', '1');"
             try:
                 cursor.execute("INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL,%s,%s,%s,%s, '1');", (userID,Directory,ftpUsername,encodedPass))
                 mysqlconnection.commit()
             except:
-                msg={"error":"danger","message":"FTP Username Already in Use."}
-                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+                flash('FTP username already in use.')
+                return redirect(url_for('routes.admin_viewAccounts'))
             if cursor.rowcount>0:
                 add_ftp(ftpUsername,getUserName,ftpPassword)
-                msg={"error":"success","message":"FTP Account Added."}
-                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+                flash('FTP account added successfully.')
+                return redirect(url_for('routes.admin_viewAccounts'))
             else:
-                msg = {"error": "danger", "message": "FTP account not added."}
-                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+                flash('FTP account not added.')
+                return redirect(url_for('routes.admin_viewAccounts'))
         else:
-            msg=''
-            return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+            return redirect(url_for('routes.admin_viewAccounts'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -903,16 +887,15 @@ def admin_addEmail():
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form :
             domainID = request.form['domainID']
             if(domainID==""):
-                msg={"error":"danger", "message": "Domain not Selected."}
-                # FIX R12-01: was rendering userFiles template inside admin route
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Domain not selected.')
+                return redirect(url_for('routes.admin_viewEmail'))
             suffix = request.form['suffix']
             # FIX NEW-03: validate suffix to prevent injection into mail address and downstream XSS
             try:
                 suffix = sanitize_shell_arg(suffix, 'suffix')
             except ValueError:
-                msg = {'error': 'danger', 'message': 'Invalid email prefix. Use only letters, digits, and hyphens.'}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Invalid email prefix. Use only letters, digits, and hyphens.')
+                return redirect(url_for('routes.admin_viewEmail'))
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
             cursor.execute(
@@ -924,27 +907,25 @@ def admin_addEmail():
             rDomain = cursor.fetchone()
             # FIX D-10: IDOR — domainID verified to belong to this admin's users
             if rDomain is None:
-                msg = {'error': 'danger', 'message': 'Domain not found or access denied.'}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Domain not found or access denied.')
+                return redirect(url_for('routes.admin_viewEmail'))
             mail_adress= suffix+"@"+rDomain[1]
             userID= str(rDomain[2])
-            #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+mail_adress+"', '"+encodedPass+"', '1')"
             try:
                 cursor.execute("INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL,%s,%s,%s,%s, '1')",(domainID,userID,mail_adress,encodedPass))
                 mysqlconnection.commit()
             except:
-                msg={"error":"danger","message":"Mail Account Already Exists."}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Mail account already exists.')
+                return redirect(url_for('routes.admin_viewEmail'))
             if cursor.rowcount>0:
                 create_mail_user(cursor,mail_adress,Password)
-                msg={"error":"success","message":"Mail Account Added."}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Email account created successfully.')
+                return redirect(url_for('routes.admin_viewEmail'))
             else:
-                msg = {"error": "danger", "message": "Mail Account not added."}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Mail account not added.')
+                return redirect(url_for('routes.admin_viewEmail'))
         else:
-            msg=''
-            return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+            return redirect(url_for('routes.admin_viewEmail'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -1071,8 +1052,8 @@ def admin_addSubDomain():
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form :
             domainID = request.form['domainID']
             if(domainID==""):
-                msg={"error":"danger", "message": "Domain not Selected."}
-                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Domain not selected.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
             # FIX R10-01: IDOR — verify domainID belongs to this admin before adding subdomain
             cursor.execute(
                 'SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id '
@@ -1081,41 +1062,39 @@ def admin_addSubDomain():
             )
             row = cursor.fetchone()
             if row is None:
-                msg={'error':'danger','message':'Domain not found or access denied.'}
-                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Domain not found or access denied.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
             getUserName = row[0]
             suffix = request.form['suffix']
             # FIXED VULN-11: validate suffix to prevent XSS + vhost injection
             try:
                 suffix = sanitize_shell_arg(suffix, 'suffix')
             except ValueError:
-                msg = {'error': 'danger', 'message': 'Invalid subdomain prefix. Use only letters, digits, and hyphens.'}
-                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Invalid subdomain prefix. Use only letters, digits, and hyphens.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
             cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s", (domainID,))
             rDomain = cursor.fetchone()
             # FIX R13-08: NullPointer — rDomain[1] crashes if domainID was tampered
             if rDomain is None:
-                msg = {'error': 'danger', 'message': 'Domain not found.'}
-                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Domain not found.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
             SubDomainAdress = suffix + '.' + rDomain[1]
             userID= str(rDomain[2])
-            #query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
             try:
                 cursor.execute("INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL,%s,%s,%s, '1')",(domainID,userID,SubDomainAdress))
                 mysqlconnection.commit()
             except:
-                msg={"error":"danger","message":"Subdomain Already Exists."}
-                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Subdomain already exists.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
             if cursor.rowcount>0:
                 add_vhost(getUserName, SubDomainAdress)
-                msg={"error":"success","message":"Subdomain Added."}
-                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Subdomain created successfully.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
             else:
-                msg = {"error": "danger", "message": "Subdomain not added."}
-                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Subdomain not added.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
         else:
-            msg=''
-            return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            return redirect(url_for('routes.admin_viewSubDomains'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -1133,8 +1112,14 @@ def admin_viewSubDomains():
             (str(session['id']),)
         )
         results = cursor.fetchall()
-        msg = ''
-        return render_template('adminFiles/SubDomains/viewSubDomains.html', results=results)
+        # UI: also fetch domains for embedded Add Subdomain tab
+        cursor.execute(
+            'SELECT * FROM `domains` WHERE Is_Deleted=0 '
+            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s);',
+            (str(session['id']),)
+        )
+        domains = cursor.fetchall()
+        return render_template('adminFiles/SubDomains/viewSubDomains.html', results=results, domains=domains)
     else:
         return redirect(url_for('routes.login'))
 
@@ -1183,20 +1168,10 @@ def admin_deleteSubDomain():
 
 @routes.route('/admin/Logs/error_Logs')
 def admin_error_logs():
-    mysqlconnection.reconnect()
+    # Error logs merged into access_logs tab page — redirect
     if check_admin_Login():
-        msg = ''
-        cursor = mysqlconnection.cursor()
-        # FIX R13-05: info-leak — was showing ALL domains from all admins in log viewer dropdown
-        cursor.execute(
-            'SELECT * FROM `domains` WHERE Is_Deleted=0 '
-            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
-            (str(session['id']),)
-        )
-        domains = cursor.fetchall()
-        return render_template('adminFiles/Logs/error_logs.html', msg=msg, domains=domains)
-    else:
-        return redirect(url_for('routes.login'))
+        return redirect(url_for('routes.admin_access_logs'))
+    return redirect(url_for('routes.login'))
 
 @routes.route('/admin/Logs/error_Logs/Ajax' , methods = ['GET', 'POST'])
 def admin_error_logs_ajax():

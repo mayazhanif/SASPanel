@@ -1,248 +1,134 @@
 {% include "layout/header.html" %}
-{% block body %}
-            <div class="content-page">
-                <div class="content">
-                    <div class="container-fluid">
-                        <div class="row page-title align-items-center">
-                            <div class="col-sm-4 col-xl-6">
-                                <h4 class="mb-1 mt-0">Dashboard</h4>
-                            </div>
-                        </div>
 
-                        <!-- content -->
-                        <div class="row">
-                            <div class="col-md-6 col-xl-4">
-                                <div class="card">
-                                    <div class="card-body p-0">
-                                        <div class="media p-3">
-                                            <div class="media-body">
-                                                <span class="text-muted text-uppercase font-size-12 font-weight-bold">Today
-                                                    Ram Usage</span>
-                                                <h2 id="memtext" class="mb-0">0/0</h2>
-                                            </div>
-                                            <div class="align-self-center">
-                                                <div id="memchart" class="apex-charts"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Dashboard</h1>
+  <p class="sp-page-subtitle">Your hosting overview at a glance</p>
+</div>
 
-                            <div class="col-md-6 col-xl-4">
-                                <div class="card">
-                                    <div class="card-body p-0">
-                                        <div class="media p-3">
-                                            <div class="media-body">
-                                                <span class="text-muted text-uppercase font-size-12 font-weight-bold">
-                                                    CPU Usage</span>
-                                                <h2 id="cputext" class="mb-0">00</h2>
-                                            </div>
-                                            <div class="align-self-center">
-                                                <div id="cpuchart" class="apex-charts"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+<!-- Stat cards -->
+<div class="sp-stats">
+  <div class="sp-stat-card">
+    <div class="sp-stat-icon indigo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    </div>
+    <div>
+      <div class="sp-stat-value" id="stat-domains">—</div>
+      <div class="sp-stat-label">Domains</div>
+    </div>
+  </div>
 
-                            <div class="col-md-6 col-xl-4">
-                                <div class="card">
-                                    <div class="card-body p-0">
-                                        <div class="media p-3">
-                                            <div class="media-body">
-                                                <span class="text-muted text-uppercase font-size-12 font-weight-bold">New
-                                                    Load Average</span>
-                                                <h2 id="loadtext" class="mb-0">00</h2>
-                                            </div>
-                                            <div class="align-self-center">
-                                                <div id="loadchart" class="apex-charts"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+  <div class="sp-stat-card">
+    <div class="sp-stat-icon sky">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    </div>
+    <div>
+      <div class="sp-stat-value" id="stat-dbs">—</div>
+      <div class="sp-stat-label">Databases</div>
+    </div>
+  </div>
 
-                        <!-- stats + charts -->
-                        <div class="row">
-                            <div class="col-xl-3">
-                                <div class="card">
-                                    <div class="card-body p-0">
-                                        <h5 class="card-title header-title border-bottom p-3 mb-0">CPU Details</h5>
-                                        <!-- stat 1 -->
-                                        <div class="media px-3 py-4 border-bottom">
-                                            <div class="media-body">
-                                                <h4 id="cpuname" class="mt-0 mb-1 font-size-22 font-weight-normal">Intel</h4>
-                                                <span class="text-muted">CPU</span>
-                                            </div>
-                                            <i data-feather="users" class="align-self-center icon-dual icon-lg"></i>
-                                        </div>
+  <div class="sp-stat-card">
+    <div class="sp-stat-icon green">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    </div>
+    <div>
+      <div class="sp-stat-value" id="stat-mails">—</div>
+      <div class="sp-stat-label">Email Accounts</div>
+    </div>
+  </div>
 
-                                        <!-- stat 2 -->
-                                        <div class="media px-3 py-4 border-bottom">
-                                            <div class="media-body">
-                                                <h4 id="systemname" class="mt-0 mb-1 font-size-22 font-weight-normal">Ubuntu</h4>
-                                                <span class="text-muted">System</span>
-                                            </div>
-                                            <i data-feather="image" class="align-self-center icon-dual icon-lg"></i>
-                                        </div>
+  <div class="sp-stat-card">
+    <div class="sp-stat-icon amber">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </div>
+    <div>
+      <div class="sp-stat-value" id="stat-cpu">—%</div>
+      <div class="sp-stat-label">CPU Usage</div>
+    </div>
+  </div>
+</div>
 
-                                        <!-- stat 3 -->
-                                        <div class="media px-3 py-4">
-                                            <div class="media-body">
-                                                <h4 id="systemuptime" class="mt-0 mb-1 font-size-22 font-weight-normal">0 Days</h4>
-                                                <span class="text-muted">Uptime</span>
-                                            </div>
-                                            <i data-feather="shopping-bag" class="align-self-center icon-dual icon-lg"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+<!-- Main grid -->
+<div class="sp-dashboard-grid">
+  <!-- Resource gauges -->
+  <div class="sp-card">
+    <div class="sp-card-header">
+      <span class="sp-card-title">Server Resources</span>
+      <span class="sp-text-small sp-text-muted" id="sys-os">Loading…</span>
+    </div>
+    <div class="sp-card-body">
+      <div class="sp-gauge-row">
+        <div class="sp-gauge-item">
+          <div class="sp-gauge-header">
+            <span class="sp-gauge-label">CPU Usage</span>
+            <span class="sp-gauge-value" id="cpu-val">—%</span>
+          </div>
+          <div class="sp-gauge-bar"><div class="sp-gauge-fill" id="cpu-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sp-gauge-item">
+          <div class="sp-gauge-header">
+            <span class="sp-gauge-label">RAM Usage</span>
+            <span class="sp-gauge-value" id="mem-val">—</span>
+          </div>
+          <div class="sp-gauge-bar"><div class="sp-gauge-fill green" id="mem-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sp-gauge-item">
+          <div class="sp-gauge-header">
+            <span class="sp-gauge-label">Load Average</span>
+            <span class="sp-gauge-value" id="load-val">—</span>
+          </div>
+          <div class="sp-gauge-bar"><div class="sp-gauge-fill amber" id="load-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                            <div class="col-xl-6">
-                                <div class="card">
-                                    <div class="card-body pb-0">
-                                        <ul class="nav card-nav float-right">
-                                            <li class="nav-item">
-                                                <a class="nav-link text-muted" href="#">Today</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link text-muted" href="#">7d</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link active" href="#">15d</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link text-muted" href="#">1m</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link text-muted" href="#">1y</a>
-                                            </li>
-                                        </ul>
-                                        <h5 class="card-title mb-0 header-title">Revenue</h5>
-
-                                        <div id="revenue-chart" class="apex-charts mt-3"  dir="ltr"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-xl-3">
-                                <div class="card">
-                                    <div class="card-body pb-0">
-                                        <h5 class="card-title header-title">Targets</h5>
-                                        <div id="targets-chart" class="apex-charts mt-3" dir="ltr"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- row -->
-
-
-                    </div>
-                </div>
+  <!-- Quick links -->
+  <div class="sp-card">
+    <div class="sp-card-header"><span class="sp-card-title">Quick Links</span></div>
+    <div class="sp-card-body" style="display:flex;flex-direction:column;gap:10px;padding:14px;">
+      {% set links = [
+        (url_for('routes.user_viewDomains'),    'Domains',    '#circle'),
+        (url_for('routes.user_viewDatabases'),  'Databases',  '#db'),
+        (url_for('routes.user_viewEmail'),      'Emails',     '#mail'),
+        (url_for('routes.user_viewAccounts'),   'FTP Accounts','#folder'),
+        (url_for('routes.user_viewSubDomains'), 'Subdomains', '#code'),
+        (url_for('routes.user_cronJobs'),       'Cron Jobs',  '#cal'),
+      ] %}
+      {% for href, label, icon in links %}
+        <a href="{{ href }}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);background:var(--surface2);color:var(--text-muted);font-size:13.5px;font-weight:500;transition:background var(--transition),color var(--transition);text-decoration:none;" onmouseover="this.style.color='var(--text)';this.style.background='var(--border)'" onmouseout="this.style.color='var(--text-muted)';this.style.background='var(--surface2)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          {{ label }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
 
 <script>
-var focused = true;
-document.addEventListener("visibilitychange", function() {
-    if(document.hidden){
-        focused = false;
-    }
-    else {
-        focused = true;
-    }
-});
-    setInterval(function(){
-        if(focused){
-        get_updates()
-        }
-        }, 5000);
-function get_updates(){
-    $.ajax({
-      type:"get",
-      url:"/get_updates",
-        success:function(res)
-        {
-            console.log(res);
-            //var loadCount = Math.round((res.load_average.one / res.load_average.max) * 100) > 100 ? 100 : Math.round((res.load_average.one / res.load_average.max) * 100);
-            update_cart_ram(res.mem.memTotal,res.mem.memFree);
-            update_cart_cpu(res.cpu_percentage);
-            update_cart_load(res.cpu[0]);
-            document.getElementById('cpuname').innerHTML=res.cpu[3];
-            document.getElementById('systemname').innerHTML=res.system;
-            document.getElementById('systemuptime').innerHTML=res.time;
-        },
-        error: function(xhr, status, error) {
-        var err = eval("(" + xhr.responseText + ")");
-        console.log(err);
-        }
-    });
-}
-function update_cart_ram(used, free){
-        var totalram = used+free;
-        var text = document.getElementById('memtext');
-        text.innerHTML=used+"/"+totalram;
-        var options = {
-          series: [used, free],
-          chart: {
-          width: 250,
-          height: 150,
-          type: 'pie',
-        },
-        labels: ['Used', 'Free'],
-            show: false,
-            dataLabels: {
-            enabled: false
-            },
-        };
+var _focused = true;
+document.addEventListener('visibilitychange', function(){ _focused = !document.hidden; });
 
-        var chart = new ApexCharts(document.querySelector("#memchart"), options);
-        chart.render();
+function setGauge(barId, valId, pct, label) {
+  var bar = document.getElementById(barId);
+  var val = document.getElementById(valId);
+  if (bar) { bar.style.width = pct + '%'; bar.classList.remove('green','amber','red'); if(pct>85)bar.classList.add('red');else if(pct>60)bar.classList.add('amber'); }
+  if (val) val.textContent = label;
+}
 
+function fetchUpdates() {
+  fetch('/get_updates').then(function(r){return r.json();}).then(function(d){
+    var cpu = Math.round(d.cpu_percentage||0);
+    setGauge('cpu-bar','cpu-val',cpu,cpu+'%');
+    document.getElementById('stat-cpu').textContent = cpu+'%';
+    if(d.mem){var u=d.mem.memRealUsed||0,t=d.mem.memTotal||1;setGauge('mem-bar','mem-val',Math.min(100,Math.round(u/t*100)),u+' / '+t+' MB');}
+    if(d.load_average){var la=d.load_average.one||0,lm=d.load_average.max||4;setGauge('load-bar','load-val',Math.min(100,Math.round(la/lm*100)),la.toFixed(2));}
+    if(d.system){document.getElementById('sys-os').textContent=d.system;}
+  }).catch(function(){});
 }
-function update_cart_cpu(load){
-        total=100-load;
-        console.log(load);
-        var text = document.getElementById('cputext');
-        text.innerHTML=load+"/"+total;
-        var options = {
-          series: [load, total],
-          chart: {
-          width: 250,
-          height: 150,
-          type: 'pie',
-        },
-        labels: ['CPU Load', 'Free'],
-            show: false,
-            dataLabels: {
-            enabled: false
-            },
-        };
-        var chart = new ApexCharts(document.querySelector("#cpuchart"), options);
-        chart.render();
-}
-function update_cart_load(load){
-        total=100-load;
-        console.log(load);
-        var text = document.getElementById('loadtext');
-        text.innerHTML=load+"/"+total;
-        var options = {
-          series: [load, total],
-          chart: {
-          width: 250,
-          height: 150,
-          type: 'pie',
-        },
-        labels: ['Used', 'Free'],
-            show: false,
-            dataLabels: {
-            enabled: false
-            },
-        };
-        var chart = new ApexCharts(document.querySelector("#loadchart"), options);
-        chart.render();
 
-}
-get_updates();
+fetchUpdates();
+setInterval(function(){ if(_focused) fetchUpdates(); }, 5000);
 </script>
+
 {% include "layout/footer.html" %}
-{% endblock %}

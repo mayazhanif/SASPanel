@@ -117,34 +117,30 @@ def user_addDomain():
             try:
                 DomainName = sanitize_shell_arg(DomainName, 'domain')
             except ValueError:
-                msg = {'error': 'danger', 'message': 'Invalid domain name. Use only letters, digits, dots, hyphens.'}
-                return render_template('userFiles/domains/addDomain.html', msg=msg)
-            #querylimit ="SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
+                flash('Invalid domain name. Use only letters, digits, dots, hyphens.')
+                return redirect(url_for('routes.user_viewDomains'))
             cursor.execute("SELECT Limit_Domains FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
-            # FIX R15-02: null guard — limit fetchone() crashes if user record is missing
+            # FIX R15-02: null guard
             limit_row = cursor.fetchone()
             if limit_row is None:
-                msg = {"error": "danger", "message": "User account error. Please contact support."}
-                return render_template('userFiles/domains/addDomain.html', msg=msg)
+                flash('User account error. Please contact support.')
+                return redirect(url_for('routes.user_viewDomains'))
             limit = limit_row[0]
-            #cursor.rowcount>
-            #queryinUSe ="SELECT * FROM `domains` where User_id="+userID
             cursor.execute("SELECT * FROM `domains` where User_id=%s",(userID,))
             cursor.fetchall()
             if cursor.rowcount>=limit:
-                msg = {"error": "danger", "message": "Domains Limit Reached."}
-                return render_template('userFiles/domains/addDomain.html', msg=msg)
+                flash('Domain limit reached.')
+                return redirect(url_for('routes.user_viewDomains'))
             cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
             user = cursor.fetchone()
             getUserName = user[0]
             getEmail = user[1]
-            #query = "INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, '" + DomainName + "', '"+userID+"', '0', '0');"
             try:
                 cursor.execute("INSERT INTO `domains` (`Domain_Id`, `Domain_Name`, `User_id`, `Domain_Suspended`, `Is_Deleted`) VALUES (NULL, %s, %s, '0', '0');",(DomainName,userID))
                 mysqlconnection.commit()
             except:
-                msg = {"error": "danger", "message": "Domain Already Added."}
-                return render_template('userFiles/domains/addDomain.html', msg=msg)
+                flash('Domain already added.')
+                return redirect(url_for('routes.user_viewDomains'))
             if cursor.rowcount > 0:
                 DomainID = str(cursor.lastrowid)
                 add_vhost(getUserName,DomainName)
@@ -152,18 +148,16 @@ def user_addDomain():
                 ExpiryDate = (datetime.now() + timedelta(days=90)).strftime('%Y-%m-%d')
                 privatekey="/etc/letsencrypt/live/"+DomainName+"/privkey.pem"
                 fullchain="/etc/letsencrypt/live/"+DomainName+"/fullchain.pem"
-                #query = "INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, '"+DomainID+"', '"+userID+"', '/etc/letsencrypt/live/"+DomainName+"/fullchain.pem', '/etc/letsencrypt/live/"+DomainName+"/privkey.pem', '"+ExpiryDate+"', '1');"
                 cursor.execute("INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, %s, '1');",(DomainID,userID,fullchain,privatekey,ExpiryDate))
                 mysqlconnection.commit()
                 add_mail_domain(cursor,DomainName)
-                msg = {"error": "success", "message": "Domain Added."}
-                return render_template('userFiles/domains/addDomain.html', msg=msg)
+                flash('Domain added successfully.')
+                return redirect(url_for('routes.user_viewDomains'))
             else:
-                msg = {"error": "danger", "message": "Domain Not Added."}
-                return render_template('userFiles/domains/addDomain.html', msg=msg)
+                flash('Domain not added. Please try again.')
+                return redirect(url_for('routes.user_viewDomains'))
         else:
-            msg = ''
-            return render_template('userFiles/domains/addDomain.html', msg=msg)
+            return redirect(url_for('routes.user_viewDomains'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -245,29 +239,27 @@ def user_addDB():
             cursor.execute('SELECT COUNT(*) FROM `msqldatabases` WHERE User_id=%s AND Is_Active=1', (userID,))
             in_use = cursor.fetchone()[0]
             if in_use >= limit:
-                msg = {"error": "danger", "message": "Mysql Databases Limit Reached."}
-                return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
+                flash('MySQL database limit reached.')
+                return redirect(url_for('routes.user_viewDatabases'))
             cursor.execute(
                 'SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id=%s',(userID,))
             DBUserbyID = cursor.fetchone()
             databaseName = request.form['databaseName']
-            #query = "INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, '" + databaseName + "', '" + userID + "', '" + str(DBUserbyID[0]) + "', '1');"
             try:
                 cursor.execute("INSERT INTO `msqldatabases` (`DB_ID`, `DbName`, `User_id`, `DbUser_ID`, `Is_Active`) VALUES (NULL, %s, %s, %s, '1');",(databaseName,userID,str(DBUserbyID[0])))
                 mysqlconnection.commit()
             except:
-                msg = {"error": "danger", "message": "Database name already in use."}
-                return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
+                flash('Database name already in use.')
+                return redirect(url_for('routes.user_viewDatabases'))
             if cursor.rowcount > 0:
                 create_database(cursor,databaseName,DBUserbyID[1])
-                msg = {"error": "success", "message": "Database Added."}
-                return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
+                flash('Database created successfully.')
+                return redirect(url_for('routes.user_viewDatabases'))
             else:
-                msg = {"error": "danger", "message": "Database Adding not Successfull."}
-                return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
+                flash('Database not added.')
+                return redirect(url_for('routes.user_viewDatabases'))
         else:
-            msg = ''
-            return render_template('userFiles/MysqlDatabase/addDB.html', msg=msg)
+            return redirect(url_for('routes.user_viewDatabases'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -387,43 +379,39 @@ def user_addAccounts():
             cursor.execute("SELECT * FROM `ftp_accounts` where User_id=%s",(userID,))
             cursor.fetchall()
             if cursor.rowcount>=limit:
-                msg = {"error": "danger", "message": "FTP Account Limit Reached."}
-                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+                flash('FTP account limit reached.')
+                return redirect(url_for('routes.user_viewAccounts'))
             ftpUsername = request.form['ftpUsername']
-            ftpPassword = request.form['ftpPassword']
-            # FIX R6-05: validate ftpUsername — it becomes a Linux OS username
-            # Unvalidated username could inject special chars into useradd
+            ftpPassword = request.form['ftpPass']
+            # FIX R6-05: validate ftpUsername
             try:
                 ftpUsername = sanitize_shell_arg(ftpUsername, 'username')
             except ValueError:
-                msg = {'error': 'danger', 'message': 'Invalid FTP username. Use only lowercase letters, digits, hyphens, underscores.'}
-                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+                flash('Invalid FTP username. Use only lowercase letters, digits, hyphens, underscores.')
+                return redirect(url_for('routes.user_viewAccounts'))
             encodedPass = Base64Encode(ftpPassword)
             Directory = "/home/username/public_html"
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
-            # FIX R16-06: null guard — fetchone()[0] crashes if user record deleted mid-session
             _serv_row = cursor.fetchone()
             if _serv_row is None:
-                msg = {'error': 'danger', 'message': 'User account error. Please contact support.'}
-                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+                flash('User account error. Please contact support.')
+                return redirect(url_for('routes.user_viewAccounts'))
             getUserName = _serv_row[0]
-            #query = "INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, '" + userID + "', '" + Directory + "', '" + ftpUsername + "', '" + encodedPass + "', '1');"
             try:
                 cursor.execute("INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, '1');",(userID,Directory,ftpUsername,encodedPass))
                 mysqlconnection.commit()
             except:
-                msg = {"error": "danger", "message": "FTP Username Already in Use."}
-                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+                flash('FTP username already in use.')
+                return redirect(url_for('routes.user_viewAccounts'))
             if cursor.rowcount > 0:
                 add_ftp(ftpUsername,getUserName,ftpPassword)
-                msg = {"error": "success", "message": "FTP Account Added."}
-                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+                flash('FTP account created successfully.')
+                return redirect(url_for('routes.user_viewAccounts'))
             else:
-                msg = {"error": "danger", "message": "FTP account not added."}
-                return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+                flash('FTP account not added.')
+                return redirect(url_for('routes.user_viewAccounts'))
         else:
-            msg = ''
-            return render_template('userFiles/ftpAccounts/addAccounts.html', msg=msg)
+            return redirect(url_for('routes.user_viewAccounts'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -554,48 +542,43 @@ def user_addEmail():
             cursor.execute("SELECT * FROM `mail_accounts` where User_id=%s",(userID,))
             cursor.fetchall()
             if cursor.rowcount>=limit:
-                msg = {"error": "danger", "message": "Mail Accounts Limit Reached."}
-                return render_template('userFiles/Mails/addEmail.html', msg=msg)
+                flash('Mail account limit reached.')
+                return redirect(url_for('routes.user_viewEmail'))
             domainID = request.form['domainID']
             if(domainID==""):
-                msg={"error":"danger", "message": "Domain not Selected."}
-                # FIX R10-08: was rendering adminFiles template (wrong context for user)
-                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Domain not selected.')
+                return redirect(url_for('routes.user_viewEmail'))
             suffix = request.form['suffix']
-            # FIX NEW-01: validate suffix before building email address — prevents stored XSS and
-            # injection into the mail DB via specially crafted local-part (e.g. suffix="admin'--")
+            # FIX NEW-01: validate suffix
             try:
                 suffix = sanitize_shell_arg(suffix, 'suffix')
             except ValueError:
-                msg = {'error': 'danger', 'message': 'Invalid email prefix. Use only letters, digits, and hyphens.'}
-                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
-            Password = request.form['Password']
+                flash('Invalid email prefix. Use only letters, digits, and hyphens.')
+                return redirect(url_for('routes.user_viewEmail'))
+            Password = request.form['emailPass']
             encodedPass = Base64Encode(Password)
-            #query = "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=" + domainID + " and User_id="+userID
             cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s",(domainID,userID))
             rDomain = cursor.fetchone()
             if rDomain is None:
-                msg = {'error': 'danger', 'message': 'Domain not found or access denied.'}
-                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Domain not found or access denied.')
+                return redirect(url_for('routes.user_viewEmail'))
             mail_adress = suffix + "@" + rDomain[1]
             userID = str(rDomain[2])
-            #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
             try:
                 cursor.execute("INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, '1')",(domainID,userID,mail_adress,encodedPass))
                 mysqlconnection.commit()
             except:
-                msg = {"error": "danger", "message": "Mail Account Already Exists."}
-                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Mail account already exists.')
+                return redirect(url_for('routes.user_viewEmail'))
             if cursor.rowcount > 0:
                 create_mail_user(cursor,mail_adress,Password)
-                msg = {"error": "success", "message": "Mail Account Added."}
-                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Email account created successfully.')
+                return redirect(url_for('routes.user_viewEmail'))
             else:
-                msg = {"error": "danger", "message": "Mail Account not added."}
-                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                flash('Mail account not added.')
+                return redirect(url_for('routes.user_viewEmail'))
         else:
-            msg = ''
-            return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
+            return redirect(url_for('routes.user_viewEmail'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -607,8 +590,10 @@ def user_viewEmail():
         cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1 AND mail_accounts.User_id=%s',(userID,))
         results = cursor.fetchall()
-        msg = ''
-        return render_template('userFiles/Mails/viewEmail.html', results=results)
+        # UI: pass user's domains for the Add Email tab dropdown
+        cursor.execute('SELECT Domain_Id, Domain_Name FROM `domains` WHERE Is_Deleted=0 AND User_id=%s', (userID,))
+        domains = cursor.fetchall()
+        return render_template('userFiles/Mails/viewEmail.html', results=results, domains=domains)
     else:
         return redirect(url_for('routes.login'))
 
@@ -709,55 +694,48 @@ def user_addSubDomain():
             cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s', (userID,))
             _serv_row = cursor.fetchone()
             if _serv_row is None:
-                msg = {'error': 'danger', 'message': 'User not found. Please log in again.'}
-                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('User not found. Please log in again.')
+                return redirect(url_for('routes.user_viewSubDomains'))
             getUserName = _serv_row[0]
 
-            # FIXED VULN-03: parameterized query (was raw string concat)
+            # FIXED VULN-03: parameterized query
             cursor.execute('SELECT COUNT(*) FROM `subdomains` WHERE User_id=%s AND Is_Active=1', (userID,))
             in_use = cursor.fetchone()[0]
             if in_use >= limit:
-                msg = {"error": "danger", "message": "Subdomains Limit Reached."}
-                return render_template('userFiles/SubDomains/addSubDomain.html', msg=msg)
+                flash('Subdomain limit reached.')
+                return redirect(url_for('routes.user_viewSubDomains'))
             domainID = request.form['domainID']
             if(domainID==""):
-                msg={"error":"danger", "message": "Domain not Selected."}
-                # FIX R11-08: was rendering adminFiles/Mails template (wrong context for user)
-                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
-            # FIX NEW-02: read suffix from form FIRST, then validate
+                flash('Domain not selected.')
+                return redirect(url_for('routes.user_viewSubDomains'))
             suffix = request.form['suffix']
             try:
                 suffix = sanitize_shell_arg(suffix, 'suffix')
             except ValueError:
-                msg = {'error': 'danger', 'message': 'Invalid subdomain prefix. Use only letters, digits, and hyphens.'}
-                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Invalid subdomain prefix. Use only letters, digits, and hyphens.')
+                return redirect(url_for('routes.user_viewSubDomains'))
             cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s and User_id=%s", (domainID, userID))
             rDomain = cursor.fetchone()
-            # FIX R11-09: NullPointer — no null check before rDomain[1] if domain doesn't belong to this user
             if rDomain is None:
-                msg = {'error': 'danger', 'message': 'Domain not found or access denied.'}
-                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Domain not found or access denied.')
+                return redirect(url_for('routes.user_viewSubDomains'))
             SubDomainAdress = suffix + '.' + rDomain[1]
             userID = str(rDomain[2])
-            #query = "INSERT INTO `mail_accounts` (`Mail_Id`, `Domain_Id`, `User_id`, `Mail_Address`, `Mail_Pass`, `Is_Active`) VALUES (NULL, '" + domainID + "', '" + userID + "', '" + mail_adress + "', '" + encodedPass + "', '1')"
-            #query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
-            #print(query)
             try:
                 cursor.execute("INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, %s, %s, %s, '1')",(domainID,userID,SubDomainAdress))
                 mysqlconnection.commit()
             except:
-                msg = {"error": "danger", "message": "SubDomain Already Exists."}
-                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Subdomain already exists.')
+                return redirect(url_for('routes.user_viewSubDomains'))
             if cursor.rowcount > 0:
                 add_vhost(getUserName, SubDomainAdress)
-                msg = {"error": "success", "message": "SubDomain Added."}
-                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Subdomain created successfully.')
+                return redirect(url_for('routes.user_viewSubDomains'))
             else:
-                msg = {"error": "danger", "message": "SubDomain not added."}
-                return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+                flash('Subdomain not added.')
+                return redirect(url_for('routes.user_viewSubDomains'))
         else:
-            msg = ''
-            return render_template('userFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            return redirect(url_for('routes.user_viewSubDomains'))
     else:
         return redirect(url_for('routes.login'))
 
@@ -769,8 +747,10 @@ def user_viewSubDomains():
         cursor = mysqlconnection.cursor()
         cursor.execute('SELECT * FROM subdomains LEFT JOIN users ON users.User_id = subdomains.User_id LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id WHERE subdomains.Is_Active = 1 AND subdomains.User_id=%s',(userID,))
         results = cursor.fetchall()
-        msg = ''
-        return render_template('userFiles/SubDomains/viewSubDomains.html', results=results)
+        # UI: pass user's domains for the Add Subdomain tab dropdown
+        cursor.execute('SELECT Domain_Id, Domain_Name FROM `domains` WHERE Is_Deleted=0 AND User_id=%s', (userID,))
+        domains = cursor.fetchall()
+        return render_template('userFiles/SubDomains/viewSubDomains.html', results=results, domains=domains)
     else:
         return redirect(url_for('routes.login'))
 
@@ -808,16 +788,10 @@ def user_deleteSubDomain():
 
 @routes.route('/user/Logs/error_Logs')
 def user_error_logs():
-    mysqlconnection.reconnect()
+    # Error logs merged into access_logs tab page — redirect
     if check_user_Login():
-        msg = ''
-        userID = str(session["id"])
-        cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0 and User_id=%s',(userID,))
-        domains = cursor.fetchall()
-        return render_template('userFiles/Logs/error_logs.html', domains=domains,msg=msg)
-    else:
-        return redirect(url_for('routes.login'))
+        return redirect(url_for('routes.user_access_logs'))
+    return redirect(url_for('routes.login'))
 
 @routes.route('/user/Logs/error_Logs/Ajax' , methods = ['GET', 'POST'])
 def user_error_logs_ajax():
