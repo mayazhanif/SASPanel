@@ -328,9 +328,13 @@ def user_updateDBPass():
                 return redirect(url_for("routes.user_viewDatabases"))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
-            #query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
             cursor.execute("SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s and User_id=%s",(DbUser_ID,userID))
-            mysqlUsername = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            # FIX R12-04: NullPointer — fetchone()[0] crashes if DbUser_ID not owned by this user
+            if row is None:
+                msg = {"error": "danger", "message": "Database not found or access denied."}
+                return render_template('userFiles/MysqlDatabase/updateDBPass.html', database=DbUser_ID, msg=msg)
+            mysqlUsername = row[0]
             pass1 = request.form['pass1']
             pass2 = request.form['pass2']
             if pass1 == pass2:
@@ -467,7 +471,8 @@ def user_updateAccountPass():
                 msg = {"error": "danger", "message": "Password and confirm password does not match."}
                 return render_template('userFiles/ftpAccounts/updateAccountPass.html', database=AccID, msg=msg)
         else:
-            return redirect(url_for("routes.user_viewDatabases"))
+            # FIX R12-05: was redirecting to user_viewDatabases (wrong page for FTP accounts)
+            return redirect(url_for("routes.user_viewAccounts"))
     else:
         return redirect(url_for('routes.login'))
 

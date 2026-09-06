@@ -761,8 +761,16 @@ def admin_deleteAccount():
                 flash('FTP Account not found or access denied.')
                 return redirect(url_for('routes.admin_viewAccounts'))
             ftpUsername = row[0]
-            #query="UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` = "+AccID
-            cursor.execute("UPDATE `ftp_accounts` SET `Is_Active` = '0' WHERE `ftp_accounts`.`Account_Id` =%s ",(AccID,))
+            # FIX R12-02/03: scope the UPDATE to this admin's own FTP accounts
+            # The SELECT check above prevents IDOR on fetch, but the UPDATE itself
+            # must also include the Admin_id scope to prevent race-condition bypass.
+            cursor.execute(
+                "UPDATE `ftp_accounts` "
+                "SET `Is_Active` = '0' "
+                "WHERE `ftp_accounts`.`Account_Id` =%s "
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (AccID, str(session['id']))
+            )
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_ftp(ftpUsername)
@@ -799,8 +807,8 @@ def admin_addEmail():
             domainID = request.form['domainID']
             if(domainID==""):
                 msg={"error":"danger", "message": "Domain not Selected."}
-                # FIX R10-08: was rendering adminFiles template (wrong template + info-leak)
-                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                # FIX R12-01: was rendering userFiles template inside admin route
+                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
             # FIX NEW-03: validate suffix to prevent injection into mail address and downstream XSS
             try:

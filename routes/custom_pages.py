@@ -64,17 +64,18 @@ def installer():
             return render_template('installer/installer.html',
                                    msg={'error': 'danger', 'message': 'Password and Confirm Password Mismatch.'})
 
-        # FIX NEW-04: validate domain and email before passing to install_packages()
-        # These values are passed into shell scripts — must be whitelisted
+        # FIX R12-06: validate full email address properly before passing to install_packages()
+        # emailaddress here is the local-part only (before @); domain comes from the domain field
         import re
         _DOMAIN_RE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9.\-]{1,251}[a-zA-Z0-9]$')
-        _EMAIL_RE  = re.compile(r'^[A-Za-z0-9._%+\-]{1,64}$')  # local-part only (before @)
+        # local-part: start/end with alphanumeric; allow dots, +, -, _ in the middle; max 64 chars
+        _LOCALPART_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9.+_-]{0,62}[A-Za-z0-9]$|^[A-Za-z0-9]{1}$')
         if not _DOMAIN_RE.match(domain):
             return render_template('installer/installer.html',
                                    msg={'error': 'danger', 'message': 'Invalid domain name.'})
-        if not _EMAIL_RE.match(emailaddress):
+        if not _LOCALPART_RE.match(emailaddress):
             return render_template('installer/installer.html',
-                                   msg={'error': 'danger', 'message': 'Invalid email address prefix.'})
+                                   msg={'error': 'danger', 'message': 'Invalid email address prefix. Use only letters, digits, dots, hyphens, and underscores.'})
 
         full_email = emailaddress + '@' + domain
         install_packages(DBpass1, mailserverpassword, domain, full_email, emailpassword)
