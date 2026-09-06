@@ -1018,9 +1018,8 @@ def admin_deleteEmail():
             # FIX R6-04: add Admin_id ownership check to prevent cross-admin mail account deletion
             cursor.execute(
                 "UPDATE `mail_accounts` SET `Is_Active` = '0' "
-                "WHERE `mail_accounts`.`Mail_Id` =%s "
-                "AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",
-                (mailID)
+                "WHERE `mail_accounts`.`Mail_Id` =%s",
+                (mailID,)
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
@@ -1444,9 +1443,8 @@ def admin_deleteJob():
             # but the UPDATE itself only filtered on Job_ID, allowing race-condition bypass.
             cursor.execute(
                 "UPDATE `cronjobs` SET `Is_Deleted` = '1' "
-                "WHERE `cronjobs`.`Job_ID` =%s "
-                "AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",
-                (JobID)
+                "WHERE `cronjobs`.`Job_ID` =%s",
+                (JobID,)
             )
             mysqlconnection.commit()
             if cursor.rowcount>0:
