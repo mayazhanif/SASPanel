@@ -735,7 +735,8 @@ def admin_updateAccountPass():
                 msg = {"error": "danger", "message": "Password and confirm password does not match."}
                 return render_template('adminFiles/ftpAccounts/updateAccountPass.html', database=AccID, msg=msg)
         else:
-            return redirect(url_for("routes.admin_viewDatabases"))
+            # FIX R13-04: was redirecting to admin_viewDatabases (wrong page for FTP accounts)
+            return redirect(url_for("routes.admin_viewAccounts"))
     else:
         return redirect(url_for('routes.login'))
 
@@ -953,7 +954,12 @@ def admin_addSubDomain():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0;')
+        # FIX R13-01: info-leak — was showing ALL domains from all admins in dropdown
+        cursor.execute(
+            'SELECT * FROM `domains` WHERE Is_Deleted=0 '
+            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s);',
+            (str(session['id']),)
+        )
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form :
             domainID = request.form['domainID']
@@ -980,6 +986,10 @@ def admin_addSubDomain():
                 return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s", (domainID,))
             rDomain = cursor.fetchone()
+            # FIX R13-08: NullPointer — rDomain[1] crashes if domainID was tampered
+            if rDomain is None:
+                msg = {'error': 'danger', 'message': 'Domain not found.'}
+                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             SubDomainAdress = suffix + '.' + rDomain[1]
             userID= str(rDomain[2])
             #query = "INSERT INTO `subdomains` (`SDomain_ID`, `Domain_Id`, `User_id`, `SubDomain`, `Is_Active`) VALUES (NULL, '"+domainID+"', '"+userID+"', '"+SubDomainAdress+"', '1')"
@@ -1007,7 +1017,14 @@ def admin_viewSubDomains():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM subdomains LEFT JOIN users ON users.User_id = subdomains.User_id LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id WHERE subdomains.Is_Active = 1')
+        # FIX R13-02: info-leak — was showing ALL subdomains from all admins
+        cursor.execute(
+            'SELECT * FROM subdomains '
+            'LEFT JOIN users ON users.User_id = subdomains.User_id '
+            'LEFT JOIN domains ON domains.Domain_Id = subdomains.Domain_Id '
+            'WHERE subdomains.Is_Active = 1 AND users.Admin_id=%s',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         msg = ''
         return render_template('adminFiles/SubDomains/viewSubDomains.html', results=results)
@@ -1032,8 +1049,13 @@ def admin_deleteSubDomain():
                 flash('Subdomain not found or access denied.')
                 return redirect(url_for('routes.admin_viewSubDomains'))
             SubDomainName = row[0]
-            #query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID
-            cursor.execute("UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` =%s ",(SdomainID,))
+            # FIX R13-03: IDOR — UPDATE was not scoped to admin's own subdomains
+            cursor.execute(
+                "UPDATE `subdomains` SET `Is_Active` = '0' "
+                "WHERE `subdomains`.`SDomain_ID` =%s "
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (SdomainID, str(session['id']))
+            )
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 remove_vhost(SubDomainName)
@@ -1058,7 +1080,12 @@ def admin_error_logs():
     if check_admin_Login():
         msg = ''
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0')
+        # FIX R13-05: info-leak — was showing ALL domains from all admins in log viewer dropdown
+        cursor.execute(
+            'SELECT * FROM `domains` WHERE Is_Deleted=0 '
+            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+            (str(session['id']),)
+        )
         domains = cursor.fetchall()
         return render_template('adminFiles/Logs/error_logs.html', msg=msg, domains=domains)
     else:
@@ -1115,7 +1142,12 @@ def admin_access_logs():
     if check_admin_Login():
         msg = ''
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0')
+        # FIX R13-06: info-leak — was showing ALL domains from all admins in log viewer dropdown
+        cursor.execute(
+            'SELECT * FROM `domains` WHERE Is_Deleted=0 '
+            'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+            (str(session['id']),)
+        )
         domains = cursor.fetchall()
         return render_template('adminFiles/Logs/access_logs.html', msg=msg, domains=domains)
     else:
