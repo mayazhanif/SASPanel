@@ -29,9 +29,12 @@ def admin_viewUser():
     if check_admin_Login():
         mysqlconnection.reconnect()
         cursor = mysqlconnection.cursor()
-        #cursor.close()
-        #cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
-        cursor.execute('SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0;')
+        # FIX R14-01: info-leak — was showing ALL users from all admins
+        cursor.execute(
+            'SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id '
+            'WHERE Is_Deleted=0 AND users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         return render_template('adminFiles/users/viewUser.html', results=results)
     else:
@@ -44,9 +47,12 @@ def admin_deleteUser():
             userID=request.args.get('userID')
             mysqlconnection.reconnect()
             cursor = mysqlconnection.cursor()
-            #query="UPDATE `packages` SET `Is_Active` = '0' WHERE `packages`.`Package_Id` ="+userID
-            #query="UPDATE `users` SET `Is_Deleted` = '1' WHERE `users`.`User_id` ="+userID
-            cursor.execute("UPDATE `users` SET `Is_Deleted` = '1' WHERE `users`.`User_id` =%s",(userID,))
+            # FIX R14-02: IDOR — no Admin_id ownership check; any admin could delete any user
+            cursor.execute(
+                "UPDATE `users` SET `Is_Deleted` = '1' "
+                "WHERE `users`.`User_id` =%s AND Admin_id=%s",
+                (userID, str(session['id']))
+            )
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 flash('User Deleted.')
@@ -185,8 +191,12 @@ def admin_updateUser():
             cursor = mysqlconnection.cursor()
             cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
             results = cursor.fetchall()
-            #query="SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id="+userID
-            cursor.execute("SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id where Is_Deleted=0 and User_id=%s",(userID,))
+            # FIX R14-03: IDOR — no Admin_id scope on GET fetch; any admin could view any user's data
+            cursor.execute(
+                "SELECT * FROM `users` INNER JOIN packages ON users.Package_id = packages.Package_Id "
+                "WHERE Is_Deleted=0 AND User_id=%s AND users.Admin_id=%s",
+                (userID, str(session['id']))
+            )
             user = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('adminFiles/users/updateUser.html', user=user, results=results)
@@ -265,9 +275,9 @@ def admin_viewPackages():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `packages` where Is_Active=1;')
+        # FIX R14-04: info-leak — was showing ALL packages from all admins
+        cursor.execute('SELECT * FROM `packages` WHERE Is_Active=1 AND Admin_id=%s;', (str(session['id']),))
         results = cursor.fetchall()
-        #msg=''
         return render_template('adminFiles/Packages/viewPackages.html', results=results)
     else:
         return redirect(url_for('routes.login'))
@@ -280,7 +290,8 @@ def admin_updatePackage():
         if request.method == 'GET' and request.args.get('packageID'):
             packageID=request.args.get('packageID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT * FROM `packages` where Package_Id=%s',(packageID,))
+            # FIX R14-05: IDOR — no Admin_id scope; any admin could view any package
+            cursor.execute('SELECT * FROM `packages` WHERE Package_Id=%s AND Admin_id=%s', (packageID, str(session['id'])))
             package = cursor.fetchone()
             if cursor.rowcount>0:
                 return render_template('adminFiles/Packages/updatePackage.html', package=package)
@@ -530,7 +541,14 @@ def admin_viewDatabases():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM mysqldbusers LEFT JOIN msqldatabases ON msqldatabases.DbUser_ID = mysqldbusers.DbUser_ID LEFT JOIN users ON users.User_id = mysqldbusers.User_id WHERE msqldatabases.Is_Active = 1')
+        # FIX R14-06: info-leak — was showing ALL databases from all admins
+        cursor.execute(
+            'SELECT * FROM mysqldbusers '
+            'LEFT JOIN msqldatabases ON msqldatabases.DbUser_ID = mysqldbusers.DbUser_ID '
+            'LEFT JOIN users ON users.User_id = mysqldbusers.User_id '
+            'WHERE msqldatabases.Is_Active = 1 AND users.Admin_id=%s',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         msg = ''
         return render_template('adminFiles/MysqlDatabase/viewDatabases.html', results=results)
@@ -681,7 +699,12 @@ def admin_viewAccounts():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id where ftp_accounts.Is_Active=1;')
+        # FIX R14-07: info-leak — was showing ALL FTP accounts from all admins
+        cursor.execute(
+            'SELECT * FROM `ftp_accounts` INNER JOIN users ON ftp_accounts.User_id = users.User_id '
+            'WHERE ftp_accounts.Is_Active=1 AND users.Admin_id=%s;',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         msg = ''
         return render_template('adminFiles/ftpAccounts/viewAccounts.html', results=results)
@@ -857,7 +880,14 @@ def admin_viewEmail():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM mail_accounts LEFT JOIN users ON users.User_id = mail_accounts.User_id LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id WHERE mail_accounts.Is_Active = 1')
+        # FIX R14-08: info-leak — was showing ALL mail accounts from all admins
+        cursor.execute(
+            'SELECT * FROM mail_accounts '
+            'LEFT JOIN users ON users.User_id = mail_accounts.User_id '
+            'LEFT JOIN domains ON domains.Domain_Id = mail_accounts.Domain_Id '
+            'WHERE mail_accounts.Is_Active = 1 AND users.Admin_id=%s',
+            (str(session['id']),)
+        )
         results = cursor.fetchall()
         msg = ''
         return render_template('adminFiles/Mails/viewEmail.html', results=results)
@@ -1265,8 +1295,12 @@ def admin_cron_jobs():
             cursor.execute("INSERT INTO `cronjobs` (`Job_ID`, `User_id`, `Cron_Command`, `Logs_Directory`, `Is_Deleted`) VALUES (NULL, %s, %s, %s, '0')",(userID,Command,logFile))
             mysqlconnection.commit()
             if cursor.rowcount>0:
+                # FIX R14-12: cron refresh was showing ALL users' cron jobs, not just this admin's
                 cursor.execute(
-                    'SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id where cronjobs.Is_Deleted=0;')
+                    'SELECT * FROM `cronjobs` INNER JOIN users ON users.User_id = cronjobs.User_id '
+                    'WHERE cronjobs.Is_Deleted=0 AND users.Admin_id=%s;',
+                    (str(session['id']),)
+                )
                 cronjobs = cursor.fetchall()
                 msg = {"error": "success", "message": "Cron Job Added."}
                 return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
