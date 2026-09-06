@@ -46,8 +46,11 @@ CREATE TABLE IF NOT EXISTS `administrator` (
 -- Dumping data for table `administrator`
 --
 
-INSERT INTO `administrator` (`Admin_id`, `Admin_Name`, `Admin_Username`, `Admin_Password`, `Admin_Email`, `Is_Active`, `Admin_type`, `Reg_Date`) VALUES
-(1, 'Test Admin', 'TestAdmin', '202cb962ac59075b964b07152d234b70', 'admin@admin.com', 1, '1', '2022-01-17 19:30:07');
+-- FIX R10-06: DEFAULT CREDENTIAL REMOVED
+-- The original schema shipped with TestAdmin / MD5('123') = 202cb962ac59075b964b07152d234b70
+-- This is a trivially guessable password. The installer now creates the admin account interactively.
+-- DO NOT insert a default administrator row here.
+
 
 -- --------------------------------------------------------
 

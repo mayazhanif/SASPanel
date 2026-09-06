@@ -324,7 +324,8 @@ def user_updateDBPass():
             if cursor.rowcount>0:
                 return render_template('userFiles/MysqlDatabase/updateDBPass.html', database=database[0])
             else:
-                return redirect(url_for("routes.admin_viewDatabases"))
+                # FIX R10-07: was redirecting to admin_viewDatabases (wrong route for a user)
+                return redirect(url_for("routes.user_viewDatabases"))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
             #query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID+" and User_id="+userID
@@ -534,7 +535,8 @@ def user_addEmail():
             domainID = request.form['domainID']
             if(domainID==""):
                 msg={"error":"danger", "message": "Domain not Selected."}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                # FIX R10-08: was rendering adminFiles template (wrong context for user)
+                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
             # FIX NEW-01: validate suffix before building email address — prevents stored XSS and
             # injection into the mail DB via specially crafted local-part (e.g. suffix="admin'--")

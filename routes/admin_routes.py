@@ -341,11 +341,10 @@ def admin_addDomain():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        # FIX R10-05: info-leak — was showing ALL users from all admins in dropdown
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'DomainName' in request.form:
-            userID = request.form['userID']
-            if(userID==""):
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             # FIX R9-03: IDOR — verify userID belongs to this admin before adding domain
@@ -485,7 +484,8 @@ def admin_addDB():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        # FIX R10-04: info-leak — was showing ALL users from all admins in dropdown
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'databaseName' in request.form:
             userID = request.form['userID']
@@ -618,7 +618,8 @@ def admin_addAccounts():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `users` where Is_Deleted=0;')
+        # FIX R10-03: info-leak — was showing ALL users from all admins in dropdown
+        cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0 AND Admin_id=%s;', (str(session['id']),))
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'ftpUsername' in request.form and 'ftpPassword' in request.form :
             userID = request.form['userID']
@@ -769,13 +770,15 @@ def admin_addEmail():
     mysqlconnection.reconnect()
     if check_admin_Login():
         cursor = mysqlconnection.cursor()
-        cursor.execute('SELECT * FROM `domains` where Is_Deleted=0;')
+        # FIX R10-02: scope domain dropdown to this admin's users only (was showing ALL domains)
+        cursor.execute('SELECT * FROM `domains` WHERE Is_Deleted=0 AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s);', (str(session['id']),))
         domains = cursor.fetchall()
         if request.method == 'POST' and 'domainID' in request.form and 'suffix' in request.form and 'Password' in request.form :
             domainID = request.form['domainID']
             if(domainID==""):
                 msg={"error":"danger", "message": "Domain not Selected."}
-                return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
+                # FIX R10-08: was rendering adminFiles template (wrong template + info-leak)
+                return render_template('userFiles/Mails/addEmail.html', domains=domains, msg=msg)
             suffix = request.form['suffix']
             # FIX NEW-03: validate suffix to prevent injection into mail address and downstream XSS
             try:
@@ -927,11 +930,15 @@ def admin_addSubDomain():
             if(domainID==""):
                 msg={"error":"danger", "message": "Domain not Selected."}
                 return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
-            cursor.execute('SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id where domains.Is_Deleted=0 and Domain_Id=%s',(domainID,))
+            # FIX R10-01: IDOR — verify domainID belongs to this admin before adding subdomain
+            cursor.execute(
+                'SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id '
+                'WHERE domains.Is_Deleted=0 AND Domain_Id=%s AND users.Admin_id=%s',
+                (domainID, str(session['id']))
+            )
             row = cursor.fetchone()
-            # FIX R8-01: null-pointer crash if domainID not found
             if row is None:
-                msg={'error':'danger','message':'Domain not found.'}
+                msg={'error':'danger','message':'Domain not found or access denied.'}
                 return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             getUserName = row[0]
             suffix = request.form['suffix']
