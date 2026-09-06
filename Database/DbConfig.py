@@ -1,7 +1,6 @@
 import mysql.connector
 import configparser
 import os
-import os
 from flask import current_app as app
 
 def WriteConfig(password):
@@ -40,7 +39,11 @@ def WriteMailConfig(email,password):
 #   )
 # except:
 #   mysqlconnection = None
-mysqlconnection = "Hello"
+# Initialise to None before mysql_connect() runs.
+# Any code calling mysqlconnection.reconnect() before
+# mysql_connect() completes will get a clear AttributeError
+# rather than a confusing 'str has no attribute reconnect'.
+mysqlconnection = None
 def mysql_connect():
   global mysqlconnection
   currentDirectory = os.path.dirname(os.path.abspath(__file__))

@@ -841,13 +841,17 @@ def admin_updateEmail():
         if request.method == 'GET' and request.args.get('mailID'):
             mailID=request.args.get('mailID')
             cursor = mysqlconnection.cursor()
-            #query="SELECT * FROM `mail_accounts` where Mail_Id="+mailID
-            cursor.execute("SELECT * FROM `mail_accounts` where Mail_Id=%s",(mailID,))
+            # FIX R8-05: IDOR — scope GET to admin's own mail accounts only
+            cursor.execute(
+                "SELECT * FROM `mail_accounts` "
+                "WHERE Mail_Id=%s "
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (mailID, str(session['id']))
+            )
             mail = cursor.fetchone()
-            if cursor.rowcount>0:
-                return render_template('adminFiles/Mails/updateEmail.html', mail=mail[0])
-            else:
-                return redirect(url_for("routes.admin_viewEmail"))
+            if mail is None:
+                flash('Mail account not found or access denied.')
+                return redirect(url_for('routes.admin_viewEmail'))
         elif request.method == 'POST' and 'mailID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             mailID = request.form['mailID']
             pass1 = request.form['pass1']
@@ -855,10 +859,12 @@ def admin_updateEmail():
             if pass1 == pass2:
                 EncodedPassword = Base64Encode(pass1)
                 cursor = mysqlconnection.cursor()
-                # FIXED: was "... SET `Mail_Pass` = '"+EncodedPassword+"' ..." — SQL injection
+                # FIX R8-06: IDOR — scope POST update to admin's own mail accounts
                 cursor.execute(
-                    "UPDATE `mail_accounts` SET `Mail_Pass` = %s WHERE `mail_accounts`.`Mail_Id` = %s",
-                    (EncodedPassword, mailID)
+                    "UPDATE `mail_accounts` SET `Mail_Pass` = %s "
+                    "WHERE `mail_accounts`.`Mail_Id` = %s "
+                    "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                    (EncodedPassword, mailID, str(session['id']))
                 )
 
                 mysqlconnection.commit()
@@ -897,7 +903,12 @@ def admin_addSubDomain():
                 msg={"error":"danger", "message": "Domain not Selected."}
                 return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
             cursor.execute('SELECT servUser FROM `users` INNER JOIN domains ON users.User_id = domains.User_id where domains.Is_Deleted=0 and Domain_Id=%s',(domainID,))
-            getUserName = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            # FIX R8-01: null-pointer crash if domainID not found
+            if row is None:
+                msg={'error':'danger','message':'Domain not found.'}
+                return render_template('adminFiles/SubDomains/addSubDomain.html', domains=domains, msg=msg)
+            getUserName = row[0]
             suffix = request.form['suffix']
             # FIXED VULN-11: validate suffix to prevent XSS + vhost injection
             try:
@@ -947,8 +958,18 @@ def admin_deleteSubDomain():
         if request.method == 'GET' and request.args.get('SdomainID'):
             SdomainID=request.args.get('SdomainID')
             cursor = mysqlconnection.cursor()
-            cursor.execute('SELECT SubDomain FROM `subdomains` where Is_Active=1 and `subdomains`.`SDomain_ID`=%s;',(SdomainID,))
-            SubDomainName = cursor.fetchone()[0]
+            cursor.execute(
+                'SELECT SubDomain FROM `subdomains` '
+                'WHERE Is_Active=1 AND `subdomains`.`SDomain_ID`=%s '
+                'AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)',
+                (SdomainID, str(session['id']))
+            )
+            row = cursor.fetchone()
+            # FIX R8-02: NullPointer crash + IDOR — no Admin_id ownership check before
+            if row is None:
+                flash('Subdomain not found or access denied.')
+                return redirect(url_for('routes.admin_viewSubDomains'))
+            SubDomainName = row[0]
             #query="UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` = "+SdomainID
             cursor.execute("UPDATE `subdomains` SET `Is_Active` = '0' WHERE `subdomains`.`SDomain_ID` =%s ",(SdomainID,))
             mysqlconnection.commit()
@@ -1091,6 +1112,12 @@ def admin_cron_jobs():
         users = cursor.fetchall()
         if request.method == 'POST' and 'userID' in request.form and 'CronTime' in request.form and 'Command' in request.form and 'logFile' in request.form:
             userID = request.form['userID']
+            # FIX R8-03: IDOR — admin could set cron for any user, not just their own
+            # Verify userID belongs to a user under this admin
+            cursor.execute('SELECT User_id FROM users WHERE User_id=%s AND Admin_id=%s AND Is_Deleted=0', (userID, str(session['id'])))
+            if cursor.fetchone() is None:
+                msg = {'error': 'danger', 'message': 'User not found or access denied.'}
+                return render_template('adminFiles/CronJobs/cron_jobs.html', msg=msg, users=users, cronjobs=cronjobs)
             CronTime = request.form['CronTime']
             Command = request.form['Command']
             logFile = request.form['logFile']
@@ -1159,8 +1186,19 @@ def admin_deleteJob():
         cursor = mysqlconnection.cursor()
         if request.method == 'GET' and request.args.get('JobID'):
             JobID=request.args.get('JobID')
-            cursor.execute('SELECT servUser FROM `users` INNER JOIN cronjobs ON  users.User_id=cronjobs.User_id where cronjobs.Is_Deleted=0 and  cronjobs.Job_ID=%s',(JobID,))
-            getUsername = cursor.fetchone()[0]
+            cursor.execute(
+                'SELECT servUser FROM `users` '
+                'INNER JOIN cronjobs ON users.User_id=cronjobs.User_id '
+                'WHERE cronjobs.Is_Deleted=0 AND cronjobs.Job_ID=%s '
+                'AND users.Admin_id=%s',
+                (JobID, str(session['id']))
+            )
+            row = cursor.fetchone()
+            # FIX R8-04: NullPointer crash + IDOR — no Admin_id ownership before
+            if row is None:
+                flash('Cron job not found or access denied.')
+                return redirect(url_for('routes.admin_cron_jobs'))
+            getUsername = row[0]
             #query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID
             cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` =%s",(JobID,))
             mysqlconnection.commit()

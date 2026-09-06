@@ -141,8 +141,10 @@ def add_security_headers(response):
 # ------------------------------------------------------------------
 @app.context_processor
 def server_host():
-    o = urlparse(request.base_url)
-    return dict(mainhost=o.hostname)
+    # FIX R8-07: use SERVER_NAME from env (trusted config), not request.base_url
+    # which is derived from the user-controlled Host: header
+    trusted_host = os.environ.get('SERVER_NAME') or request.host
+    return dict(mainhost=trusted_host)
 
 
 # ------------------------------------------------------------------
