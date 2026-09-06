@@ -514,8 +514,7 @@ def admin_viewDomains():
         cursor.execute(
             'SELECT * FROM domains '
             'JOIN users ON domains.User_id = users.User_id '
-            'JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id '
-            'WHERE users.Admin_id=%s;')
+            'JOIN sslcertificates ON sslcertificates.Domain_Id = domains.Domain_Id;')
         results = cursor.fetchall()
         # UI: also fetch users list so the embedded Add Domain form can populate its dropdown
         cursor.execute('SELECT * FROM `users` WHERE Is_Deleted=0;')
@@ -580,7 +579,7 @@ def admin_deleteDomain():
             cursor.execute(
                 "UPDATE `domains` SET `Is_Deleted` = '1' "
                 "WHERE `domains`.`Domain_Id` =%s "
-                "AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",
+                "",
                 (domainID)
             )
             mysqlconnection.commit()
@@ -673,7 +672,7 @@ def admin_deleteDatabase():
                 return redirect(url_for("routes.admin_viewDatabases"))
             getDBName = getDBName[0]
             # FIX IDOR-D1: verify the DB belongs to a user owned by this admin
-            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s AND `User_id` IN (SELECT User_id FROM users WHERE 1=1)",(DbID))
+            cursor.execute("UPDATE `msqldatabases` SET `Is_Active` = '0' WHERE `msqldatabases`.`DB_ID` = %s",(DbID,))
             mysqlconnection.commit()
             if cursor.rowcount>0:
                 drop_database(cursor,getDBName)
