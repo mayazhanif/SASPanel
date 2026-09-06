@@ -1,0 +1,208 @@
+{% include "layout/adminheader.html" %}
+
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Update Hosting Package</h1>
+  <p class="sp-page-subtitle">Edit limits and options for package #{{ package[0] }} — <strong>{{ package[1] }}</strong></p>
+</div>
+
+<!-- Back link -->
+<div style="margin-bottom:1.5rem;">
+  <a href="{{ url_for('routes.admin_viewPackages') }}" class="sp-btn sp-btn-ghost" style="font-size:0.875rem;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Packages
+  </a>
+</div>
+
+{% for message in get_flashed_messages() %}
+<div class="sp-alert {{ 'success' if 'Updated' in message else 'danger' }}" style="margin-bottom:1rem;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    {% if 'Updated' in message %}
+    <polyline points="20 6 9 17 4 12"/>
+    {% else %}
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    {% endif %}
+  </svg>
+  {{ message }}
+</div>
+{% endfor %}
+
+{% if msg %}
+<div class="sp-alert {{ msg.error }}" style="margin-bottom:1rem;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    {% if msg.error == 'success' %}
+    <polyline points="20 6 9 17 4 12"/>
+    {% else %}
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    {% endif %}
+  </svg>
+  {{ msg.message }}
+</div>
+{% endif %}
+
+<div style="max-width:640px;">
+
+  <!-- Current package summary -->
+  <div class="sp-card" style="margin-bottom:1.25rem;">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:7px;vertical-align:-2px;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Current Limits
+      </span>
+    </div>
+    <div style="padding:1rem 1.25rem;display:flex;flex-wrap:wrap;gap:1.25rem 2rem;">
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Domains</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ package[5] }}</code>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">FTP</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ package[3] }}</code>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Mails</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ package[4] }}</code>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Databases</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ package[7] }}</code>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Subdomains</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ package[8] }}</code>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Storage (GB)</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ package[9] }}</code>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">CGI Access</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ 'Yes' if package[6] in ('1', 1) else 'No' }}</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit form -->
+  <div class="sp-card">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:7px;vertical-align:-2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit Package
+      </span>
+    </div>
+    <div style="padding:1.5rem;">
+
+      <form method="POST" action="{{ url_for('routes.admin_updatePackage') }}" id="pkgForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="packageID" value="{{ package[0] }}">
+
+        <!-- Package Name -->
+        <div class="sp-form-group">
+          <label for="pkgName" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+            Package Name <span style="color:#f87171;">*</span>
+          </label>
+          <input type="text" class="sp-input" id="pkgName" name="packagename"
+                 value="{{ package[1] }}" placeholder="e.g. Starter, Pro, Business"
+                 maxlength="128" required style="width:100%;box-sizing:border-box;">
+        </div>
+
+        <!-- Limits grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+
+          <div class="sp-form-group">
+            <label for="pkgDomains" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+              Domains <span style="color:#f87171;">*</span>
+            </label>
+            <input type="number" class="sp-input" id="pkgDomains" name="domains"
+                   value="{{ package[5] }}" min="0" max="9999" required
+                   style="width:100%;box-sizing:border-box;">
+          </div>
+
+          <div class="sp-form-group">
+            <label for="pkgFTP" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+              FTP Accounts <span style="color:#f87171;">*</span>
+            </label>
+            <input type="number" class="sp-input" id="pkgFTP" name="ftps"
+                   value="{{ package[3] }}" min="0" max="9999" required
+                   style="width:100%;box-sizing:border-box;">
+          </div>
+
+          <div class="sp-form-group">
+            <label for="pkgMails" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+              Email Accounts <span style="color:#f87171;">*</span>
+            </label>
+            <input type="number" class="sp-input" id="pkgMails" name="mails"
+                   value="{{ package[4] }}" min="0" max="9999" required
+                   style="width:100%;box-sizing:border-box;">
+          </div>
+
+          <div class="sp-form-group">
+            <label for="pkgDBs" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+              Databases <span style="color:#f87171;">*</span>
+            </label>
+            <input type="number" class="sp-input" id="pkgDBs" name="dbs"
+                   value="{{ package[7] }}" min="0" max="9999" required
+                   style="width:100%;box-sizing:border-box;">
+          </div>
+
+          <div class="sp-form-group">
+            <label for="pkgSubdomains" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+              Subdomains <span style="color:#f87171;">*</span>
+            </label>
+            <input type="number" class="sp-input" id="pkgSubdomains" name="subdomains"
+                   value="{{ package[8] }}" min="0" max="9999" required
+                   style="width:100%;box-sizing:border-box;">
+          </div>
+
+          <div class="sp-form-group">
+            <label for="pkgStorage" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+              Storage (GB) <span style="color:#f87171;">*</span>
+            </label>
+            <input type="number" class="sp-input" id="pkgStorage" name="storage"
+                   value="{{ package[9] }}" min="0" max="999999" required
+                   style="width:100%;box-sizing:border-box;">
+          </div>
+
+        </div>
+
+        <!-- CGI Access toggle -->
+        <div style="margin-top:1.25rem;padding:1rem;background:var(--surface2);border-radius:8px;display:flex;align-items:center;gap:0.75rem;">
+          <div style="position:relative;width:40px;height:22px;flex-shrink:0;">
+            <input type="checkbox" name="cgiAccess" value="1" id="pkgCgiAccess"
+                   {% if package[6] in ('1', 1) %}checked{% endif %}
+                   style="position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1;">
+            <div id="cgiTrack" style="width:40px;height:22px;border-radius:11px;background:{% if package[6] in ('1', 1) %}var(--accent){% else %}var(--border){% endif %};transition:background 0.2s;"></div>
+            <div id="cgiThumb" style="position:absolute;top:3px;left:{% if package[6] in ('1', 1) %}21px{% else %}3px{% endif %};width:16px;height:16px;border-radius:50%;background:#fff;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>
+          </div>
+          <label for="pkgCgiAccess" style="font-size:0.875rem;font-weight:500;color:var(--text);cursor:pointer;margin:0;">
+            CGI Access
+            <span style="display:block;font-size:0.75rem;color:var(--text-muted);font-weight:400;">Allow CGI scripts for users on this package</span>
+          </label>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+          <a href="{{ url_for('routes.admin_viewPackages') }}" class="sp-btn sp-btn-ghost">Cancel</a>
+          <button type="submit" class="sp-btn sp-btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save Changes
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+(function() {
+  var cb    = document.getElementById('pkgCgiAccess');
+  var track = document.getElementById('cgiTrack');
+  var thumb = document.getElementById('cgiThumb');
+  cb.addEventListener('change', function() {
+    track.style.background = this.checked ? 'var(--accent)' : 'var(--border)';
+    thumb.style.left = this.checked ? '21px' : '3px';
+  });
+})();
+</script>
+
+{% include "layout/adminfooter.html" %}

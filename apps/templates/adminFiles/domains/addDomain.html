@@ -1,0 +1,96 @@
+{% include "layout/adminheader.html" %}
+{% block body %}
+
+            <div class="content-page">
+                <div class="content">
+                    
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+                        <div class="row page-title">
+                            <div class="col-md-12">
+                                <nav aria-label="breadcrumb" class="float-right mt-1">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{{url_for('routes.admin_dashboard') }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="{{url_for('routes.admin_viewDomains') }}">Domains</a></li>
+                                        <li class="breadcrumb-item active">Add new Domain</li>
+                                    </ol>
+                                </nav>
+                                <h4 class="mb-1 mt-0">New Domain</h4>
+                            </div>
+                        </div>
+
+
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Add New Domain</h4>
+                                        <p class="sub-header">
+                                            Select the User and fill the fields to Add new Domain.
+                                        </p>
+                                        {% if msg %}
+                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
+                                        {{ msg.message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                {% endif %}
+                                        <form method="POST" role="form" class="parsley-examples">
+                                            <div class="form-group row">
+                                                <label for="Name" class="col-md-2 col-form-label">User<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                     <select name="userID" id="userID" class="custom-select mb-2">
+                                                     <option selected="" value="">Select User</option>
+                                                  {% if users %}
+                                                  {% for user in users %}
+                                                     <option value="{{ user[0] }}">{{ user[2] }}</option>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </select>
+
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="Domain" class="col-md-2 col-form-label">Domain Name<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="url" required="" parsley-type="url" pattern="[^\s]+" name="DomainName" class="form-control" id="Domain" placeholder="Enter Domain name">
+                                                </div>
+                                            </div>
+                                            <h4 class="header-title mt-0">Additional Options</h4>
+                                            <div class="mt-3">
+                                            <div class="custom-control custom-checkbox mb-2">
+                                                <input type="checkbox" class="custom-control-input" name="createFTP" id="createFTP">
+                                                <label class="custom-control-label" for="createFTP">Create FTP</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox mb-2">
+                                                <input type="checkbox" class="custom-control-input" id="customCheck2">
+                                                <label class="custom-control-label" for="customCheck2">Create Default Mail</label>
+                                            </div>
+                                                <div class="custom-control custom-checkbox mb-2">
+                                                <input type="checkbox" class="custom-control-input" name="createMail" id="createMail">
+                                                <label class="custom-control-label" for="createMail">Create Mail</label>
+                                            </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <div class="col-md-8 offset-md-4">
+                                                    <button type="submit" class="btn btn-primary mr-1">
+                                                        Add Domain Name
+                                                    </button>
+                                                    <button type="reset"
+                                                            class="btn btn-secondary">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div> <!-- end card -->
+
+                            </div> <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+
+
+{% include "layout/adminfooter.html" %}
+{% endblock %}

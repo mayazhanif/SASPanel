@@ -1,0 +1,86 @@
+{% include "layout/header.html" %}
+{% block body %}
+
+            <div class="content-page">
+                <div class="content">
+                    
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+                        <div class="row page-title">
+                            <div class="col-md-12">
+                                <nav aria-label="breadcrumb" class="float-right mt-1">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{{url_for('routes.user_dashboard') }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="{{url_for('routes.user_viewAccounts') }}">FTP Accounts</a></li>
+                                        <li class="breadcrumb-item active">Modify Account</li>
+                                    </ol>
+                                </nav>
+                                <h4 class="mb-1 mt-0">Update Account Details</h4>
+                            </div>
+                        </div>
+                        {% for message in get_flashed_messages() %}
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                        {% endfor %}
+
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Modify Account's Details</h4>
+                                        <p class="sub-header">
+                                            Use Form to Update the password of FTP Account.
+                                        </p>
+                                    {% if msg %}
+                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
+                                        {{ msg.message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                {% endif %}
+                                        <form role="form" method="POST" class="parsley-examples">
+
+
+                                            <div class="form-group row">
+                                                <label for="Password" class="col-md-2 col-form-label">Update Password<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input id="Password" name="pass1" type="password" placeholder="Enter Password" required
+                                                            class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="confirmPassword" class="col-md-2 col-form-label">Confirm Password
+                                                    <span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input data-parsley-equalto="#Password" type="password" required
+                                                            placeholder="ReType Password" name="pass2" class="form-control" id="confirmPassword">
+                                                </div>
+                                            </div>
+                                            <input name="AccID" type="hidden" value="{{ account }}">
+                                            <div class="form-group row">
+                                                <div class="col-md-8 offset-md-4">
+                                                    <button type="submit" class="btn btn-primary mr-1">
+                                                        Update FTP User
+                                                    </button>
+                                                    <button type="reset"
+                                                            class="btn btn-secondary">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div> <!-- end card -->
+
+                            </div> <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+
+
+{% include "layout/footer.html" %}
+{% endblock %}

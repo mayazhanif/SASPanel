@@ -1,0 +1,4 @@
+<!-- Merged into access_logs.html — redirect handled by backend -->
+{% include "layout/header.html" %}
+<script nonce="{{ csp_nonce }}">window.location.replace("{{ url_for('routes.user_access_logs') }}");</script>
+{% include "layout/footer.html" %}

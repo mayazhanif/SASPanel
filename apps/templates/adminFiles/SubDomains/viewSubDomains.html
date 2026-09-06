@@ -1,0 +1,130 @@
+{% include "layout/adminheader.html" %}
+
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Subdomains</h1>
+  <p class="sp-page-subtitle">Create and manage subdomains for hosted domains</p>
+</div>
+
+{% if msg %}
+<div class="sp-alert {{ msg.error }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ msg.message }}
+</div>
+{% endif %}
+{% for message in get_flashed_messages() %}
+<div class="sp-alert success">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  {{ message }}
+</div>
+{% endfor %}
+
+<div class="sp-tab-container">
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="tab-list">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      All Subdomains
+    </button>
+    <button class="sp-tab" data-tab="tab-add">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Subdomain
+    </button>
+  </div>
+
+  <!-- ── Tab: List ── -->
+  <div class="sp-tab-panel active" id="tab-list">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Subdomain List</span>
+        <div class="sp-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="sub-search" placeholder="Search subdomains…" aria-label="Search subdomains"/>
+        </div>
+      </div>
+      <div class="sp-table-wrap">
+        <table class="sp-table" id="sub-table">
+          <thead>
+            <tr>
+              <th>User Email</th>
+              <th>Parent Domain</th>
+              <th>Subdomain</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if results %}
+              {% for record in results %}
+                <tr>
+                  <td class="muted">{{ record[7] }}</td>
+                  <td class="muted">{{ record[17] }}</td>
+                  <td>
+                    <a href="https://{{ record[3] }}" target="_blank" rel="noopener noreferrer"
+                       style="color:var(--accent-h);font-weight:500;">{{ record[3] }}</a>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('routes.admin_deleteSubDomain', SdomainID=record[0]) }}"
+                       class="sp-btn-icon delete" title="Delete subdomain" aria-label="Delete subdomain"
+                       onclick="return confirm('Delete subdomain {{ record[3] }}?')">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" style="text-align:center;padding:40px;color:var(--text-dim);">No subdomains found.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Add ── -->
+  <div class="sp-tab-panel" id="tab-add">
+    <div class="sp-card" style="max-width:520px;">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Add Subdomain</span>
+      </div>
+      <div class="sp-card-body">
+        <form method="POST" action="{{ url_for('routes.admin_addSubDomain') }}" autocomplete="off">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="sp-form-group">
+            <label class="sp-label" for="sub-domain">Parent Domain <span style="color:var(--danger)">*</span></label>
+            <select name="domainID" id="sub-domain" class="sp-select" required>
+              <option value="">— Select Domain —</option>
+              {% if domains %}
+                {% for domain in domains %}
+                  <option value="{{ domain[0] }}">{{ domain[1] }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+          <div class="sp-form-group">
+            <label class="sp-label" for="sub-suffix">Subdomain Prefix <span style="color:var(--danger)">*</span></label>
+            <input type="text" name="suffix" id="sub-suffix" class="sp-input"
+                   placeholder="blog, shop, api…" required autocomplete="disabled"
+                   pattern="[a-zA-Z0-9-]+" title="Letters, numbers, and hyphens only"/>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">e.g. "blog" → blog.yourdomain.com</div>
+          </div>
+          <div class="sp-flex sp-gap-8" style="margin-top:8px;">
+            <button type="submit" class="sp-btn sp-btn-primary">Create Subdomain</button>
+            <button type="reset" class="sp-btn sp-btn-ghost">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script nonce="{{ csp_nonce }}">
+document.getElementById('sub-search').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('#sub-table tbody tr').forEach(function(r) {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+
+{% include "layout/adminfooter.html" %}

@@ -1,0 +1,147 @@
+{% include "layout/adminheader.html" %}
+
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Cron Jobs</h1>
+  <p class="sp-page-subtitle">Schedule automated tasks for hosted users</p>
+</div>
+
+{% for message in get_flashed_messages() %}
+<div class="sp-alert danger">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ message }}
+</div>
+{% endfor %}
+
+<div class="sp-tab-container">
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="tab-list">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      All Cron Jobs
+    </button>
+    <button class="sp-tab" data-tab="tab-add">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Cron Job
+    </button>
+  </div>
+
+  <!-- ── Tab: List ── -->
+  <div class="sp-tab-panel active" id="tab-list">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Scheduled Jobs</span>
+        <div class="sp-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="cron-search" placeholder="Search jobs…" aria-label="Search cron jobs"/>
+        </div>
+      </div>
+      <div class="sp-table-wrap">
+        <table class="sp-table" id="cron-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Command</th>
+              <th>Log Directory</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if cronjobs %}
+              {% for record in cronjobs %}
+                <tr>
+                  <td class="sp-fw-600">{{ record[9] }}</td>
+                  <td class="muted">{{ record[7] }}</td>
+                  <td><code style="font-size:12px;color:var(--accent-h);">{{ record[2] }}</code></td>
+                  <td class="muted" style="font-family:monospace;font-size:12px;">{{ record[3] }}</td>
+                  <td>
+                    <a href="{{ url_for('routes.admin_deleteJob', JobID=record[0]) }}"
+                       class="sp-btn-icon delete" title="Delete job" aria-label="Delete cron job"
+                       onclick="return confirm('Delete this cron job?')">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" style="text-align:center;padding:40px;color:var(--text-dim);">No cron jobs yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Add ── -->
+  <div class="sp-tab-panel" id="tab-add">
+    <div class="sp-card" style="max-width:600px;">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Add Cron Job</span>
+        <a href="https://crontab.guru/" target="_blank" rel="noopener noreferrer"
+           class="sp-btn sp-btn-ghost" style="padding:5px 10px;font-size:12px;">CronTab Guru ↗</a>
+      </div>
+      <div class="sp-card-body">
+        <form method="POST" action="{{ url_for('routes.admin_cron_jobs') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+          <div class="sp-form-group">
+            <label class="sp-label" for="cron-user">Assign to User <span style="color:var(--danger)">*</span></label>
+            <select name="userID" id="cron-user" class="sp-select" required>
+              <option value="">— Select User —</option>
+              {% if users %}
+                {% for user in users %}
+                  <option value="{{ user[0] }}">{{ user[1] }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+          <div class="sp-form-group">
+            <label class="sp-label">Schedule <span style="color:var(--danger)">*</span></label>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+              {% set schedule_opts = [
+                ('oneminute',  'Every Minute   (*/1 * * * *)'),
+                ('fiveminute', 'Every 5 Minutes (*/5 * * * *)'),
+                ('everyday',   'Every Day        (0 0 * * *)'),
+                ('everymonth', 'Every Month      (0 0 1 * *)')
+              ] %}
+              {% for val, label in schedule_opts %}
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                  <input type="radio" name="CronTime" value="{{ val }}"
+                         {% if val == 'oneminute' %}checked{% endif %}
+                         style="accent-color:var(--accent);width:15px;height:15px;"/>
+                  <span style="color:var(--text-muted);font-size:13.5px;">{{ label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="sp-form-group">
+            <label class="sp-label" for="Command">Command to Execute <span style="color:var(--danger)">*</span></label>
+            <input type="text" name="Command" id="Command" class="sp-input"
+                   placeholder="php /home/user/domains/example.com/script.php" required autocomplete="off"/>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">Use absolute paths for reliability.</div>
+          </div>
+
+          <div class="sp-flex sp-gap-8" style="margin-top:8px;">
+            <button type="submit" class="sp-btn sp-btn-primary">Add Cron Job</button>
+            <button type="reset" class="sp-btn sp-btn-ghost">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script nonce="{{ csp_nonce }}">
+document.getElementById('cron-search').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('#cron-table tbody tr').forEach(function(r) {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+
+{% include "layout/adminfooter.html" %}

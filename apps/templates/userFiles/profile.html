@@ -1,171 +1,112 @@
 {% include "layout/header.html" %}
-{% block body %}
 
-        <div class="content-page">
-            <div class="content">
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Profile</h1>
+  <p class="sp-page-subtitle">Manage your account details and security</p>
+</div>
 
-                <!-- Start Content-->
-                <div class="container-fluid">
-                    <div class="row page-title">
-                        <div class="col-md-12">
-                            <nav aria-label="breadcrumb" class="float-right mt-1">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item"><a href="{{ url_for("routes.user_dashboard") }}">Dashboard</a></li>
-                                    <li class="breadcrumb-item active" aria-current="page">Profile</li>
-                                </ol>
-                            </nav>
-                            <h4 class="mb-1 mt-0">Profile</h4>
-                        </div>
-                    </div>
+{% if msg %}
+<div class="sp-alert {{ msg.error }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ msg.message }}
+</div>
+{% endif %}
+{% if passmsg %}
+<div class="sp-alert {{ passmsg.error }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ passmsg.message }}
+</div>
+{% endif %}
 
-                    <div class="row">
-                        <div class="col-lg-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="text-center mt-3">
-                                        <img src="assets/images/users/avatar-7.jpg" alt=""
-                                            class="avatar-lg rounded-circle" />
-                                        <h5 class="mt-2 mb-0">{{ session["Name"] }}</h5>
-                                        <h6 class="text-muted font-weight-normal mt-2 mb-0">User Experience Specialist
-                                        </h6>
-                                        <h6 class="text-muted font-weight-normal mt-1 mb-4">San Francisco, CA</h6>
+<div class="sp-dashboard-grid" style="grid-template-columns: 280px 1fr; align-items: start;">
 
+  <!-- Left card: account summary -->
+  <div class="sp-card">
+    <div style="padding:28px 20px;text-align:center;">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent-soft),var(--accent));display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px;font-weight:700;color:#fff;border:3px solid var(--border);">
+        {{ session['Name'][0]|upper if session['Name'] else 'U' }}
+      </div>
+      <div style="font-size:16px;font-weight:700;color:var(--text);">{{ session['Name'] }}</div>
+      <div style="font-size:12.5px;color:var(--text-dim);margin-top:4px;">Hosting User</div>
+    </div>
 
-                                    </div>
+    <div style="border-top:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;">Email</div>
+        <div style="font-size:13px;color:var(--text-muted);">{{ session['Email'] }}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;">Member Since</div>
+        <div style="font-size:13px;color:var(--text-muted);">{{ profileData.RegDate }}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;">Package</div>
+        <span class="sp-badge-pill active">{{ profileData.PackageName }}</span>
+      </div>
+    </div>
 
-                                    <!-- profile  -->
-                                    <div class="mt-3 pt-2 border-top">
-                                        <h4 class="mb-3 font-size-15">Your Details</h4>
-                                        <div class="table-responsive">
-                                            <table class="table table-borderless mb-0 text-muted">
-                                                <tbody>
-                                                    <tr>
-                                                        <th scope="row">Email</th>
-                                                        <td>xyz123@gmail.com</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Registration Date</th>
-                                                        <td>2022-01-17 19:28:59</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="mt-3 pt-2 border-top">
-                                        <h5 class="mb-3 font-size-15">Package Details</h5>
-                                        <div class="table-responsive">
-                                            <table class="table table-borderless mb-0 text-muted">
-                                                <tbody>
-                                                    <tr>
-                                                        <th scope="row">Package Name</th>
-                                                        <td class="text-primary">Default</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">FTP Accounts</th>
-                                                        <td class="text-primary">4/5</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Mail Accounts</th>
-                                                        <td class="text-primary">5/5</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Domains</th>
-                                                        <td class="text-primary">1/10</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">CGI ACCESS</th>
-                                                        <td class="text-primary">Disabled</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">MySQL Databases</th>
-                                                        <td class="text-primary">5/10</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Subdomains</th>
-                                                        <td class="text-primary">5/25</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Storage Limit</th>
-                                                        <td class="text-primary">5GB/25GB</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end card -->
+    <div style="border-top:1px solid var(--border);padding:16px 20px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">Package Limits</div>
+      {% set limits = [
+        ('Domains',    profileData.Domains),
+        ('FTP Accounts', profileData.FTP),
+        ('Email Accounts', profileData.Mails),
+        ('Databases',  profileData.Mysql),
+        ('Subdomains', profileData.SubDomains if profileData.SubDomains is defined else '—'),
+        ('CGI Access', profileData.CGI),
+        ('Storage',    profileData.Storage if profileData.Storage is defined else '—')
+      ] %}
+      {% for label, val in limits %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+          <span style="color:var(--text-muted);font-size:12.5px;">{{ label }}</span>
+          <span style="font-weight:600;color:var(--accent-h);font-size:12.5px;">{{ val }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
 
-                        </div>
+  <!-- Right: edit forms -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
 
-                        <div class="col-lg-8">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-0 header-title">Profile information</h5>
-                                    {% if msg %}
-                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
-                                        {{ msg.message }}
-                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                                {% endif %}
-                                    <div class="mt-3">
-                                        <form method="post" action="{{ url_for("routes.user_profile")}}">
-                                        <div class="form-group">
-                                            <label>Your Name</label>
-                                            <div>
-                                                <input name="Name" type="text" class="form-control col-lg-4" required="" value="{{ session['Name'] }}" placeholder="{{ session['Name'] }}">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Email</label>
-                                            <div>
-                                                <input readonly type="email" class="form-control col-lg-4" required="" value="{{ session['Email'] }}" placeholder="{{ session['Email'] }}">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-8 offset-md-1">
-                                            <button type="submit" class="btn btn-primary mr-1">
-                                                Update
-                                            </button>
-                                        </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title mb-0 header-title">Change Password</h5>
-                                <div class="mt-3">
-                                    <form role="form" class="parsley-examples" novalidate="">
-                                            <div class="form-group row">
-                                                <label for="hori-pass1" class="col-md-2 col-form-label">Password<span class="text-danger">*</span></label>
-                                                <div class="col-md-7">
-                                                    <input id="hori-pass1" type="password" placeholder="Password" required="" class="form-control">
-                                                </div>
-                                            </div>
-                                            <div class="form-group row">
-                                                <label for="hori-pass2" class="col-md-2 col-form-label">Confirm Password
-                                                    <span class="text-danger">*</span></label>
-                                                <div class="col-md-7">
-                                                    <input data-parsley-equalto="#hori-pass1" type="password" required="" placeholder="Password" class="form-control" id="hori-pass2">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-8 offset-md-4">
-                                                    <button type="submit" class="btn btn-primary mr-1">
-                                                        Change Password
-                                                    </button>
-                                            </div>
-                                    </form>
-                                </div>
-                            </div>
-                            </div>
-                            <!-- end card -->
-                        </div>
-                    </div>
-                    <!-- end row -->
-                </div> <!-- container-fluid -->
+    <div class="sp-card">
+      <div class="sp-card-header"><span class="sp-card-title">Update Name</span></div>
+      <div class="sp-card-body">
+        <form method="POST" action="{{ url_for('routes.user_profile') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="sp-form-group">
+            <label class="sp-label" for="prof-name">Full Name</label>
+            <input type="text" name="Name" id="prof-name" class="sp-input" value="{{ session['Name'] }}" required style="max-width:400px;"/>
+          </div>
+          <div class="sp-form-group">
+            <label class="sp-label">Email</label>
+            <input type="email" class="sp-input" value="{{ session['Email'] }}" readonly style="max-width:400px;opacity:.6;cursor:not-allowed;"/>
+          </div>
+          <button type="submit" name="action" value="update_profile" class="sp-btn sp-btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
 
+    <div class="sp-card">
+      <div class="sp-card-header"><span class="sp-card-title">Change Password</span></div>
+      <div class="sp-card-body">
+        <form method="POST" action="{{ url_for('routes.user_profile') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="sp-form-row" style="max-width:500px;">
+            <div class="sp-form-group">
+              <label class="sp-label" for="pass1">New Password <span style="color:var(--danger)">*</span></label>
+              <input id="pass1" name="pass1" type="password" class="sp-input" placeholder="••••••••" required maxlength="128" autocomplete="new-password"/>
             </div>
+            <div class="sp-form-group">
+              <label class="sp-label" for="pass2">Confirm Password <span style="color:var(--danger)">*</span></label>
+              <input id="pass2" name="pass2" type="password" class="sp-input" placeholder="••••••••" required maxlength="128" autocomplete="new-password"/>
+            </div>
+          </div>
+          <button type="submit" name="action" value="change_password" class="sp-btn sp-btn-primary">Change Password</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 {% include "layout/footer.html" %}
-{% endblock %}

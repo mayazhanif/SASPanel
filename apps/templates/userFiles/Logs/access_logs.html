@@ -1,0 +1,80 @@
+{% include "layout/header.html" %}
+
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Server Logs</h1>
+  <p class="sp-page-subtitle">Real-time access and error logs for your domains</p>
+</div>
+
+<div class="sp-tab-container">
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="tab-access">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Access Logs
+    </button>
+    <button class="sp-tab" data-tab="tab-error">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Error Logs
+    </button>
+  </div>
+
+  <div class="sp-tab-panel active" id="tab-access">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Access Logs</span>
+        <div class="sp-flex sp-gap-8">
+          <select id="access-domain-select" class="sp-select" style="width:220px;">
+            <option value="">— Select Domain —</option>
+            {% if domains %}{% for domain in domains %}
+              <option value="{{ domain[1] }}">{{ domain[1] }}</option>
+            {% endfor %}{% endif %}
+          </select>
+          <button onclick="document.getElementById('access-log-output').textContent='Log cleared.'" class="sp-btn sp-btn-ghost" style="padding:6px 12px;font-size:12.5px;">Clear</button>
+        </div>
+      </div>
+      <pre id="access-log-output" style="background:#0a0f1e;color:#a5f3a5;font-family:'Courier New',monospace;font-size:12.5px;line-height:1.6;padding:16px 20px;min-height:380px;max-height:550px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;margin:0;border-radius:0 0 var(--radius) var(--radius);">Select a domain to view access logs…</pre>
+    </div>
+  </div>
+
+  <div class="sp-tab-panel" id="tab-error">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Error Logs</span>
+        <div class="sp-flex sp-gap-8">
+          <select id="error-domain-select" class="sp-select" style="width:220px;">
+            <option value="">— Select Domain —</option>
+            {% if domains %}{% for domain in domains %}
+              <option value="{{ domain[1] }}">{{ domain[1] }}</option>
+            {% endfor %}{% endif %}
+          </select>
+          <button onclick="document.getElementById('error-log-output').textContent='Log cleared.'" class="sp-btn sp-btn-ghost" style="padding:6px 12px;font-size:12.5px;">Clear</button>
+        </div>
+      </div>
+      <pre id="error-log-output" style="background:#0a0f1e;color:#f87171;font-family:'Courier New',monospace;font-size:12.5px;line-height:1.6;padding:16px 20px;min-height:380px;max-height:550px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;margin:0;border-radius:0 0 var(--radius) var(--radius);">Select a domain to view error logs…</pre>
+    </div>
+  </div>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+var _aTimer = null, _eTimer = null;
+function fetchLog(url, id) {
+  fetch(url).then(function(r){return r.json();}).then(function(d){
+    if(d && d.data !== undefined){
+      var el = document.getElementById(id);
+      el.textContent = d.data || '(empty)';
+      el.scrollTop = el.scrollHeight;
+    }
+  }).catch(function(){});
+}
+document.getElementById('access-domain-select').addEventListener('change', function(){
+  clearInterval(_aTimer); var v = this.value; if(!v) return;
+  fetchLog('/user/Logs/access_Logs/Ajax?domainName='+v, 'access-log-output');
+  _aTimer = setInterval(function(){ fetchLog('/user/Logs/access_Logs/Ajax?domainName='+v, 'access-log-output'); }, 5000);
+});
+document.getElementById('error-domain-select').addEventListener('change', function(){
+  clearInterval(_eTimer); var v = this.value; if(!v) return;
+  fetchLog('/user/Logs/error_Logs/Ajax?domainName='+v, 'error-log-output');
+  _eTimer = setInterval(function(){ fetchLog('/user/Logs/error_Logs/Ajax?domainName='+v, 'error-log-output'); }, 5000);
+});
+</script>
+
+{% include "layout/footer.html" %}

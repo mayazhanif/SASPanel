@@ -1,0 +1,119 @@
+{% include "layout/adminheader.html" %}
+{% block body %}
+
+            <div class="content-page">
+                <div class="content">
+                    
+                    <!-- Start Content-->
+                    <div class="container-fluid">
+                        <div class="row page-title">
+                            <div class="col-md-12">
+                                <nav aria-label="breadcrumb" class="float-right mt-1">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="{{url_for('routes.admin_dashboard') }}">Dashboard</a></li>
+                                        <li class="breadcrumb-item"><a href="{{url_for('routes.admin_viewUser') }}">Users</a></li>
+                                        <li class="breadcrumb-item active">Add new Users</li>
+                                    </ol>
+                                </nav>
+                                <h4 class="mb-1 mt-0">New User</h4>
+                            </div>
+                        </div>
+                                                        {% if msg %}
+                                    <div class="alert alert-{{ msg.error }} alert-dismissible fade show" role="alert">
+                                        {{ msg.message }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                {% endif %}
+                        {% if UserInfo %}
+                        <div class="card">
+                                <div class="card-body">
+                                    <div class="text-center mt-3">
+                                        <h5 class="mt-2 mb-0 font-weight-bold">User Details</h5>
+                                        <h6 class="text-muted font-weight-bold">Name:</h6>{{ UserInfo.Name }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Server Username:</h6> {{ UserInfo.ServUser }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Password:</h6> {{ UserInfo.Password }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Database Username:</h6> {{ UserInfo.DBUser }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Database Password:</h6> {{ UserInfo.DBPass }}
+                                        <h6 class="text-muted font-weight-bold mt-2 mb-0">Email:</h6> {{ UserInfo.Email }}
+                                </div>
+                            </div><!-- end card -->
+                        </div>
+                        {% endif %}
+                            <div class="">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h4 class="header-title mt-0 mb-1">Add New User</h4>
+                                        <p class="sub-header">
+                                            Use this module to Add new Users to System. To add fill the required form, select the package and click the add user button.
+                                        </p>
+                                        <form method="POST" role="form" class="parsley-examples">
+                                            <div class="form-group row">
+                                                <label for="Name" class="col-md-2 col-form-label">Name<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="Text" required parsley-type="Text" class="form-control"
+                                                            id="Name" pattern="[^\s]+" name="Name" placeholder="User Name">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <label for="Email" class="col-md-2 col-form-label">Email<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input type="email" required parsley-type="email" class="form-control"
+                                                            id="Email" name="Email" placeholder="Enter Email">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="Password" class="col-md-2 col-form-label">Password<span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input id="Password" name="pass1" type="password" placeholder="Enter Password" required
+                                                            class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="form-group row">
+                                                <label for="confirmPassword" class="col-md-2 col-form-label">Confirm Password
+                                                    <span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                    <input data-parsley-equalto="#Password" type="password" required
+                                                            placeholder="ReType Password" name="pass2" class="form-control" id="confirmPassword">
+                                                </div>
+                                            </div>
+                                                <div class="form-group row">
+                                                <label for="confirmPassword" class="col-md-2 col-form-label">Select Package
+                                                    <span class="text-danger">*</span></label>
+                                                <div class="col-md-7">
+                                                  <select name="packageID" class="custom-select mb-2">
+                                                     <option selected="">Select Package</option>
+                                                  {% if results %}
+                                                  {% for record in results %}
+                                                     <option value="{{ record[0] }}">{{ record[1] }}</option>
+                                                    {% endfor %}
+                                                    {% endif %}
+                                                  </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <div class="col-md-8 offset-md-4">
+                                                    <button type="submit" class="btn btn-primary mr-1">
+                                                        Add User
+                                                    </button>
+                                                    <button type="reset"
+                                                            class="btn btn-secondary">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div> <!-- end card -->
+
+                            </div> <!-- end col -->
+                        </div>
+                        <!-- end row -->
+
+
+
+{% include "layout/adminfooter.html" %}
+{% endblock %}

@@ -1,0 +1,142 @@
+{% include "layout/adminheader.html" %}
+
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Server Logs</h1>
+  <p class="sp-page-subtitle">View real-time access and error logs per domain</p>
+</div>
+
+<div class="sp-tab-container">
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="tab-access">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Access Logs
+    </button>
+    <button class="sp-tab" data-tab="tab-error">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Error Logs
+    </button>
+  </div>
+
+  <!-- ── Access Logs Tab ── -->
+  <div class="sp-tab-panel active" id="tab-access">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Access Logs</span>
+        <div class="sp-flex sp-gap-8">
+          <select id="access-domain-select" class="sp-select" style="width:240px;">
+            <option value="">— Select Domain —</option>
+            {% if domains %}
+              {% for domain in domains %}
+                <option value="{{ domain[0] }}">{{ domain[1] }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+          <button onclick="clearLog('access-log-output')" class="sp-btn sp-btn-ghost" style="padding:6px 12px;font-size:12.5px;">Clear</button>
+        </div>
+      </div>
+      <div style="padding:0;">
+        <pre id="access-log-output" style="
+          background:#0a0f1e;
+          color:#a5f3a5;
+          font-family:'Courier New',monospace;
+          font-size:12.5px;
+          line-height:1.6;
+          padding:16px 20px;
+          min-height:420px;
+          max-height:600px;
+          overflow-y:auto;
+          white-space:pre-wrap;
+          word-break:break-all;
+          border-radius:0 0 var(--radius) var(--radius);
+          margin:0;
+        ">Select a domain to view access logs…</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Error Logs Tab ── -->
+  <div class="sp-tab-panel" id="tab-error">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Error Logs</span>
+        <div class="sp-flex sp-gap-8">
+          <select id="error-domain-select" class="sp-select" style="width:240px;">
+            <option value="">— Select Domain —</option>
+            {% if domains %}
+              {% for domain in domains %}
+                <option value="{{ domain[0] }}">{{ domain[1] }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+          <button onclick="clearLog('error-log-output')" class="sp-btn sp-btn-ghost" style="padding:6px 12px;font-size:12.5px;">Clear</button>
+        </div>
+      </div>
+      <div style="padding:0;">
+        <pre id="error-log-output" style="
+          background:#0a0f1e;
+          color:#f87171;
+          font-family:'Courier New',monospace;
+          font-size:12.5px;
+          line-height:1.6;
+          padding:16px 20px;
+          min-height:420px;
+          max-height:600px;
+          overflow-y:auto;
+          white-space:pre-wrap;
+          word-break:break-all;
+          border-radius:0 0 var(--radius) var(--radius);
+          margin:0;
+        ">Select a domain to view error logs…</pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script nonce="{{ csp_nonce }}">
+var _accessTimer = null;
+var _errorTimer  = null;
+
+function clearLog(id) {
+  document.getElementById(id).textContent = 'Log cleared.';
+}
+
+function scrollToBottom(id) {
+  var el = document.getElementById(id);
+  el.scrollTop = el.scrollHeight;
+}
+
+function fetchLog(url, outputId) {
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.data !== undefined) {
+        document.getElementById(outputId).textContent = d.data || '(empty)';
+        scrollToBottom(outputId);
+      }
+    })
+    .catch(function() {});
+}
+
+document.getElementById('access-domain-select').addEventListener('change', function() {
+  clearInterval(_accessTimer);
+  var id = this.value;
+  if (!id) return;
+  fetchLog('/admin/Logs/access_Logs/Ajax?domainID=' + id, 'access-log-output');
+  _accessTimer = setInterval(function() {
+    fetchLog('/admin/Logs/access_Logs/Ajax?domainID=' + id, 'access-log-output');
+  }, 5000);
+});
+
+document.getElementById('error-domain-select').addEventListener('change', function() {
+  clearInterval(_errorTimer);
+  var id = this.value;
+  if (!id) return;
+  fetchLog('/admin/Logs/error_Logs/Ajax?domainID=' + id, 'error-log-output');
+  _errorTimer = setInterval(function() {
+    fetchLog('/admin/Logs/error_Logs/Ajax?domainID=' + id, 'error-log-output');
+  }, 5000);
+});
+</script>
+
+{% include "layout/adminfooter.html" %}

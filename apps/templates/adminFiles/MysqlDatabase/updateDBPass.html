@@ -1,0 +1,179 @@
+{% include "layout/adminheader.html" %}
+
+<div class="sp-page-header">
+  <h1 class="sp-page-title">Update Database Password</h1>
+  <p class="sp-page-subtitle">Change the MySQL user password for database ID #{{ database }}</p>
+</div>
+
+<!-- Back link -->
+<div style="margin-bottom:1.5rem;">
+  <a href="{{ url_for('routes.admin_viewDatabases') }}" class="sp-btn sp-btn-ghost" style="font-size:0.875rem;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Databases
+  </a>
+</div>
+
+{% for message in get_flashed_messages() %}
+<div class="sp-alert danger" style="margin-bottom:1rem;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ message }}
+</div>
+{% endfor %}
+
+{% if msg %}
+<div class="sp-alert {{ msg.error }}" style="margin-bottom:1rem;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    {% if msg.error == 'success' %}
+    <polyline points="20 6 9 17 4 12"/>
+    {% else %}
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    {% endif %}
+  </svg>
+  {{ msg.message }}
+</div>
+{% endif %}
+
+<div style="max-width:540px;">
+
+  <!-- DB Info -->
+  {% if db %}
+  <div class="sp-card" style="margin-bottom:1.25rem;">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:7px;vertical-align:-2px;"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Database Details
+      </span>
+    </div>
+    <div style="padding:1rem 1.25rem;display:flex;gap:2rem;">
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">DB Username</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">{{ db[1] }}</code>
+      </div>
+      <div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">Record ID</div>
+        <code style="background:var(--surface2);padding:2px 8px;border-radius:4px;font-size:0.85rem;">#{{ database }}</code>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Password Form -->
+  <div class="sp-card">
+    <div class="sp-card-header">
+      <span class="sp-card-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:7px;vertical-align:-2px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Set New Password
+      </span>
+    </div>
+    <div style="padding:1.5rem;">
+
+      <form method="POST" action="{{ url_for('routes.admin_updateDBPass') }}" autocomplete="off" id="pwForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="DbID" value="{{ database }}">
+
+        <!-- New Password -->
+        <div class="sp-form-group">
+          <label for="pass1" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+            New Password <span style="color:#f87171;">*</span>
+          </label>
+          <div style="position:relative;">
+            <input type="password" class="sp-input" id="pass1" name="pass1"
+                   placeholder="Minimum 8 characters"
+                   minlength="8" maxlength="128" required autocomplete="new-password"
+                   style="padding-right:2.5rem;width:100%;box-sizing:border-box;">
+            <button type="button" id="togglePass1"
+                    style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
+              <svg id="eye1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <!-- Strength bar -->
+          <div style="height:3px;background:var(--surface2);border-radius:2px;margin-top:6px;overflow:hidden;">
+            <div id="strengthBar" style="height:100%;width:0%;border-radius:2px;transition:all 0.3s;"></div>
+          </div>
+          <small id="strengthLabel" style="color:var(--text-muted);font-size:0.75rem;">&nbsp;</small>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="sp-form-group">
+          <label for="pass2" style="display:block;font-size:0.875rem;font-weight:500;margin-bottom:0.5rem;color:var(--text);">
+            Confirm Password <span style="color:#f87171;">*</span>
+          </label>
+          <div style="position:relative;">
+            <input type="password" class="sp-input" id="pass2" name="pass2"
+                   placeholder="Re-enter password"
+                   minlength="8" maxlength="128" required autocomplete="new-password"
+                   style="padding-right:2.5rem;width:100%;box-sizing:border-box;">
+            <button type="button" id="togglePass2"
+                    style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;">
+              <svg id="eye2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <small id="matchHint" style="color:#f87171;font-size:0.75rem;display:none;">
+            ✕ Passwords do not match
+          </small>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+          <a href="{{ url_for('routes.admin_viewDatabases') }}" class="sp-btn sp-btn-ghost">Cancel</a>
+          <button type="submit" class="sp-btn sp-btn-primary" id="submitBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Update Password
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script nonce="{{ csp_nonce }}">
+(function() {
+  // Eye toggle
+  function mkToggle(inputId, btnId, svgId) {
+    document.getElementById(btnId).addEventListener('click', function() {
+      var inp = document.getElementById(inputId);
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      document.getElementById(svgId).innerHTML = show
+        ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+        : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    });
+  }
+  mkToggle('pass1','togglePass1','eye1');
+  mkToggle('pass2','togglePass2','eye2');
+
+  // Strength meter
+  var p1 = document.getElementById('pass1');
+  var bar = document.getElementById('strengthBar');
+  var lbl = document.getElementById('strengthLabel');
+  p1.addEventListener('input', function() {
+    var v = this.value, s = 0;
+    if (v.length >= 8)       s++;
+    if (/[A-Z]/.test(v))     s++;
+    if (/[0-9]/.test(v))     s++;
+    if (/[^A-Za-z0-9]/.test(v)) s++;
+    var colours = ['#f87171','#fbbf24','#38bdf8','#4ade80'];
+    var words   = ['Weak','Fair','Good','Strong'];
+    bar.style.width = (s * 25) + '%';
+    bar.style.background = colours[s-1] || '#f87171';
+    lbl.textContent = v.length ? words[s-1] || 'Very Weak' : '';
+    lbl.style.color = colours[s-1] || 'var(--text-muted)';
+    checkMatch();
+  });
+
+  // Match check
+  var p2 = document.getElementById('pass2');
+  var hint = document.getElementById('matchHint');
+  function checkMatch() {
+    hint.style.display = (p2.value && p2.value !== p1.value) ? '' : 'none';
+  }
+  p2.addEventListener('input', checkMatch);
+
+  // Block submit on mismatch
+  document.getElementById('pwForm').addEventListener('submit', function(e) {
+    if (p1.value !== p2.value) { e.preventDefault(); hint.style.display = ''; p2.focus(); }
+  });
+})();
+</script>
+
+{% include "layout/adminfooter.html" %}

@@ -1,443 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>SASPanel - Web Hosting Control Panel</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description" />
-        <meta content="Coderthemes" name="author" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-
-        <!-- App favicon -->
-        <link rel="shortcut icon" href="/assets/images/favicon.ico">
-
-        <!-- plugins -->
-        <link href="/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
-
-        <!-- plugin css -->
-        <link href="/assets/libs/datatables/dataTables.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="/assets/libs/datatables/responsive.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="/assets/libs/datatables/buttons.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="/assets/libs/datatables/select.bootstrap4.min.css" rel="stylesheet" type="text/css" />
-        <link href="/assets/libs/bootstrap-select//bootstrap-select.min.css" rel="stylesheet" type="text/css" />
-
-        <!-- App css -->
-        <link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-        <link href="/assets/css/icons.min.css" rel="stylesheet" type="text/css" />
-        <link href="/assets/css/app.min.css" rel="stylesheet" type="text/css" />
-
-    </head>
-
-    <body>
-        <!-- Begin page -->
-        <div id="wrapper">
-
-            <!-- Topbar Start -->
-            <div class="navbar navbar-expand flex-column flex-md-row navbar-custom">
-                <div class="container-fluid">
-                    <!-- LOGO -->
-                    <a href="index.html" class="navbar-brand mr-0 mr-md-2 logo">
-                        <span class="logo-lg">
-                            <img src="/assets/images/logo.png" alt="" height="50" />
-                            <span class="d-inline h1 ml-1 text-logo">SASPANEL</span>
-                        </span>
-                        <span class="logo-sm">
-                            <img src="/assets/images/logo.png" alt="" height="24">
-                        </span>
-                    </a>
-
-                    <ul class="navbar-nav bd-navbar-nav flex-row list-unstyled menu-left mb-0">
-                        <li class="">
-                            <button class="button-menu-mobile open-left disable-btn">
-                                <i data-feather="menu" class="menu-icon"></i>
-                                <i data-feather="x" class="close-icon"></i>
-                            </button>
-                        </li>
-                    </ul>
-
-                    <ul class="navbar-nav flex-row ml-auto d-flex list-unstyled topnav-menu float-right mb-0">
-                        <li class="d-none d-sm-block">
-                            <div class="app-search">
-                                <form>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" placeholder="Search...">
-                                        <span data-feather="search"></span>
-                                    </div>
-                                </form>
-                            </div>
-                        </li>
-
-
-
-
-                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left"
-                            title="8 new unread notifications">
-                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="false"
-                                aria-expanded="false">
-                                <i data-feather="bell"></i>
-                                <span class="noti-icon-badge"></span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-right dropdown-lg">
-
-                                <!-- item-->
-                                <div class="dropdown-item noti-title border-bottom">
-                                    <h5 class="m-0 font-size-16">
-                                        <span class="float-right">
-                                            <a href="" class="text-dark">
-                                                <small>Clear All</small>
-                                            </a>
-                                        </span>Notification
-                                    </h5>
-                                </div>
-
-                                <div class="slimscroll noti-scroll">
-
-                                    <!-- item-->
-                                    <a href="javascript:void(0);" class="dropdown-item notify-item border-bottom">
-                                        <div class="notify-icon bg-primary"><i class="uil uil-user-plus"></i></div>
-                                        <p class="notify-details">New user registered.<small class="text-muted">5 hours ago</small>
-                                        </p>
-                                    </a>
-
-                                    <!-- item-->
-                                    <a href="javascript:void(0);" class="dropdown-item notify-item border-bottom">
-                                        <div class="notify-icon">
-                                            <img src="/assets/images/users/avatar-1.jpg" class="img-fluid rounded-circle" alt="" />
-                                        </div>
-                                        <p class="notify-details">Karen Robinson</p>
-                                        <p class="text-muted mb-0 user-msg">
-                                            <small>Wow ! this admin looks good and awesome design</small>
-                                        </p>
-                                    </a>
-
-                                    <!-- item-->
-                                    <a href="javascript:void(0);" class="dropdown-item notify-item border-bottom">
-                                        <div class="notify-icon">
-                                            <img src="/assets/images/users/avatar-2.jpg" class="img-fluid rounded-circle" alt="" />
-                                        </div>
-                                        <p class="notify-details">Cristina Pride</p>
-                                        <p class="text-muted mb-0 user-msg">
-                                            <small>Hi, How are you? What about our next meeting</small>
-                                        </p>
-                                    </a>
-
-                                    <!-- item-->
-                                    <a href="javascript:void(0);" class="dropdown-item notify-item border-bottom active">
-                                        <div class="notify-icon bg-success"><i class="uil uil-comment-message"></i> </div>
-                                        <p class="notify-details">Jaclyn Brunswick commented on Dashboard<small class="text-muted">1
-                                                min
-                                                ago</small></p>
-                                    </a>
-
-                                    <!-- item-->
-                                    <a href="javascript:void(0);" class="dropdown-item notify-item border-bottom">
-                                        <div class="notify-icon bg-danger"><i class="uil uil-comment-message"></i></div>
-                                        <p class="notify-details">Caleb Flakelar commented on Admin<small class="text-muted">4 days
-                                                ago</small></p>
-                                    </a>
-
-                                    <!-- item-->
-                                    <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                        <div class="notify-icon bg-primary">
-                                            <i class="uil uil-heart"></i>
-                                        </div>
-                                        <p class="notify-details">Carlos Crouch liked
-                                            <b>Admin</b>
-                                            <small class="text-muted">13 days ago</small>
-                                        </p>
-                                    </a>
-                                </div>
-
-                                <!-- All-->
-                                <a href="javascript:void(0);"
-                                    class="dropdown-item text-center text-primary notify-item notify-all border-top">
-                                    View all
-                                    <i class="fi-arrow-right"></i>
-                                </a>
-
-                            </div>
-                        </li>
-
-                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
-                            <a href="{{ url_for("routes.admin_profile") }}" class="nav-link right-bar-toggle">
-                                <i data-feather="user"></i>
-                            </a>
-                        </li>
-
-                        <li class="dropdown notification-list" data-toggle="tooltip" data-placement="left" title="Settings">
-                            <a href="{{ url_for("routes.logout") }}" class="nav-link right-bar-toggle">
-                                <i data-feather="log-out"></i>
-                            </a>
-                        </li>
-
-                        <li class="dropdown notification-list align-self-center profile-dropdown">
-                            <a class="nav-link dropdown-toggle nav-user mr-0" data-toggle="dropdown" href="#" role="button"
-                                aria-haspopup="false" aria-expanded="false">
-                                <div class="media user-profile ">
-                                    <img src="/assets/images/users/avatar-7.jpg" alt="user-image" class="rounded-circle align-self-center" />
-                                    <div class="media-body text-left">
-                                        <h6 class="pro-user-name ml-2 my-0">
-                                            <span>Shreyu N</span>
-                                            <span class="pro-user-desc text-muted d-block mt-1">{{ session['usertype'] }} </span>
-                                        </h6>
-                                    </div>
-                                    <span data-feather="chevron-down" class="ml-2 align-self-center"></span>
-                                </div>
-                            </a>
-                            <div class="dropdown-menu profile-dropdown-items dropdown-menu-right">
-                                <a href="pages-profile.html" class="dropdown-item notify-item">
-                                    <i data-feather="user" class="icon-dual icon-xs mr-2"></i>
-                                    <span>My Account</span>
-                                </a>
-
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <i data-feather="settings" class="icon-dual icon-xs mr-2"></i>
-                                    <span>Settings</span>
-                                </a>
-
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <i data-feather="help-circle" class="icon-dual icon-xs mr-2"></i>
-                                    <span>Support</span>
-                                </a>
-
-                                <a href="pages-lock-screen.html" class="dropdown-item notify-item">
-                                    <i data-feather="lock" class="icon-dual icon-xs mr-2"></i>
-                                    <span>Lock Screen</span>
-                                </a>
-
-                                <div class="dropdown-divider"></div>
-
-                                <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                    <i data-feather="log-out" class="icon-dual icon-xs mr-2"></i>
-                                    <span>Logout</span>
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
-            <!-- end Topbar -->
-
-            <!-- ========== Left Sidebar Start ========== -->
-            <div class="left-side-menu">
-                <div class="media user-profile mt-2 mb-2">
-                    <img src="/assets/images/users/avatar-7.jpg" class="avatar-sm rounded-circle mr-2" alt="Shreyu" />
-                    <img src="/assets/images/users/avatar-7.jpg" class="avatar-xs rounded-circle mr-2" alt="Shreyu" />
-
-                    <div class="media-body">
-                        <h6 class="pro-user-name mt-0 mb-0">{{ session['Name'] }}</h6>
-                        <span class="pro-user-desc">{{ session['usertype'] }}</span>
-                    </div>
-                    <div class="dropdown align-self-center profile-dropdown-menu">
-                        <a class="dropdown-toggle mr-0" data-toggle="dropdown" href="#" role="button" aria-haspopup="false"
-                            aria-expanded="false">
-                            <span data-feather="chevron-down"></span>
-                        </a>
-                        <div class="dropdown-menu profile-dropdown">
-                            <a href="{{ url_for("routes.admin_profile") }}" class="dropdown-item notify-item">
-                                <i data-feather="user" class="icon-dual icon-xs mr-2"></i>
-                                <span>My Account</span>
-                            </a>
-                            <a href="{{ url_for("routes.logout") }}" class="dropdown-item notify-item">
-                                <i data-feather="log-out" class="icon-dual icon-xs mr-2"></i>
-                                <span>Logout</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="sidebar-content">
-                    <!--- Sidemenu -->
-                    <div id="sidebar-menu" class="slimscroll-menu">
-                        <ul class="metismenu" id="menu-bar">
-                            <li class="menu-title">Navigation</li>
-
-                            <li>
-                                <a href="{{ url_for("routes.admin_dashboard") }}">
-                                    <i data-feather="home"></i>
-
-                                    <span> Dashboard </span>
-                                </a>
-                            </li>
-
-                            <li class="menu-title">Apps</li>
-                            <li>
-                                <a href="javascript: void(0);">
-                                    <i data-feather="user"></i>
-                                    <span> Users </span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-
-                                <ul class="nav-second-level" aria-expanded="false">
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_addUser") }}">Add new User</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_viewUser") }}">View User</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_updateUser") }}">Modify</a>
-                                    </li>
-                                </ul>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);">
-                                    <i data-feather="globe"></i>
-                                    <span> Domains </span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-
-                                <ul class="nav-second-level" aria-expanded="false">
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_addDomain") }}">Add new Domain</a>
-                                    </li>
-                                     <li>
-                                        <a href="{{ url_for("routes.admin_viewDomains") }}">View Domains</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_updateDomains") }}">Modify</a>
-                                    </li>
-                                </ul>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);">
-                                    <i class="uil-database-alt"></i>
-                                    <span> MySQL Databases </span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-
-                                <ul class="nav-second-level" aria-expanded="false">
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_viewDatabases") }}">Database List</a>
-                                    </li>
-
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_addDB") }}">Add new Database</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_addDBUser") }}">Add new DBuser</a>
-                                    </li>
-                                    <li>
-                                        <a href="email-compose.html">Delete DBuser</a>
-                                    </li>
-                                    <li>
-                                        <a href="email-compose.html">Delete Database</a>
-                                    </li>
-                                    <li>
-                                        <a href="email-compose.html">Change DBuser Pass</a>
-                                    </li>
-                                </ul>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);">
-                                    <i data-feather="hard-drive"></i>
-                                    <span> FTP Accounts </span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-
-                                <ul class="nav-second-level" aria-expanded="false">
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_addAccounts") }}">Add new Account</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_viewAccounts") }}">View Account</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_updateAccounts") }}">Modify Account</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_ftpServer") }}">FTP Server</a>
-                                    </li>
-                                </ul>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);">
-                                    <i data-feather="inbox"></i>
-                                    <span> Email Accounts </span>
-                                    <span class="menu-arrow"></span>
-                                </a>
-
-                                <ul class="nav-second-level" aria-expanded="false">
-                                     <li>
-                                        <a href="{{ url_for("routes.admin_addEmail") }}">Add</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_viewEmail") }}">View</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ url_for("routes.admin_updateEmail") }}">Modify</a>
-                                    </li>
-                                </ul>
-                            </li>
-
-
-                            <li class="menu-title">Plugins</li>
-
-
-                            <li>
-                                <a href="">
-                                    <i data-feather="database"></i>
-
-                                    <span> PhpMyAdmin </span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="">
-                                    <i data-feather="inbox"></i>
-
-                                    <span> Roundcube </span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="">
-                                    <i data-feather="server"></i>
-
-                                    <span> Web FTP </span>
-                                </a>
-                            </li>
-
-                            <li class="menu-title">Errors</li>
-
-
-                            <li>
-                                <a href="">
-                                    <i class="uil-bug"></i>
-
-                                    <span> Error Log </span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="">
-                                    <i data-feather="list"></i>
-
-                                    <span> Access Log  </span>
-                                </a>
-                            </li>
-
-                            <li class="menu-title">Account Actions</li>
-
-                            <li>
-                                <a href="{{ url_for("routes.logout") }}">
-                                    <i data-feather="log-out"></i>
-
-                                    <span> Logout </span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <!-- End Sidebar -->
-
-                    <div class="clearfix"></div>
-                </div>
-                <!-- Sidebar -left -->
-
-            </div>
-            <!-- Left Sidebar End -->
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="SASPanel — Web Hosting Control Panel"/>
+  <!-- CSRF token for Flask-WTF — auto-injected into all POST forms by csrf-inject.js -->
+  <meta name="csrf-token" content="{{ csrf_token() }}"/>
+  <title>SASPanel — Admin</title>
+  <link rel="shortcut icon" href="/assets/images/favicon.ico"/>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- New design system -->
+  <link href="/css/saspanel.css" rel="stylesheet"/>
+  <!-- Feather icons -->
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body>
+
+<div id="sp-wrapper">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside id="sp-sidebar">
+
+    <!-- Logo -->
+    <div class="sp-logo">
+      <div class="sp-logo-icon">SP</div>
+      <span class="sp-logo-text">SASPanel</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sp-nav" role="navigation" aria-label="Main navigation">
+
+      <div class="sp-nav-section">
+        <div class="sp-nav-label">Overview</div>
+        <a href="{{ url_for('routes.admin_dashboard') }}"
+           class="sp-nav-item {% if request.endpoint == 'routes.admin_dashboard' %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+      <div class="sp-nav-section">
+        <div class="sp-nav-label">Management</div>
+
+        <a href="{{ url_for('routes.admin_viewUser') }}"
+           class="sp-nav-item {% if 'User' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Users</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_viewPackages') }}"
+           class="sp-nav-item {% if 'Package' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          <span>Packages</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_viewDomains') }}"
+           class="sp-nav-item {% if 'Domain' in request.endpoint and 'Sub' not in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>Domains</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_viewDatabases') }}"
+           class="sp-nav-item {% if 'DB' in request.endpoint or 'Database' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>MySQL</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_viewAccounts') }}"
+           class="sp-nav-item {% if 'Account' in request.endpoint or 'ftp' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span>FTP Accounts</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_viewEmail') }}"
+           class="sp-nav-item {% if 'Email' in request.endpoint or 'Mail' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Email Accounts</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_viewSubDomains') }}"
+           class="sp-nav-item {% if 'SubDomain' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Subdomains</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_cron_jobs') }}"
+           class="sp-nav-item {% if 'cron' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>Cron Jobs</span>
+        </a>
+      </div>
+
+      <div class="sp-nav-section">
+        <div class="sp-nav-label">Tools</div>
+
+        <a href="{{ url_for('routes.admin_error_logs') }}"
+           class="sp-nav-item {% if 'error_log' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span>Error Logs</span>
+        </a>
+
+        <a href="{{ url_for('routes.admin_access_logs') }}"
+           class="sp-nav-item {% if 'access_log' in request.endpoint %}active{% endif %}">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>Access Logs</span>
+        </a>
+
+        <a href="http://{{ mainhost }}/phpmyadmin" target="_blank" rel="noopener noreferrer" class="sp-nav-item">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>phpMyAdmin ↗</span>
+        </a>
+
+        <a href="http://{{ mainhost }}/roundcube" target="_blank" rel="noopener noreferrer" class="sp-nav-item">
+          <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span>Roundcube ↗</span>
+        </a>
+
+
+      </div>
+
+    </nav>
+
+    <!-- Bottom user strip -->
+    <div class="sp-sidebar-user">
+      <div class="sp-avatar">{{ session['Name'][0]|upper if session.get('Name') else 'A' }}</div>
+      <div class="sp-sidebar-user-info">
+        <div class="sp-sidebar-user-name">{{ session.get('Name', 'Admin') }}</div>
+        <div class="sp-sidebar-user-role">Administrator</div>
+      </div>
+    </div>
+
+  </aside>
+  <!-- ══════════════ END SIDEBAR ══════════════ -->
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <div id="sp-main">
+
+    <!-- Topbar -->
+    <header id="sp-topbar">
+      <button id="sp-toggle" class="sp-topbar-toggle" aria-label="Toggle sidebar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <div class="sp-breadcrumb">
+        <span>Admin</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="sp-breadcrumb-current" id="sp-page-name">Dashboard</span>
+      </div>
+
+      <div class="sp-topbar-right">
+
+        <a href="{{ url_for('routes.admin_profile') }}" class="sp-topbar-btn" title="Profile" aria-label="Profile">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </a>
+
+        <a href="{{ url_for('routes.logout') }}" class="sp-topbar-btn" title="Logout" aria-label="Logout">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
+
+        <a href="{{ url_for('routes.admin_profile') }}" class="sp-topbar-user">
+          <div class="sp-avatar" style="width:28px;height:28px;font-size:11px;">{{ session['Name'][0]|upper if session.get('Name') else 'A' }}</div>
+          <span class="sp-topbar-user-name">{{ session.get('Name', 'Admin') }}</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main id="sp-content">

@@ -1,0 +1,40 @@
+[Unit]
+Description=SASPanel — Web Hosting Control Panel
+Documentation=https://github.com/mayazhanif/SASPanel
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+# FIX R24-01 / R20-05: Run as a dedicated unprivileged system user, NOT root.
+# Running as root means any RCE in Flask grants full system access.
+#
+# Setup (run once during install):
+#   useradd --system --no-create-home --shell /usr/sbin/nologin saspanel
+#   chown -R saspanel:saspanel /home/SASPanel
+#   usermod -aG www-data saspanel  # if nginx/vsftpd integration needed
+#
+Type=simple
+User=saspanel
+Group=saspanel
+WorkingDirectory=/home/SASPanel
+EnvironmentFile=/home/SASPanel/.env
+ExecStart=/home/SASPanel/venv/bin/gunicorn \
+    --workers 4 \
+    --bind 0.0.0.0:5000 \
+    --timeout 120 \
+    --access-logfile /home/SASPanel/logs/access.log \
+    --error-logfile /home/SASPanel/logs/error.log \
+    app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/SASPanel/logs/service.log
+StandardError=append:/home/SASPanel/logs/service.log
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/home/SASPanel/logs /home /tmp /var/run /etc/nginx /etc/vsftpd.chroot_list
+
+[Install]
+WantedBy=multi-user.target

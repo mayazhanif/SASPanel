@@ -1,40 +1,45 @@
+    </main>
+  </div>
+</div>
 
+<script src="/js/csrf-inject.js"></script>
+<script nonce="{{ csp_nonce }}">
+(function() {
+  var sidebar = document.getElementById('sp-sidebar');
+  var toggle  = document.getElementById('sp-toggle');
+  var PREF_KEY = 'sp_sidebar_collapsed';
+  if (localStorage.getItem(PREF_KEY) === '1') sidebar.classList.add('collapsed');
+  if (toggle) {
+    toggle.addEventListener('click', function() {
+      sidebar.classList.toggle('collapsed');
+      localStorage.setItem(PREF_KEY, sidebar.classList.contains('collapsed') ? '1' : '0');
+    });
+  }
+  var activeItem = document.querySelector('.sp-nav-item.active span');
+  var pageName = document.getElementById('sp-page-name');
+  if (activeItem && pageName) {
+    pageName.textContent = activeItem.textContent.replace('↗','').trim();
+  }
+})();
 
-                <!-- Footer Start -->
-                <footer class="footer">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-12">
-                                2022 &copy; SASPanel . All Rights Reserved. Crafted with <i class='uil uil-heart text-danger font-size-12'></i> by <a href="https://github.com/mayazhanif/SASPanel" target="_blank">SAS Developers</a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-                <!-- end Footer -->
-
-            </div>
-
-        </div>
-
-
-        <!-- Vendor js -->
-        <script src="/assets/js/vendor.min.js"></script>
-
-        <!-- optional plugins -->
-        <script src="/assets/libs/moment/moment.min.js"></script>
-        <script src="/assets/libs/apexcharts/apexcharts.min.js"></script>
-        <script src="/assets/libs/flatpickr/flatpickr.min.js"></script>
-        <!-- Plugin js-->
-        <script src="assets/libs/parsleyjs/parsley.min.js"></script>
-
-        <!-- Validation init js-->
-        <script src="assets/js/pages/form-validation.init.js"></script>
-        <!-- page js -->
-        <script src="/assets/js/pages/dashboard.init.js"></script>
-
-        <!-- App js -->
-        <script src="/assets/js/app.min.js"></script>
-
-
-    </body>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.sp-tab[data-tab]').forEach(function(tab) {
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      var target = this.dataset.tab;
+      var container = this.closest('.sp-tab-container') || document;
+      container.querySelectorAll('.sp-tab').forEach(function(t) { t.classList.remove('active'); });
+      container.querySelectorAll('.sp-tab-panel').forEach(function(p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      var panel = container.querySelector('#' + target);
+      if (panel) panel.classList.add('active');
+    });
+  });
+  if (window.location.hash) {
+    var hashTab = document.querySelector('.sp-tab[data-tab="' + window.location.hash.slice(1) + '"]');
+    if (hashTab) hashTab.click();
+  }
+});
+</script>
+</body>
 </html>

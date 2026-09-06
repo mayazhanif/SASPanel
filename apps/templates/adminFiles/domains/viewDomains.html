@@ -1,0 +1,196 @@
+{% include "layout/adminheader.html" %}
+
+<div class="sp-page-header sp-flex-between">
+  <div>
+    <h1 class="sp-page-title">Domains</h1>
+    <p class="sp-page-subtitle">Manage all hosted domains and SSL certificates</p>
+  </div>
+  <a href="{{ url_for('routes.admin_renewSSL') }}" class="sp-btn sp-btn-ghost" style="gap:6px;">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Renew All SSL
+  </a>
+</div>
+
+{% for message in get_flashed_messages() %}
+<div class="sp-alert danger">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ message }}
+</div>
+{% endfor %}
+
+{% if msg %}
+<div class="sp-alert {{ msg.error }}">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  {{ msg.message }}
+</div>
+{% endif %}
+
+<!-- Tab bar -->
+<div class="sp-tab-container">
+  <div class="sp-tabs">
+    <button class="sp-tab active" data-tab="tab-list" id="tab-list-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      All Domains
+    </button>
+    <button class="sp-tab" data-tab="tab-add" id="tab-add-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Domain
+    </button>
+  </div>
+
+  <!-- ── Tab: List ── -->
+  <div class="sp-tab-panel active" id="tab-list">
+    <div class="sp-card">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Domain List</span>
+        <div class="sp-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="domain-search" placeholder="Search domains…" aria-label="Search domains"/>
+        </div>
+      </div>
+      <div class="sp-table-wrap">
+        <table class="sp-table" id="domains-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>User</th>
+              <th>Email</th>
+              <th>Directory</th>
+              <th>SSL</th>
+              <th>SSL Expiry</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if results %}
+              {% for record in results %}
+                {% if record[3] == 1 %}
+                  {% set is_suspended = true %}
+                  {% set suspend_label = 'Unsuspend' %}
+                {% else %}
+                  {% set is_suspended = false %}
+                  {% set suspend_label = 'Suspend' %}
+                {% endif %}
+                <tr>
+                  <td>
+                    <a href="https://{{ record[1] }}" target="_blank" rel="noopener noreferrer"
+                       style="color:var(--accent-h);font-weight:500;">{{ record[1] }}</a>
+                  </td>
+                  <td class="muted">{{ record[9] }}</td>
+                  <td class="muted">{{ record[7] }}</td>
+                  <td class="muted" style="font-family:monospace;font-size:12px;">/home/{{ record[6] }}/domains/{{ record[1] }}/html</td>
+                  <td><span class="sp-badge-pill active">Active</span></td>
+                  <td class="muted">{{ record[21] }}</td>
+                  <td>
+                    {% if is_suspended %}
+                      <span class="sp-badge-pill danger">Suspended</span>
+                    {% else %}
+                      <span class="sp-badge-pill active">Active</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="sp-flex sp-gap-8">
+                      <a href="{{ url_for('routes.admin_updateDomains', domainID=record[0]) }}"
+                         class="sp-btn-icon edit" title="{{ suspend_label }}" aria-label="{{ suspend_label }}">
+                        {% if is_suspended %}
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="10 8 16 12 10 16"/></svg>
+                        {% else %}
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+                        {% endif %}
+                      </a>
+                      <a href="{{ url_for('routes.admin_deleteDomain', domainID=record[0]) }}"
+                         class="sp-btn-icon delete"
+                         title="Delete domain"
+                         aria-label="Delete domain"
+                         onclick="return confirm('Delete {{ record[1] }}? This cannot be undone.')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="8" style="text-align:center;padding:40px;color:var(--text-dim);">
+                  No domains found. <button class="sp-tab" data-tab="tab-add" style="color:var(--accent);background:none;border:none;cursor:pointer;font:inherit;">Add one now →</button>
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Add Domain ── -->
+  <div class="sp-tab-panel" id="tab-add">
+    <div class="sp-card" style="max-width:600px;">
+      <div class="sp-card-header">
+        <span class="sp-card-title">Add New Domain</span>
+      </div>
+      <div class="sp-card-body">
+        <form method="POST" action="{{ url_for('routes.admin_addDomain') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+          <div class="sp-form-group">
+            <label class="sp-label" for="userID">Assign to User <span style="color:var(--danger)">*</span></label>
+            <select name="userID" id="userID" class="sp-select" required>
+              <option value="">— Select User —</option>
+              {% if users %}
+                {% for user in users %}
+                  <option value="{{ user[0] }}">{{ user[2] }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+          <div class="sp-form-group">
+            <label class="sp-label" for="DomainName">Domain Name <span style="color:var(--danger)">*</span></label>
+            <input type="text" name="DomainName" id="DomainName" class="sp-input"
+                   placeholder="example.com" required autocomplete="off"/>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">Enter the full domain name without http://</div>
+          </div>
+
+          <div class="sp-form-group">
+            <label class="sp-label">Options</label>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+                <input type="checkbox" name="createFTP" id="createFTP" style="accent-color:var(--accent);width:16px;height:16px;margin-top:2px;flex-shrink:0;"/>
+                <div>
+                  <span style="color:var(--text);font-size:13.5px;font-weight:500;">Auto-create FTP account</span>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Creates an FTP account using the user's server username with a random password. Credentials visible in FTP Accounts.</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+                <input type="checkbox" name="createMail" id="createMail" style="accent-color:var(--accent);width:16px;height:16px;margin-top:2px;flex-shrink:0;"/>
+                <div>
+                  <span style="color:var(--text);font-size:13.5px;font-weight:500;">Auto-create info@ mailbox</span>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Creates <code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:11px;">info@[domain]</code> with a random password. Credentials visible in Email Accounts.</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="sp-flex sp-gap-8" style="margin-top:8px;">
+            <button type="submit" class="sp-btn sp-btn-primary">Add Domain</button>
+            <button type="reset" class="sp-btn sp-btn-ghost">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .sp-tab-container -->
+
+<script nonce="{{ csp_nonce }}">
+// Client-side domain search filter
+document.getElementById('domain-search').addEventListener('input', function() {
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('#domains-table tbody tr').forEach(function(row) {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+
+{% include "layout/adminfooter.html" %}
