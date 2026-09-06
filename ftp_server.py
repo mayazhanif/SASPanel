@@ -56,11 +56,11 @@ logger = logging.getLogger('saspanel.ftp')
 def _get_db_config() -> dict:
     cfg = configparser.ConfigParser()
     cfg.read(os.path.join(BASE_DIR, 'Database', 'config.ini'))
-    s = cfg['database']
+    s = cfg['config']   # section is [config], not [database]
     return {
         'host':     s.get('host',     'localhost'),
         'port':     int(s.get('port', '3306')),
-        'user':     s['user'],
+        'user':     s.get('user',     'root'),
         'password': s['password'],
         'database': s['database'],
     }

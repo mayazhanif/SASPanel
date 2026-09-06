@@ -595,7 +595,7 @@ section "Installing phpMyAdmin"
 DEBIAN_FRONTEND=noninteractive apt-get install -y phpmyadmin || true
 
 cat > /etc/nginx/snippets/phpmyadmin.conf <<'EOF'
-location /phpmyadmin {
+location ^~ /phpmyadmin {
     root /usr/share/;
     index index.php index.html index.htm;
     location ~ ^/phpmyadmin/(.+\.php)$ {
@@ -722,15 +722,23 @@ PYEOF
 rm -rf /usr/share/roundcube/installer
 
 cat > /etc/nginx/snippets/roundcube.conf <<'EOF'
-location /roundcube {
-    root /usr/share/;
-    index index.php index.html index.htm;
-    location ~ ^/roundcube/(.+\.php)$ {
-        root /usr/share/;
-        include /etc/nginx/php.conf;
+location ^~ /roundcube {
+    # Roundcube 1.7+ serves from the public_html/ subdirectory
+    alias /usr/share/roundcube/public_html;
+    index index.php;
+
+    location ~ ^/roundcube(/.+\.php)$ {
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        # $1 strips the /roundcube prefix so SCRIPT_FILENAME resolves correctly
+        fastcgi_param SCRIPT_FILENAME /usr/share/roundcube/public_html$1;
+        fastcgi_param SCRIPT_NAME     $1;
     }
-    location ~* ^/roundcube/(.+\.(jpg|jpeg|gif|css|png|js|ico|html|xml|txt))$ {
-        root /usr/share/;
+
+    location ~* ^/roundcube/.+\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
     }
 }
 EOF
