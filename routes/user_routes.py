@@ -22,9 +22,8 @@ def user_dashboard():
     mysqlconnection.reconnect()
     if check_user_Login():
         msg=""
-        o = urlparse(request.base_url)
-        mainhost = o.hostname
-        #print(o.hostname)
+        # FIX R9-08: Host header injection — use trusted SERVER_NAME, not request.base_url
+        mainhost = os.environ.get('SERVER_NAME') or request.host
         return render_template('userFiles/dashboard.html', msg=msg, mainhost=mainhost)
     else:
         return redirect(url_for('routes.login'))
@@ -54,8 +53,17 @@ def user_profile():
         cursor.execute('SELECT * FROM msqldatabases where Is_Active=1 and User_id=%s',(str(session["id"]),))
         cursor.fetchall()
         countSubDomain = str(cursor.rowcount)
-        profileData = '{"RegDate" : "'+str(getPackage[11])+'", "PackageName" : "'+str(getPackage[1])+'", "FTP" : "'+countFTP+'/'+str(getPackage[3])+'", "Mails" : "'+countMails+'/'+str(getPackage[4])+'", "Domains" : "'+countDomains+'/'+str(getPackage[5])+'", "CGI" : "'+cgiAccess+'", "Mysql" : "'+countDB+'/'+str(getPackage[7])+'", "SubDomains" : "'+countSubDomain+'/'+str(getPackage[8])+'", "Storage" : "'+str(getPackage[9])+'"}'
-        profileData = json.loads(profileData)
+        profileData = {
+            'RegDate':    str(getPackage[11]),
+            'PackageName': str(getPackage[1]),
+            'FTP':        f'{countFTP}/{getPackage[3]}',
+            'Mails':      f'{countMails}/{getPackage[4]}',
+            'Domains':    f'{countDomains}/{getPackage[5]}',
+            'CGI':        cgiAccess,
+            'Mysql':      f'{countDB}/{getPackage[7]}',
+            'SubDomains': f'{countSubDomain}/{getPackage[8]}',
+            'Storage':    str(getPackage[9]),
+        }
 
         if request.method == 'POST' and 'Name' in request.form:
             Name = request.form['Name']
@@ -939,7 +947,12 @@ def user_deleteJob():
             userID = str(session["id"])
             JobID=request.args.get('JobID')
             cursor.execute('SELECT servUser FROM `users` INNER JOIN cronjobs ON  users.User_id=cronjobs.User_id where cronjobs.Is_Deleted=0 and cronjobs.Job_ID=%s and cronjobs.User_id=%s',(JobID,userID))
-            getUsername = cursor.fetchone()[0]
+            row = cursor.fetchone()
+            # FIX R9-06: NullPointer crash if job already deleted or doesn't belong to user
+            if row is None:
+                flash('Cron job not found or access denied.')
+                return redirect(url_for('routes.user_cron_jobs'))
+            getUsername = row[0]
             #query="UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = "+JobID+" and User_id="+userID
             cursor.execute("UPDATE `cronjobs` SET `Is_Deleted` = '1' WHERE `cronjobs`.`Job_ID` = %s and User_id=%s",(JobID,userID))
             mysqlconnection.commit()

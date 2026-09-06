@@ -348,8 +348,12 @@ def admin_addDomain():
             if(userID==""):
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
-            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id=%s;',(userID,))
+            # FIX R9-03: IDOR — verify userID belongs to this admin before adding domain
+            cursor.execute('SELECT servUser,User_email FROM `users` where Is_Deleted=0 and User_id=%s AND Admin_id=%s;',(userID, str(session['id'])))
             user = cursor.fetchone()
+            if user is None:
+                msg={"error":"danger", "message": "User not found or access denied."}
+                return render_template('adminFiles/domains/addDomain.html', users=users, msg=msg)
             getUserName = user[0]
             getEmail = user[1]
             DomainName = request.form['DomainName']
@@ -418,23 +422,26 @@ def admin_updateDomains():
         if request.method == 'GET' and request.args.get('domainID'):
             domainID=request.args.get('domainID')
             cursor = mysqlconnection.cursor()
-            #query="select * from domains WHERE `domains`.`Domain_Id` ="+domainID
-            cursor.execute("select * from domains WHERE `domains`.`Domain_Id` =%s",(domainID,))
+            # FIX R9-02: IDOR — no Admin_id ownership check before suspend/unsuspend
+            cursor.execute(
+                "SELECT `Domain_Suspended` FROM domains "
+                "WHERE `domains`.`Domain_Id` =%s "
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (domainID, str(session['id']))
+            )
             domain = cursor.fetchone()
-            if cursor.rowcount>0:
-                if domain[3]==0:
-                    #query = "UPDATE `domains` SET `Domain_Suspended` = '1' WHERE `domains`.`Domain_Id` =" + domainID
-                    cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '1' WHERE `domains`.`Domain_Id` =%s",(domainID,))
-                    mysqlconnection.commit()
-                    flash('Domain Suspended.')
-                    return redirect(url_for("routes.admin_viewDomains"))
-                else:
-                    #query = "UPDATE `domains` SET `Domain_Suspended` = '0' WHERE `domains`.`Domain_Id` =" + domainID
-                    cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '0' WHERE `domains`.`Domain_Id` =%s",(domainID,))
-                    mysqlconnection.commit()
-                    flash('Domain not Suspended.')
-                    return redirect(url_for("routes.admin_viewDomains"))
+            if domain is None:
+                flash('Domain not found or access denied.')
+                return redirect(url_for('routes.admin_viewDomains'))
+            if domain[0]==0:
+                cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '1' WHERE `domains`.`Domain_Id` =%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",(domainID, str(session['id'])))
+                mysqlconnection.commit()
+                flash('Domain Suspended.')
+                return redirect(url_for("routes.admin_viewDomains"))
             else:
+                cursor.execute("UPDATE `domains` SET `Domain_Suspended` = '0' WHERE `domains`.`Domain_Id` =%s AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",(domainID, str(session['id'])))
+                mysqlconnection.commit()
+                flash('Domain not Suspended.')
                 return redirect(url_for("routes.admin_viewDomains"))
         return redirect(url_for("routes.admin_viewDomains"))
     else:
@@ -485,8 +492,12 @@ def admin_addDB():
             if(userID==""):
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
-            cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id= %s;',(userID,))
+            # FIX R9-04: IDOR — verify userID belongs to this admin before adding database
+            cursor.execute('SELECT * FROM `mysqldbusers` INNER JOIN users ON mysqldbusers.User_id = users.User_id where Is_Deleted=0 and users.User_id= %s AND users.Admin_id=%s;',(userID, str(session['id'])))
             DBUserbyID = cursor.fetchone()
+            if DBUserbyID is None:
+                msg={"error":"danger", "message": "User not found or access denied."}
+                return render_template('adminFiles/MysqlDatabase/addDB.html', users=users, msg=msg)
 
             #print(DBUserbyID[0])
             databaseName = request.form['databaseName']
@@ -563,13 +574,17 @@ def admin_updateDBPass():
         msg=''
         if request.method == 'GET' and request.args.get('DbID'):
             DbUser_ID=request.args.get('DbID')
-            # FIX: single-element tuple bug — (DbUser_ID) is not a tuple, must be (DbUser_ID,)
-            cursor.execute("SELECT * FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` =%s",(DbUser_ID,))
+            # FIX R9-05: IDOR — scope DB password view to admin's own users
+            cursor.execute(
+                "SELECT * FROM `mysqldbusers` "
+                "WHERE `mysqldbusers`.`DbUser_ID` =%s "
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (DbUser_ID, str(session['id']))
+            )
             database = cursor.fetchone()
-            if cursor.rowcount>0:
-                return render_template('adminFiles/MysqlDatabase/updateDBPass.html', database=database[0])
-            else:
-                return redirect(url_for("routes.admin_viewDatabases"))
+            if database is None:
+                flash('Database not found or access denied.')
+                return redirect(url_for('routes.admin_viewDatabases'))
         elif request.method == 'POST' and 'DbID' in request.form and 'pass1' in request.form and 'pass2' in request.form:
             DbUser_ID = request.form['DbID']
             #query="SELECT DbUsername FROM `mysqldbusers` WHERE `mysqldbusers`.`DbUser_ID` ="+DbUser_ID
@@ -610,8 +625,13 @@ def admin_addAccounts():
             if(userID==""):
                 msg={"error":"danger", "message": "User not Selected."}
                 return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
-            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s',(userID,))
-            getUserName = cursor.fetchone()[0]
+            # FIX D-09: IDOR — verify userID belongs to this admin before adding FTP account
+            cursor.execute('SELECT servUser FROM `users` where Is_Deleted=0 and User_id=%s AND Admin_id=%s',(userID, str(session['id'])))
+            row = cursor.fetchone()
+            if row is None:
+                msg={"error":"danger", "message": "User not found or access denied."}
+                return render_template('adminFiles/ftpAccounts/addAccounts.html', users=users, msg=msg)
+            getUserName = row[0]
             ftpUsername = request.form['ftpUsername']
             ftpPassword = request.form['ftpPassword']
             # FIX R7-01: validate ftpUsername — it becomes a Linux OS username
@@ -765,11 +785,16 @@ def admin_addEmail():
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             Password = request.form['Password']
             encodedPass = Base64Encode(Password)
-            #query= "SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id="+domainID+""
-            cursor.execute("SELECT * FROM `domains` where Is_Deleted=0 and Domain_Id=%s",(domainID,))
+            cursor.execute(
+                "SELECT * FROM `domains` "
+                "WHERE Is_Deleted=0 AND Domain_Id=%s "
+                "AND User_id IN (SELECT User_id FROM users WHERE Admin_id=%s)",
+                (domainID, str(session['id']))
+            )
             rDomain = cursor.fetchone()
+            # FIX D-10: IDOR — domainID verified to belong to this admin's users
             if rDomain is None:
-                msg = {'error': 'danger', 'message': 'Domain not found.'}
+                msg = {'error': 'danger', 'message': 'Domain not found or access denied.'}
                 return render_template('adminFiles/Mails/addEmail.html', domains=domains, msg=msg)
             mail_adress= suffix+"@"+rDomain[1]
             userID= str(rDomain[2])

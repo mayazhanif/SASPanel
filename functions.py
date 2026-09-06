@@ -729,11 +729,12 @@ def install_packages(root_password, mail_password, domain, emailaddress, emailpa
     sp.run(['apt-get', '-y', 'install', 'zip', 'php-mbstring', 'php-zip', 'php-gd', 'php-mysql'])
     # passwords passed via env, NOT as shell args
     env = os.environ.copy()
-    env['ROOT_PASS'] = root_password
-    env['MAIL_PASS'] = mail_password
-    env['DOMAIN']    = domain
-    env['EMAIL']     = emailaddress
-    env['EMAIL_PASS']= emailpassword
+    env['ROOT_PASS']       = root_password
+    env['MAIL_PASS']       = mail_password
+    env['ROUNDCUBE_PASS']  = generatePassword()   # FIX R9-09: was missing — caused :? failure in packages_installer.sh
+    env['DOMAIN']          = domain
+    env['EMAIL']           = emailaddress
+    env['EMAIL_PASS']      = emailpassword
     sp.run(['/bin/bash', 'scripts/packages_installer.sh'], env=env)
     sp.run(['cp', '/home/SASPanel/scripts/saspanel.service', '/etc/systemd/system'])
     sp.run(['systemctl', 'daemon-reload'])
