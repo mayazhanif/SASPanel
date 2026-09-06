@@ -480,19 +480,10 @@ def add_default_user(username: str, password: str):
     # Set password safely via chpasswd
     subprocess.run(['chpasswd'], input=f'{username}:{password}\n',
                    text=True, capture_output=True)
-    _run(['chown', f'{username}:{username}', f'/home/{username}'])
-    _run(['chmod', '755', f'/home/{username}'])
-    _run(['setfacl', '-m', f'user:{username}:rx', f'/home/{username}'])
-    print('User Added.')
-    # Append to vsftpd chroot list safely
-    chroot_path = '/etc/vsftpd.chroot_list'
-    try:
-        with open(chroot_path, 'a') as f:
-            f.write(username + '\n')
-    except Exception as ex:
-        print(f'Could not write vsftpd.chroot_list: {ex}')
     _run(['chown', '-R', f'{username}:{username}', f'/home/{username}'])
     _run(['chmod', '0755', f'/home/{username}'])
+    _run(['setfacl', '-m', f'user:{username}:rx', f'/home/{username}'])
+    print('User Added.')
 
 
 # ---------------------------------------------------------------------------
