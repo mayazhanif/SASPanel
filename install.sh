@@ -608,6 +608,17 @@ location ^~ /phpmyadmin {
 }
 EOF
 
+# Fix PHP session directory so phpMyAdmin can set cookies
+mkdir -p /var/lib/php/sessions
+chown root:www-data /var/lib/php/sessions
+chmod 770 /var/lib/php/sessions
+
+# Tell phpMyAdmin where to save sessions (fallback in case permissions still fail)
+PMA_CONF=/usr/share/phpmyadmin/config.inc.php
+if [ -f "$PMA_CONF" ] && ! grep -q 'SessionSavePath' "$PMA_CONF"; then
+    echo "\$cfg['SessionSavePath'] = '/tmp';" >> "$PMA_CONF"
+fi
+
 success "phpMyAdmin configured."
 
 # =============================================================================
