@@ -449,8 +449,46 @@ def admin_addDomain():
                 fullchain="/etc/letsencrypt/live/"+DomainName+"/fullchain.pem"
                 cursor.execute("INSERT INTO `sslcertificates` (`Cert_ID`, `Domain_Id`, `User_id`, `Certificate`, `PrivateKey`, `ExpiryDate`, `Is_Active`) VALUES (NULL, %s, %s, %s, %s, %s, '1');",(DomainID,userID,fullchain,privkey,ExpiryDate))
                 mysqlconnection.commit()
-                add_mail_domain(cursor,DomainName)
-                flash('Domain Added successfully.')
+                add_mail_domain(cursor, DomainName)
+
+                # ── Optional: auto-create FTP account ──────────────────────
+                if request.form.get('createFTP'):
+                    import secrets as _sec
+                    ftp_pass = _sec.token_urlsafe(12)
+                    ftp_user = getUserName  # use the server username as FTP username
+                    ftp_enc  = Base64Encode(ftp_pass)
+                    ftp_dir  = f'/home/{getUserName}/public_html'
+                    try:
+                        cursor.execute(
+                            "INSERT INTO `ftp_accounts` "
+                            "(`Account_Id`,`User_id`,`Directory`,`FTP_Username`,`FTP_Password`,`Is_Active`) "
+                            "VALUES (NULL,%s,%s,%s,%s,'1')",
+                            (userID, ftp_dir, ftp_user, ftp_enc)
+                        )
+                        mysqlconnection.commit()
+                        add_ftp(ftp_user, getUserName, ftp_pass)
+                    except Exception:
+                        pass  # FTP account may already exist — not fatal
+
+                # ── Optional: auto-create info@ mail account ────────────────
+                if request.form.get('createMail'):
+                    import secrets as _sec2
+                    mail_pass  = _sec2.token_urlsafe(12)
+                    mail_addr  = 'info@' + DomainName
+                    mail_enc   = Base64Encode(mail_pass)
+                    try:
+                        cursor.execute(
+                            "INSERT INTO `mail_accounts` "
+                            "(`Mail_Id`,`Domain_Id`,`User_id`,`Mail_Address`,`Mail_Pass`,`Is_Active`) "
+                            "VALUES (NULL,%s,%s,%s,%s,'1')",
+                            (DomainID, userID, mail_addr, mail_enc)
+                        )
+                        mysqlconnection.commit()
+                        create_mail_user(cursor, mail_addr, mail_pass)
+                    except Exception:
+                        pass  # Mail account may already exist — not fatal
+
+                flash('Domain added successfully.')
                 return redirect(url_for('routes.admin_viewDomains'))
             else:
                 msg = {"error": "danger", "message": "Domain Not Added."}
