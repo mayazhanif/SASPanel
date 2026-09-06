@@ -612,16 +612,22 @@ def remove_vhost(domain: str):
 
 def add_ftp_only(username: str, password: str):
     username = _validate(username, 'username')
-    _run(['useradd', '-m', username])  # -m creates the home directory
-    subprocess.run(['chpasswd'], input=f'{username}:{password}\n',
-                   text=True, capture_output=True)
+    stdout, stderr = _run(['useradd', '-m', '-s', '/bin/bash', username])
+    if stderr:
+        print(f'[add_ftp_only] useradd stderr: {stderr}')
+    result = subprocess.run(
+        ['chpasswd'], input=f'{username}:{password}\n',
+        text=True, capture_output=True
+    )
+    if result.returncode != 0:
+        print(f'[add_ftp_only] chpasswd failed (rc={result.returncode}): {result.stderr}')
     # Add to chroot_list (exempt from chroot) and user_list (allowlist)
     for fpath in ('/etc/vsftpd.chroot_list', '/etc/vsftpd.user_list'):
         try:
             with open(fpath, 'a') as f:
                 f.write(username + '\n')
         except Exception as ex:
-            print(f'{fpath} error: {ex}')
+            print(f'[add_ftp_only] {fpath} error: {ex}')
     _run(['chown', '-R', f'{username}:{username}', f'/home/{username}'])
     _run(['chmod', '0755', f'/home/{username}'])
     _run(['systemctl', 'reload', 'vsftpd'])
@@ -630,18 +636,27 @@ def add_ftp_only(username: str, password: str):
 def add_ftp(ftpusername: str, username: str, password: str):
     ftpusername = _validate(ftpusername, 'username')
     username    = _validate(username,    'username')
-    _run(['useradd', '--home', f'/home/{username}', ftpusername])
-    subprocess.run(['chpasswd'], input=f'{ftpusername}:{password}\n',
-                   text=True, capture_output=True)
+    home_dir = f'/home/{username}'
+    # Ensure hosting user's home exists before sharing it with the FTP user
+    _run(['mkdir', '-p', home_dir])
+    stdout, stderr = _run(['useradd', '--home', home_dir, '-s', '/bin/bash', ftpusername])
+    if stderr:
+        print(f'[add_ftp] useradd stderr: {stderr}')
+    result = subprocess.run(
+        ['chpasswd'], input=f'{ftpusername}:{password}\n',
+        text=True, capture_output=True
+    )
+    if result.returncode != 0:
+        print(f'[add_ftp] chpasswd failed (rc={result.returncode}): {result.stderr}')
     # Add to chroot_list (exempt from chroot) and user_list (allowlist)
     for fpath in ('/etc/vsftpd.chroot_list', '/etc/vsftpd.user_list'):
         try:
             with open(fpath, 'a') as f:
                 f.write(ftpusername + '\n')
         except Exception as ex:
-            print(f'{fpath} error: {ex}')
-    _run(['chown', '-R', f'{ftpusername}:{ftpusername}', f'/home/{username}'])
-    _run(['chmod', '0755', f'/home/{username}'])
+            print(f'[add_ftp] {fpath} error: {ex}')
+    _run(['chown', '-R', f'{ftpusername}:{ftpusername}', home_dir])
+    _run(['chmod', '0755', home_dir])
     _run(['systemctl', 'reload', 'vsftpd'])
 
 

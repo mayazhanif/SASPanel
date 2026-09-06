@@ -787,7 +787,7 @@ def admin_addAccounts():
                 flash('Invalid FTP username. Lowercase letters, digits, hyphens, underscores only.')
                 return redirect(url_for('routes.admin_viewAccounts'))
             encodedPass = Base64Encode(ftpPassword)
-            Directory = "/home/username/public_html"
+            Directory = f"/home/{getUserName}/public_html"
             try:
                 cursor.execute("INSERT INTO `ftp_accounts` (`Account_Id`, `User_id`, `Directory`, `FTP_Username`, `FTP_Password`, `Is_Active`) VALUES (NULL,%s,%s,%s,%s, '1');", (userID,Directory,ftpUsername,encodedPass))
                 mysqlconnection.commit()
