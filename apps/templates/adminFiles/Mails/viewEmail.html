@@ -97,39 +97,43 @@
         <span class="sp-card-title">Add Email Account</span>
       </div>
       <div class="sp-card-body">
-        <form method="POST" action="{{ url_for('routes.admin_addEmail') }}">
+        <form method="POST" action="{{ url_for('routes.admin_addEmail') }}" id="addMailForm">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <!-- User -->
           <div class="sp-form-group">
             <label class="sp-label" for="mail-user">Assign to User <span style="color:var(--danger)">*</span></label>
             <select name="userID" id="mail-user" class="sp-select" required>
               <option value="">— Select User —</option>
               {% if users %}
                 {% for user in users %}
-                  <option value="{{ user[0] }}">{{ user[2] }}</option>
+                  <option value="{{ user[0] }}">{{ user[1] }} &lt;{{ user[2] }}&gt;</option>
                 {% endfor %}
               {% endif %}
             </select>
           </div>
+          <!-- Domain (AJAX-loaded per user) -->
           <div class="sp-form-group">
             <label class="sp-label" for="mail-domain">Domain <span style="color:var(--danger)">*</span></label>
-            <select name="domainID" id="mail-domain" class="sp-select" required>
-              <option value="">— Select Domain —</option>
-              {% if domains %}
-                {% for domain in domains %}
-                  <option value="{{ domain[0] }}">{{ domain[1] }}</option>
-                {% endfor %}
-              {% endif %}
+            <select name="domainID" id="mail-domain" class="sp-select" required disabled>
+              <option value="">— Select User first —</option>
             </select>
+            <div id="mail-domain-hint" style="font-size:12px;color:var(--text-dim);margin-top:4px;">Domains load after selecting a user.</div>
           </div>
+          <!-- Email prefix -->
           <div class="sp-form-group">
             <label class="sp-label" for="mail-prefix">Email Prefix <span style="color:var(--danger)">*</span></label>
-            <input type="text" name="emailPrefix" id="mail-prefix" class="sp-input"
-                   placeholder="info, support, admin…" required autocomplete="off"/>
-            <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">e.g. "info" → info@yourdomain.com</div>
+            <div style="display:flex;">
+              <input type="text" name="suffix" id="mail-prefix" class="sp-input"
+                     placeholder="info, support, admin…" required autocomplete="off"
+                     style="border-radius:6px 0 0 6px;flex:1;min-width:0;"/>
+              <span id="mail-at-hint" style="display:flex;align-items:center;padding:0 0.6rem;background:var(--surface2);border:1px solid var(--border);border-left:none;border-radius:0 6px 6px 0;font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">@domain.com</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">e.g. "info" → <strong id="mail-preview">info@yourdomain.com</strong></div>
           </div>
+          <!-- Password -->
           <div class="sp-form-group">
             <label class="sp-label" for="mail-pass">Password <span style="color:var(--danger)">*</span></label>
-            <input type="password" name="emailPass" id="mail-pass" class="sp-input"
+             <input type="password" name="Password" id="mail-pass" class="sp-input"
                    placeholder="••••••••" required maxlength="128" autocomplete="new-password"/>
           </div>
           <div class="sp-flex sp-gap-8" style="margin-top:8px;">
@@ -150,6 +154,64 @@ document.getElementById('mail-search').addEventListener('input', function() {
     r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 });
+
+// AJAX domain loader for Add Email form
+(function() {
+  var userSel  = document.getElementById('mail-user');
+  var domSel   = document.getElementById('mail-domain');
+  var domHint  = document.getElementById('mail-domain-hint');
+  var atHint   = document.getElementById('mail-at-hint');
+  var prefixIn = document.getElementById('mail-prefix');
+  var preview  = document.getElementById('mail-preview');
+
+  function updatePreview() {
+    var sel = domSel.options[domSel.selectedIndex];
+    var domain = (sel && sel.dataset.domain) ? sel.dataset.domain : 'yourdomain.com';
+    var prefix = prefixIn.value || 'info';
+    atHint.textContent = '@' + domain;
+    preview.textContent = prefix + '@' + domain;
+  }
+
+  userSel.addEventListener('change', function() {
+    var uid = this.value;
+    domSel.innerHTML = '<option value="">Loading…</option>';
+    domSel.disabled = true;
+    atHint.textContent = '@domain.com';
+    preview.textContent = (prefixIn.value || 'info') + '@yourdomain.com';
+    if (!uid) {
+      domSel.innerHTML = '<option value="">— Select User first —</option>';
+      domHint.textContent = 'Domains load after selecting a user.';
+      return;
+    }
+    domHint.textContent = 'Loading domains…';
+    fetch('/ajax/domains_by_user?user_id=' + encodeURIComponent(uid))
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        domSel.innerHTML = '';
+        if (!data || !data.length) {
+          domSel.innerHTML = '<option value="">— No domains for this user —</option>';
+          domHint.textContent = 'This user has no active domains.';
+          return;
+        }
+        var o = document.createElement('option'); o.value=''; o.textContent='— Select Domain —';
+        domSel.appendChild(o);
+        data.forEach(function(d) {
+          var opt = document.createElement('option');
+          opt.value = d.id; opt.textContent = d.domain; opt.dataset.domain = d.domain;
+          domSel.appendChild(opt);
+        });
+        domSel.disabled = false;
+        domHint.textContent = data.length + ' domain(s) available.';
+      })
+      .catch(function() {
+        domSel.innerHTML = '<option value="">— Error loading —</option>';
+        domHint.textContent = 'Failed to load. Refresh and try again.';
+      });
+  });
+
+  prefixIn.addEventListener('input', updatePreview);
+  domSel.addEventListener('change', updatePreview);
+})();
 </script>
 
 {% include "layout/adminfooter.html" %}
