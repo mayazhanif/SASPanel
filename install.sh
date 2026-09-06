@@ -719,7 +719,9 @@ rm -rf /usr/share/roundcube/installer
 
 cat > /etc/nginx/snippets/roundcube.conf <<'EOF'
 location ^~ /roundcube {
-    # Roundcube 1.7+ serves from the public_html/ subdirectory
+    # Roundcube 1.7+ serves from the public_html/ subdirectory.
+    # Static files are served directly by this alias; no nested static location
+    # needed (nested locations don't inherit alias, causing CSS/JS 404s).
     alias /usr/share/roundcube/public_html;
     index index.php;
 
@@ -727,14 +729,9 @@ location ^~ /roundcube {
         fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
         fastcgi_index index.php;
         include fastcgi_params;
-        # $1 strips the /roundcube prefix so SCRIPT_FILENAME resolves correctly
+        # $1 strips /roundcube prefix so SCRIPT_FILENAME resolves correctly
         fastcgi_param SCRIPT_FILENAME /usr/share/roundcube/public_html$1;
         fastcgi_param SCRIPT_NAME     $1;
-    }
-
-    location ~* ^/roundcube/.+\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf)$ {
-        expires 30d;
-        add_header Cache-Control "public, no-transform";
     }
 }
 EOF
