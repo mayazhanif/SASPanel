@@ -332,42 +332,41 @@ apt-get install -y certbot python3-certbot-nginx
 success "Certbot installed."
 
 # =============================================================================
-# 9. INSTALL VSFTPD (FTP)
+# 9. INSTALL FTP SERVER (pyftpdlib — no vsFTPd, no OS user accounts)
 # =============================================================================
-section "Installing VSFTPD"
+section "Installing pyftpdlib FTP server"
 
-apt-get install -y vsftpd
+# pyftpdlib is installed via pip into the venv (in step 14 along with other deps)
+# Here we just create the systemd service unit.
 
-# Create chroot list
-touch /etc/vsftpd.chroot_list
+cat > /etc/systemd/system/saspanel-ftp.service << 'FTPUNIT'
+[Unit]
+Description=SASPanel pyftpdlib FTP server
+Documentation=https://github.com/mayazhanif/SASPanel
+After=network.target mysql.service saspanel.service
+Requires=mysql.service
 
-cat > /etc/vsftpd.conf <<'FTPEOF'
-listen=YES
-listen_ipv6=NO
-local_enable=YES
-write_enable=YES
-local_umask=022
-dirmessage_enable=YES
-use_localtime=YES
-xferlog_enable=YES
-secure_chroot_dir=/var/run/vsftpd/empty
-pam_service_name=vsftpd
-rsa_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
-rsa_private_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
-ssl_enable=NO
-chroot_local_user=YES
-chroot_list_enable=YES
-chroot_list_file=/etc/vsftpd.chroot_list
-allow_writeable_chroot=YES
-userlist_enable=YES
-userlist_file=/etc/vsftpd.user_list
-userlist_deny=NO
-FTPEOF
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/SASPanel
+EnvironmentFile=/home/SASPanel/.env
+ExecStart=/home/SASPanel/venv/bin/python /home/SASPanel/ftp_server.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/SASPanel/logs/ftp.log
+StandardError=append:/home/SASPanel/logs/ftp.log
 
-touch /etc/vsftpd.user_list
-systemctl enable vsftpd
-systemctl restart vsftpd
-success "VSFTPD installed."
+[Install]
+WantedBy=multi-user.target
+FTPUNIT
+
+systemctl daemon-reload
+systemctl enable saspanel-ftp
+# (not started yet — venv/pip install runs in step 14, service starts after)
+success "saspanel-ftp.service registered (will start after pip install in step 14)."
+
 
 # =============================================================================
 # 10. INSTALL POSTFIX + DOVECOT (Mail Stack)
@@ -922,6 +921,10 @@ systemctl enable saspanel
 systemctl restart saspanel
 success "saspanel.service enabled and started (starts on every boot)."
 
+# Start the pyftpdlib FTP service now that the venv has pyftpdlib installed
+systemctl restart saspanel-ftp
+success "saspanel-ftp.service started."
+
 # =============================================================================
 # 16. FIREWALL RULES (ufw)
 # =============================================================================
@@ -933,6 +936,7 @@ if command -v ufw &>/dev/null; then
     ufw allow 443/tcp   comment 'HTTPS'
     ufw allow 5000/tcp  comment 'SASPanel'
     ufw allow 21/tcp    comment 'FTP'
+    ufw allow 40000:40100/tcp comment 'FTP Passive'
     ufw allow 25/tcp    comment 'SMTP'
     ufw allow 143/tcp   comment 'IMAP'
     ufw allow 110/tcp   comment 'POP3'

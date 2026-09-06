@@ -607,79 +607,37 @@ def remove_vhost(domain: str):
 
 
 # ---------------------------------------------------------------------------
-# FTP management (SAFE)
+# FTP management
+# NOTE: Authentication is now handled by ftp_server.py (pyftpdlib) which
+# reads directly from the ftp_accounts table.  These helpers only manage
+# the home directory on the filesystem; no OS user accounts are needed.
 # ---------------------------------------------------------------------------
 
 def add_ftp_only(username: str, password: str):
+    """Prepare a standalone FTP-only home directory."""
     username = _validate(username, 'username')
-    stdout, stderr = _run(['useradd', '-m', '-s', '/bin/bash', username])
-    if stderr:
-        print(f'[add_ftp_only] useradd stderr: {stderr}')
-    result = subprocess.run(
-        ['chpasswd'], input=f'{username}:{password}\n',
-        text=True, capture_output=True
-    )
-    if result.returncode != 0:
-        print(f'[add_ftp_only] chpasswd failed (rc={result.returncode}): {result.stderr}')
-    # Add to chroot_list (exempt from chroot) and user_list (allowlist)
-    for fpath in ('/etc/vsftpd.chroot_list', '/etc/vsftpd.user_list'):
-        try:
-            with open(fpath, 'a') as f:
-                f.write(username + '\n')
-        except Exception as ex:
-            print(f'[add_ftp_only] {fpath} error: {ex}')
-    _run(['chown', '-R', f'{username}:{username}', f'/home/{username}'])
-    _run(['chmod', '0755', f'/home/{username}'])
-    _run(['systemctl', 'reload', 'vsftpd'])
+    home = f'/home/{username}'
+    os.makedirs(home, exist_ok=True)
+    _run(['chmod', '0755', home])
 
 
 def add_ftp(ftpusername: str, username: str, password: str):
+    """Ensure the hosting user's home directory exists for the FTP account."""
     ftpusername = _validate(ftpusername, 'username')
     username    = _validate(username,    'username')
-    home_dir = f'/home/{username}'
-    # Ensure hosting user's home exists before sharing it with the FTP user
-    _run(['mkdir', '-p', home_dir])
-    stdout, stderr = _run(['useradd', '--home', home_dir, '-s', '/bin/bash', ftpusername])
-    if stderr:
-        print(f'[add_ftp] useradd stderr: {stderr}')
-    result = subprocess.run(
-        ['chpasswd'], input=f'{ftpusername}:{password}\n',
-        text=True, capture_output=True
-    )
-    if result.returncode != 0:
-        print(f'[add_ftp] chpasswd failed (rc={result.returncode}): {result.stderr}')
-    # Add to chroot_list (exempt from chroot) and user_list (allowlist)
-    for fpath in ('/etc/vsftpd.chroot_list', '/etc/vsftpd.user_list'):
-        try:
-            with open(fpath, 'a') as f:
-                f.write(ftpusername + '\n')
-        except Exception as ex:
-            print(f'[add_ftp] {fpath} error: {ex}')
-    _run(['chown', '-R', f'{ftpusername}:{ftpusername}', home_dir])
-    _run(['chmod', '0755', home_dir])
-    _run(['systemctl', 'reload', 'vsftpd'])
+    home = f'/home/{username}'
+    os.makedirs(home, exist_ok=True)
+    _run(['chmod', '0755', home])
 
 
 def remove_ftp(ftpusername: str):
-    ftpusername = _validate(ftpusername, 'username')
-    _run(['chage', '-E0', ftpusername])
-    _run(['usermod', '-s', '/sbin/nologin', ftpusername])
-    # Remove from user_list so the account is actually denied by vsftpd
-    for fpath in ('/etc/vsftpd.user_list', '/etc/vsftpd.chroot_list'):
-        try:
-            with open(fpath, 'r') as f:
-                lines = [l for l in f.readlines() if l.strip() != ftpusername]
-            with open(fpath, 'w') as f:
-                f.writelines(lines)
-        except Exception as ex:
-            print(f'{fpath} cleanup error: {ex}')
-    _run(['systemctl', 'reload', 'vsftpd'])
+    """No OS cleanup needed — deactivation is done via DB (Is_Active=0)."""
+    _validate(ftpusername, 'username')  # validate input, nothing else to do
 
 
 def change_ftp_pass(ftpUsername: str, ftpPassword: str):
-    ftpUsername = _validate(ftpUsername, 'username')
-    subprocess.run(['chpasswd'], input=f'{ftpUsername}:{ftpPassword}\n',
-                   text=True, capture_output=True)
+    """Password change is handled by updating the DB record directly."""
+    _validate(ftpUsername, 'username')  # validate input, DB update done by caller
 
 
 # ---------------------------------------------------------------------------
