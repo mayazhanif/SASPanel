@@ -921,9 +921,14 @@ StandardError=append:{sd}/logs/service.log
 # Security hardening
 NoNewPrivileges=yes
 ProtectSystem=strict
-# /home        — FTP user home directories (created by add_ftp helpers)
-# /etc/nginx   — virtual host config management
-ReadWritePaths={sd}/logs /home /tmp /var/run /etc/nginx
+# /home          — hosting user home directories
+# /etc/nginx     — virtual host config management
+# /etc/passwd* /etc/shadow* /etc/group* /etc/gshadow* — useradd/chpasswd for hosting accounts
+ReadWritePaths={sd}/logs /home /tmp /var/run /etc/nginx \\
+               /etc/passwd /etc/passwd- \\
+               /etc/shadow /etc/shadow- \\
+               /etc/group  /etc/group- \\
+               /etc/gshadow /etc/gshadow-
 
 [Install]
 WantedBy=multi-user.target
